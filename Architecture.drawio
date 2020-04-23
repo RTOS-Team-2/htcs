@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net" modified="2020-04-23T20:54:22.934Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36" etag="sZWzKmHR2EWkVi1Zps4L" version="13.0.1" type="github">
+  <diagram id="Dyd35VGWNDT_DwW748sT" name="Page-1">
+    <mxGraphModel dx="1165" dy="710" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="fdJU__HpLK2XwUDBHIf_-8" value="&lt;b&gt;&lt;u&gt;Felső réteg: PythonApp&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;Kontroller (Beni)&lt;/li&gt;&lt;li&gt;Vizualizáció (Tomi)&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="290" y="60" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="fdJU__HpLK2XwUDBHIf_-9" value="&lt;u&gt;&lt;b&gt;MQTT réteg&lt;br&gt;&lt;/b&gt;&lt;/u&gt;&lt;ul&gt;&lt;li&gt;(Krisz)&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="290" y="250" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fdJU__HpLK2XwUDBHIf_-10" value="&lt;u style=&quot;font-weight: bold&quot;&gt;Alsó réteg: C processzek&lt;/u&gt;&lt;br&gt;&lt;ul&gt;&lt;li&gt;Shell script / Master processz&lt;/li&gt;&lt;li&gt;&quot;Jármű&quot; processzek&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="290" y="410" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="fdJU__HpLK2XwUDBHIf_-11" value="" style="endArrow=classic;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="fdJU__HpLK2XwUDBHIf_-8" target="fdJU__HpLK2XwUDBHIf_-9">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="300" as="sourcePoint" />
+            <mxPoint x="450" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fdJU__HpLK2XwUDBHIf_-12" value="" style="endArrow=classic;html=1;entryX=0.25;entryY=1;entryDx=0;entryDy=0;exitX=0.25;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="fdJU__HpLK2XwUDBHIf_-9" target="fdJU__HpLK2XwUDBHIf_-8">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="305" y="250" as="sourcePoint" />
+            <mxPoint x="450" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fdJU__HpLK2XwUDBHIf_-13" value="" style="endArrow=classic;html=1;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="fdJU__HpLK2XwUDBHIf_-10" target="fdJU__HpLK2XwUDBHIf_-9">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="500" as="sourcePoint" />
+            <mxPoint x="450" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fdJU__HpLK2XwUDBHIf_-14" value="" style="endArrow=classic;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="fdJU__HpLK2XwUDBHIf_-9" target="fdJU__HpLK2XwUDBHIf_-10">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="400" as="sourcePoint" />
+            <mxPoint x="450" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fdJU__HpLK2XwUDBHIf_-15" value="&lt;u style=&quot;font-weight: bold&quot;&gt;RECEIVE:&lt;/u&gt;&lt;br&gt;&lt;ul&gt;&lt;li&gt;CONTROL_FLAGS&lt;/li&gt;&lt;ul&gt;&lt;li&gt;CHANGE_LANE_LEFT&lt;/li&gt;&lt;li&gt;CHANGE_LANE_RIGHT&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="580" y="395" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="fdJU__HpLK2XwUDBHIf_-16" value="&lt;b&gt;&lt;u&gt;SEND:&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;ul&gt;&lt;li&gt;CURRENT&lt;/li&gt;&lt;ul&gt;&lt;li&gt;SPEED&lt;/li&gt;&lt;li&gt;PREFERED_SPEED&lt;/li&gt;&lt;li&gt;LOCATION_X&lt;/li&gt;&lt;li&gt;LOCATION_Y&lt;/li&gt;&lt;/ul&gt;&lt;li&gt;CAR_PROPERTIES&lt;/li&gt;&lt;ul&gt;&lt;li&gt;MAX_SPEED&lt;/li&gt;&lt;li&gt;MAX_ACCELERATION&lt;/li&gt;&lt;li&gt;MAX_BRAKING&lt;/li&gt;&lt;li&gt;LANE_CHANGE_DELAY (sávváltáshoz szükséges idő)&lt;/li&gt;&lt;/ul&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="30" y="320" width="230" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="fdJU__HpLK2XwUDBHIf_-17" value="&lt;u style=&quot;font-weight: bold&quot;&gt;Alsó réteg: C processzek&lt;/u&gt;&lt;br&gt;&lt;ul&gt;&lt;li&gt;Shell script / Master processz&lt;/li&gt;&lt;li&gt;&quot;Jármű&quot; processzek&lt;/li&gt;&lt;/ul&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="290" y="410" width="260" height="70" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
