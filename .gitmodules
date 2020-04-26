@@ -1,0 +1,9 @@
+[submodule "mqtt-gcloud/jansson"]
+	path = mqtt-gcloud/jansson
+	url = https://github.com/akheron/jansson.git
+[submodule "mqtt-gcloud/libjwt"]
+	path = mqtt-gcloud/libjwt
+	url = https://github.com/benmcollins/libjwt.git
+[submodule "mqtt-gcloud/paho.mqtt.c"]
+	path = mqtt-gcloud/paho.mqtt.c
+	url = https://github.com/eclipse/paho.mqtt.c

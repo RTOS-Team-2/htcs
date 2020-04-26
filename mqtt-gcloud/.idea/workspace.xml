@@ -35,18 +35,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="eebe799f-98aa-414f-87f1-3b1214d0d087" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../.gitmodules" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/mqtt-gcloud.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/MQTT-C" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/roots.pem" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/install_submodules.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/iot_mqtt_jwt.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jansson" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/libjwt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/paho.mqtt.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.gitmodules" beforeDir="false" afterPath="$PROJECT_DIR$/../.gitmodules" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,9 +74,11 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="cf.first.check.clang-format" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="D:\IK-MSc\RTOS\team2\mqtt-gcloud" />
     </key>
   </component>
@@ -100,6 +100,8 @@
       <option name="presentableId" value="Default" />
       <updated>1587819988646</updated>
       <workItem from="1587819993768" duration="3696000" />
+      <workItem from="1587827098905" duration="7280000" />
+      <workItem from="1587880249051" duration="7835000" />
     </task>
     <servers />
   </component>
@@ -116,11 +118,56 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="419" y="178" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1587834048117">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state x="419" y="178" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1044@0.0.1920.1044" timestamp="1587834048117" />
     <state x="-1082" y="322" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1587823016619">
       <screen x="-1680" y="16" width="1680" height="1010" />
     </state>
     <state x="-1082" y="322" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040/-1680.16.1680.1010@-1680.16.1680.1010" timestamp="1587823016619" />
+    <state x="744" y="278" key="FileChooserDialogImpl" timestamp="1587831243016">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state x="744" y="278" key="FileChooserDialogImpl/0.0.1920.1044@0.0.1920.1044" timestamp="1587831243016" />
+    <state width="1874" height="276" key="GridCell.Tab.0.bottom" timestamp="1587888676240">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="276" key="GridCell.Tab.0.bottom/0.0.1920.1044@0.0.1920.1044" timestamp="1587888676240" />
+    <state width="1874" height="276" key="GridCell.Tab.0.center" timestamp="1587888676240">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="276" key="GridCell.Tab.0.center/0.0.1920.1044@0.0.1920.1044" timestamp="1587888676240" />
+    <state width="1874" height="276" key="GridCell.Tab.0.left" timestamp="1587888676239">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="276" key="GridCell.Tab.0.left/0.0.1920.1044@0.0.1920.1044" timestamp="1587888676239" />
+    <state width="1874" height="276" key="GridCell.Tab.0.right" timestamp="1587888676240">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="276" key="GridCell.Tab.0.right/0.0.1920.1044@0.0.1920.1044" timestamp="1587888676240" />
+    <state width="1874" height="276" key="GridCell.Tab.1.bottom" timestamp="1587888676158">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="276" key="GridCell.Tab.1.bottom/0.0.1920.1044@0.0.1920.1044" timestamp="1587888676158" />
+    <state width="1874" height="276" key="GridCell.Tab.1.center" timestamp="1587888676157">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="276" key="GridCell.Tab.1.center/0.0.1920.1044@0.0.1920.1044" timestamp="1587888676157" />
+    <state width="1874" height="276" key="GridCell.Tab.1.left" timestamp="1587888676157">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="276" key="GridCell.Tab.1.left/0.0.1920.1044@0.0.1920.1044" timestamp="1587888676157" />
+    <state width="1874" height="276" key="GridCell.Tab.1.right" timestamp="1587888676158">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="276" key="GridCell.Tab.1.right/0.0.1920.1044@0.0.1920.1044" timestamp="1587888676158" />
+    <state x="457" y="155" key="SettingsEditor" timestamp="1587827131003">
+      <screen x="0" y="0" width="1920" height="1044" />
+    </state>
+    <state x="457" y="155" key="SettingsEditor/0.0.1920.1044@0.0.1920.1044" timestamp="1587827131003" />
   </component>
 </project>

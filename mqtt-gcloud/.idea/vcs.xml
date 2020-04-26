@@ -2,5 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/jansson" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/libjwt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/paho.mqtt.c" vcs="Git" />
   </component>
 </project>
