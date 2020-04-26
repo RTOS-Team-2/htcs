@@ -2,9 +2,6 @@
 
 mkdir -p "${HOME}/.local"
 
-echo "Initializing submodules"
-git submodule update --init --recursive
-
 install_submodule () {
   echo "Installing $1"
 
