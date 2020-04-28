@@ -8,8 +8,8 @@ IF (WIN32)
     set(SUBMODULE_LIBS "${HOME}/eclipse-paho-mqtt-c-win32-1.3.1/lib")
     set(SUBMODULE_INCLUDES "${HOME}/eclipse-paho-mqtt-c-win32-1.3.1/include")
 ELSE()
-    set(SUBMODULE_LIBS "$ENV{HOME}/.local/lib")
-    set(SUBMODULE_INCLUDES "$ENV{HOME}/.local/include")
+    set(SUBMODULE_LIBS "$ENV{HOME}/Eclipse-Paho-MQTT-C-1.3.1-Linux/lib")
+    set(SUBMODULE_INCLUDES "$ENV{HOME}/Eclipse-Paho-MQTT-C-1.3.1-Linux/include")
 ENDIF()
 
 
@@ -18,4 +18,4 @@ link_directories(${SUBMODULE_LIBS})
 
 add_executable(htcs_vehicle ${SOURCES})
 
-target_link_libraries(htcs_vehicle paho-mqtt3a)
+target_link_libraries(htcs_vehicle paho-mqtt3as)

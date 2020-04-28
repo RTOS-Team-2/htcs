@@ -1,7 +1,13 @@
 #include "mqtt.h"
+#if !defined(_WIN32)
+#include <unistd.h>
+#else
+#include <windows.h>
+#endif
 #include <string.h>
 
-MQTTAsync createClient(char* address, char* client_id)
+MQTTAsync createAndConnect(const char* address, const char* username, const char* password,
+        const char* client_id, const int* keepRunning)
 {
     MQTTAsync client;
     int rc;
@@ -16,23 +22,32 @@ MQTTAsync createClient(char* address, char* client_id)
         printf("Failed to set callback, return code %d\n", rc);
         return NULL;
     }
-    return client;
-}
 
-int connectBroker(MQTTAsync client, int* connected)
-{
     MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
     conn_opts.keepAliveInterval = 20;
     conn_opts.cleansession = 1;
+    conn_opts.username = username;
+    conn_opts.password = password;
     conn_opts.onSuccess = onConnect;
     conn_opts.onFailure = onConnectFailure;
-    conn_opts.context = connected;
-    int rc;
+    int connected = 0;
+    conn_opts.context = &connected;
     if ((rc = MQTTAsync_connect(client, &conn_opts)) != MQTTASYNC_SUCCESS)
     {
         printf("Failed to start connect, return code %d\n", rc);
+        return NULL;
     }
-    return rc;
+
+    printf("Waiting for connection to %s\n", address);
+    while (!connected && *keepRunning)
+    {
+        #if defined(_WIN32)
+        Sleep(100);
+        #else
+        usleep(10000L);
+        #endif
+    }
+    return client;
 }
 
 void onConnect(void* connected, MQTTAsync_successData* response)
@@ -43,7 +58,8 @@ void onConnect(void* connected, MQTTAsync_successData* response)
 
 void onConnectFailure(void* context, MQTTAsync_failureData* response)
 {
-    printf("Connect failed, rc %d\n", response ? response->code : 0);
+    printf("Connect failed, rc: %d, message: %s\n",
+            response ? response->code : 0, response ? response->message : "unknown");
 }
 
 void connectionLost(void *context, char *cause)
@@ -80,6 +96,7 @@ void disconnect(MQTTAsync client, MQTTAsync_failureData* response)
     {
         printf("Failed to start disconnect, return code %d\n", rc);
     }
+    MQTTAsync_destroy(&client);
 }
 
 void onDisconnect(void* context, MQTTAsync_successData* response)

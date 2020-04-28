@@ -4,6 +4,8 @@
 typedef struct
 {
     char* address;
+    char* username;
+    char* password;
     char* client_id;
 } options;
 

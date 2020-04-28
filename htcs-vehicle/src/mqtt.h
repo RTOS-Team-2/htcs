@@ -3,9 +3,8 @@
 
 #include <MQTTAsync.h>
 
-MQTTAsync createClient(char* address, char* client_id);
-
-int connectBroker(MQTTAsync client, int* connected);
+MQTTAsync createAndConnect(const char* address, const char* username, const char* password,
+                           const char* client_id, const int* keepRunning);
 
 void onConnect(void* connected, MQTTAsync_successData* response);
 
