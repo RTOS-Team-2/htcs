@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1082
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "htcs-vehicle", "htcs-vehicle.vcxproj", "{2B9E5C29-86DA-4505-B531-ED262C7BDA08}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2B9E5C29-86DA-4505-B531-ED262C7BDA08}.Debug|x64.ActiveCfg = Debug|x64
+		{2B9E5C29-86DA-4505-B531-ED262C7BDA08}.Debug|x64.Build.0 = Debug|x64
+		{2B9E5C29-86DA-4505-B531-ED262C7BDA08}.Debug|x86.ActiveCfg = Debug|Win32
+		{2B9E5C29-86DA-4505-B531-ED262C7BDA08}.Debug|x86.Build.0 = Debug|Win32
+		{2B9E5C29-86DA-4505-B531-ED262C7BDA08}.Release|x64.ActiveCfg = Release|x64
+		{2B9E5C29-86DA-4505-B531-ED262C7BDA08}.Release|x64.Build.0 = Release|x64
+		{2B9E5C29-86DA-4505-B531-ED262C7BDA08}.Release|x86.ActiveCfg = Release|Win32
+		{2B9E5C29-86DA-4505-B531-ED262C7BDA08}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D65CCD1C-29FF-4015-B5B5-496686A00812}
+	EndGlobalSection
+EndGlobal

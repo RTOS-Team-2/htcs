@@ -35,10 +35,10 @@ int connectBroker(MQTTAsync client, int* connected)
     return rc;
 }
 
-void onConnect(int* connected, MQTTAsync_successData* response)
+void onConnect(void* connected, MQTTAsync_successData* response)
 {
     printf("Successful connection\n");
-    *connected = 1;
+    *((int*)connected) = 1;
 }
 
 void onConnectFailure(void* context, MQTTAsync_failureData* response)

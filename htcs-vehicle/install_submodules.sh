@@ -8,12 +8,9 @@ install_submodule () {
   rm -rf "$1/build"
   mkdir -p "$1/build"
 
-  cd "$1/build" || exit
-
-  cmake -DCMAKE_INSTALL_PREFIX:PATH="${HOME}/.local" -DPAHO_WITH_SSL=TRUE ..
-  make install
-
-  cd ../..
+  (cd "$1/build" && \
+  cmake -DCMAKE_INSTALL_PREFIX:PATH="${HOME}/.local" .. && \
+  make install)
 
   echo "#######################"
   echo "Successfully installed $1 under ${HOME}/.local"

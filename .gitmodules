@@ -1,3 +1,0 @@
-[submodule "mqtt-gcloud/paho.mqtt.c"]
-	path = mqtt-gcloud/paho.mqtt.c
-	url = https://github.com/eclipse/paho.mqtt.c

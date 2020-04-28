@@ -7,7 +7,7 @@ MQTTAsync createClient(char* address, char* client_id);
 
 int connectBroker(MQTTAsync client, int* connected);
 
-void onConnect(int* connected, MQTTAsync_successData* response);
+void onConnect(void* connected, MQTTAsync_successData* response);
 
 void onConnectFailure(void* context, MQTTAsync_failureData* response);
 

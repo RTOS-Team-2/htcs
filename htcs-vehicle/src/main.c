@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include <signal.h>
 #include "MQTTAsync.h"
 #include "mqtt.h"
 #include "options.h"
+#if !defined(_WIN32)
+#include <unistd.h>
+#else
+#include <windows.h>
+#endif
+
 
 #define TOPIC       "hello"
 #define PAYLOAD     "Hello World!"
@@ -19,7 +23,10 @@ void signalHandler(int signal) {
 
 int main(int argc, char* argv[])
 {
-    signal(SIGINT, signalHandler);
+	#if defined(_WIN32)
+	setvbuf(stdout, NULL, _IONBF, 0);
+	#endif
+	signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
 
     options opts;
@@ -27,6 +34,7 @@ int main(int argc, char* argv[])
     if (error)
     {
         usage();
+		getchar();
         return 0;
     }
 
@@ -45,17 +53,26 @@ int main(int argc, char* argv[])
     printf("Waiting for connection to %s\n", opts.address);
     while (!connected)
     {
-        usleep(10000L);
+        #if defined(_WIN32)
+            Sleep(100);
+        #else
+            usleep(10000L);
+        #endif
     }
 
     while (keepRunning)
     {
         error = sendMessage(client, TOPIC, PAYLOAD);
         if (error) break;
-        usleep(1000000L);
+        #if defined(_WIN32)
+            Sleep(1000);
+        #else
+            usleep(1000000L);
+        #endif
     }
 
     disconnect(client, NULL);
     MQTTAsync_destroy(&client);
+	getchar();
     return error;
 }
