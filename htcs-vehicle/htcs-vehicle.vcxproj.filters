@@ -35,7 +35,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="build.sh" />
-    <None Include="install_submodules.sh" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
