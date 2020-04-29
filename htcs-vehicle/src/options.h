@@ -7,6 +7,7 @@ typedef struct
     char* username;
     char* password;
     char* client_id;
+    char* topic;
 } options;
 
 void usage();

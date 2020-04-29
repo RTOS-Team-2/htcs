@@ -44,6 +44,12 @@ int getOptions(options* opts, int argc, char** argv)
             } else {
                 return 3;
             }
+        } else if (strcmp(argv[pos], "--topic") == 0) {
+            if (++pos < argc) {
+                opts->topic = argv[pos];
+            } else {
+                return 3;
+            }
         }
         pos++;
     }

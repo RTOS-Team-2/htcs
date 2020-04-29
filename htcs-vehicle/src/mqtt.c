@@ -64,7 +64,7 @@ void onConnectFailure(void* context, MQTTAsync_failureData* response)
 
 void connectionLost(void *context, char *cause)
 {
-    MQTTAsync client = (MQTTAsync)context;
+    MQTTAsync client = (MQTTAsync) context;
     MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
     int rc;
 
@@ -77,36 +77,35 @@ void connectionLost(void *context, char *cause)
     if ((rc = MQTTAsync_connect(client, &conn_opts)) != MQTTASYNC_SUCCESS)
     {
         printf("Failed to start connect, return code %d\n", rc);
+        disconnect(client);
     }
 }
 
-void disconnect(MQTTAsync client, MQTTAsync_failureData* response)
+void disconnect(MQTTAsync client)
 {
     MQTTAsync_disconnectOptions opts = MQTTAsync_disconnectOptions_initializer;
-    int rc;
-
-    if (response != NULL)
-    {
-        printf("Message send failed token %d error code %d\n", response->token, response->code);
-    }
     opts.onSuccess = onDisconnect;
     opts.onFailure = onDisconnectFailure;
     opts.context = client;
+    int rc;
     if ((rc = MQTTAsync_disconnect(client, &opts)) != MQTTASYNC_SUCCESS)
     {
         printf("Failed to start disconnect, return code %d\n", rc);
     }
-    MQTTAsync_destroy(&client);
 }
 
 void onDisconnect(void* context, MQTTAsync_successData* response)
 {
     printf("Successful disconnection\n");
+    MQTTAsync client = (MQTTAsync) context;
+    MQTTAsync_destroy(&client);
 }
 
 void onDisconnectFailure(void* context, MQTTAsync_failureData* response)
 {
     printf("Disconnect failed\n");
+    MQTTAsync client = (MQTTAsync) context;
+    MQTTAsync_destroy(&client);
 }
 
 int sendMessage(MQTTAsync client, char* topic, char* payload)

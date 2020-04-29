@@ -10,7 +10,7 @@ void onConnect(void* connected, MQTTAsync_successData* response);
 
 void onConnectFailure(void* context, MQTTAsync_failureData* response);
 
-void disconnect(void* context, MQTTAsync_failureData* response);
+void disconnect(MQTTAsync client);
 
 void onDisconnect(void* context, MQTTAsync_successData* response);
 

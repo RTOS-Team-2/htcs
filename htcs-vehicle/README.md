@@ -24,13 +24,14 @@ in order to safely navigate through the traffic.
 
 ## Usage
 
-Example Linux invocation:
+Example Linux invocation for [MaQiaTTo](https://maqiatto.com) connection:
 ```shell script
 htcs-vehicle \
 --address maqiatto.com \
 --username krisz.kern@gmail.com \
 --password ***** \
---client_id 1
+--client_id 1 \
+--topic krisz.kern@gmail.com/hello
 ```
 
 With Visual Studio on Windows you can set the
@@ -48,3 +49,5 @@ The program requires the following command line arguments to function properly:
 * client_id
     * arbitrary string
     * identifies the vehicle
+* topic
+    * the topic where the vehicle will publish its messages

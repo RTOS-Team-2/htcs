@@ -9,7 +9,6 @@
 #include <windows.h>
 #endif
 
-#define TOPIC       "krisz.kern@gmail.com/hello"
 #define PAYLOAD     "Hello World!"
 
 int keepRunning = 1;
@@ -45,7 +44,7 @@ int main(int argc, char* argv[])
 
     while (keepRunning)
     {
-        error = sendMessage(client, TOPIC, PAYLOAD);
+        error = sendMessage(client, opts.topic, PAYLOAD);
         if (error) break;
         #if defined(_WIN32)
         Sleep(1000);
@@ -54,7 +53,7 @@ int main(int argc, char* argv[])
         #endif
     }
 
-    disconnect(client, NULL);
+    disconnect(client);
     #if defined(_WIN32)
     getchar();
     #endif
