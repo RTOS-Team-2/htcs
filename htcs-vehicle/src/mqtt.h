@@ -2,9 +2,11 @@
 #define HTCS_VEHICLE_MQTT_H
 
 #include <MQTTAsync.h>
+#include "options.h"
 
-MQTTAsync createAndConnect(const char* address, const char* username, const char* password,
-                           const char* client_id, const int* keepRunning);
+MQTTAsync createAndConnect(const Options* opts, void(*messageCallback)(const char*), const int* keepRunning);
+
+void subscribe(MQTTAsync client, const Options* opts, const int* keepRunning);
 
 void onConnect(void* connected, MQTTAsync_successData* response);
 
@@ -23,5 +25,9 @@ int sendMessage(MQTTAsync client, char* topic, char* payload);
 void onSend(void* context, MQTTAsync_successData* response);
 
 int messageArrived(void* context, char* topicName, int topicLen, MQTTAsync_message* m);
+
+void onSubscribe(void* context, MQTTAsync_successData* response);
+
+void onSubscribeFailure(void* context, MQTTAsync_failureData* response);
 
 #endif //HTCS_VEHICLE_MQTT_H
