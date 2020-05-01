@@ -2,8 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
-void usage()
-{
+void usage() {
     printf("mqtt_gcloud\\\n");
     printf("\t--address <mqtt broker, e.g. maqiatto.com>\\\n");
     printf("\t--username <your username>\\\n");
@@ -12,8 +11,7 @@ void usage()
     fflush(stdout);
 }
 
-int getOptions(options* opts, int argc, char** argv)
-{
+int getOptions(options* opts, int argc, char** argv) {
     int pos = 1;
 
     if (argc < 2) {

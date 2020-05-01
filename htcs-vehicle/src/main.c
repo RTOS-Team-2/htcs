@@ -11,7 +11,7 @@
 #include "scheduler.h"
 
 #define PAYLOAD     "Hello World!"
-#define INTERVAL    1
+#define INTERVAL_MS    1000
 
 int keepRunning = 1;
 MQTTAsync client;
@@ -21,14 +21,12 @@ void signalHandler(int signal);
 
 void schedulerCallback();
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 	signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
 
     int error = getOptions(&opts, argc, argv);
-    if (error)
-    {
+    if (error) {
         usage();
         #if defined(_WIN32)
         getchar();
@@ -37,12 +35,11 @@ int main(int argc, char* argv[])
     }
 
     client = createAndConnect(opts.address, opts.username, opts.password, opts.client_id, &keepRunning);
-    if (client == NULL)
-    {
+    if (client == NULL) {
         return EXIT_FAILURE;
     }
 
-    startRunning(&keepRunning, INTERVAL, &schedulerCallback);
+    startRunning(&keepRunning, INTERVAL_MS, &schedulerCallback);
 
     disconnect(client);
     #if defined(_WIN32)
@@ -51,13 +48,11 @@ int main(int argc, char* argv[])
     return error;
 }
 
-void signalHandler(int signal)
-{
+void signalHandler(int signal) {
     keepRunning = 0;
 }
 
-void schedulerCallback()
-{
+void schedulerCallback() {
     int error = sendMessage(client, opts.topic, PAYLOAD);
     if (error)
     {

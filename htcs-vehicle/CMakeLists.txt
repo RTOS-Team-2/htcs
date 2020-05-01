@@ -18,4 +18,4 @@ link_directories(${SUBMODULE_LIBS})
 
 add_executable(htcs_vehicle ${SOURCES})
 
-target_link_libraries(htcs_vehicle paho-mqtt3as)
+target_link_libraries(htcs_vehicle paho-mqtt3as rt)

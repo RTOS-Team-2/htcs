@@ -1,8 +1,7 @@
 #ifndef HTCS_VEHICLE_OPTIONS_H
 #define HTCS_VEHICLE_OPTIONS_H
 
-typedef struct
-{
+typedef struct {
     char* address;
     char* username;
     char* password;
