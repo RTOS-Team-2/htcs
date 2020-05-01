@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.7)
 project(htcs_vehicle C)
 
 set(CMAKE_C_STANDARD 99)
-set(SOURCES src/main.c src/mqtt.c src/mqtt.h src/options.c src/options.h)
+set(SOURCES src/main.c src/mqtt.c src/mqtt.h src/options.c src/options.h src/scheduler.c src/scheduler.h)
 IF (WIN32)
     string(REPLACE "\\" "/" HOME $ENV{USERPROFILE})
     set(SUBMODULE_LIBS "${HOME}/eclipse-paho-mqtt-c-win32-1.3.1/lib")

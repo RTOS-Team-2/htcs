@@ -1,5 +1,5 @@
-#ifndef MQTT_GCLOUD_OPTIONS_H
-#define MQTT_GCLOUD_OPTIONS_H
+#ifndef HTCS_VEHICLE_OPTIONS_H
+#define HTCS_VEHICLE_OPTIONS_H
 
 typedef struct
 {
@@ -14,4 +14,4 @@ void usage();
 
 int getOptions(options* opts, int argc, char** argv);
 
-#endif //MQTT_GCLOUD_OPTIONS_H
+#endif //HTCS_VEHICLE_OPTIONS_H

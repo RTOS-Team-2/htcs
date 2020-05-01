@@ -110,10 +110,12 @@
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\mqtt.c" />
     <ClCompile Include="src\options.c" />
+    <ClCompile Include="src\scheduler.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\mqtt.h" />
     <ClInclude Include="src\options.h" />
+    <ClInclude Include="src\scheduler.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="build.sh" />

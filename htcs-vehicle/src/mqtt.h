@@ -1,5 +1,5 @@
-#ifndef MQTT_GCLOUD_MQTT_H
-#define MQTT_GCLOUD_MQTT_H
+#ifndef HTCS_VEHICLE_MQTT_H
+#define HTCS_VEHICLE_MQTT_H
 
 #include <MQTTAsync.h>
 
@@ -24,4 +24,4 @@ void onSend(void* context, MQTTAsync_successData* response);
 
 int messageArrived(void* context, char* topicName, int topicLen, MQTTAsync_message* m);
 
-#endif //MQTT_GCLOUD_MQTT_H
+#endif //HTCS_VEHICLE_MQTT_H

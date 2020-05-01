@@ -9,6 +9,7 @@ void usage()
     printf("\t--username <your username>\\\n");
     printf("\t--password <your password>\\\n");
     printf("\t--client_id <your client id>\\\n");
+    fflush(stdout);
 }
 
 int getOptions(options* opts, int argc, char** argv)

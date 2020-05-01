@@ -24,12 +24,18 @@
     <ClCompile Include="src\options.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\scheduler.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\mqtt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\options.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scheduler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
