@@ -3,7 +3,7 @@
 // Windows Implementation
 #include <windows.h>
 
-void startRunning(const int* keepRunning, int intervalMs, void(*callback)())
+void startRunning(int* keepRunning, int intervalMs, void(*callback)())
 {
     while (*keepRunning) {
         callback();
@@ -21,23 +21,18 @@ void startRunning(const int* keepRunning, int intervalMs, void(*callback)())
 
 timer_t timerID;
 
-typedef struct {
-    int* keepRunning;
-    void (*callback)();
-} sigval;
-
 void handlerTimer(int signal, siginfo_t *si, void* uc)
 {
-    sigval* sv = si->si_value.sival_ptr;
-    if (sv->keepRunning) {
-        sv->callback();
+    scheduler_sigdata* sigdata = si->si_value.sival_ptr;
+    if (sigdata->keepRunning) {
+        sigdata->callback();
     } else {
         timer_delete(timerID);
         raise(SIGUSR1);
     }
 }
 
-void startRunning(int* keepRunning, int intervalMs, void(*callback)())
+void startRunning(_Bool* keepRunning, int intervalMs, void(*callback)())
 {
     struct sched_param schedpar;
     schedpar.sched_priority = 12;
@@ -47,18 +42,18 @@ void startRunning(int* keepRunning, int intervalMs, void(*callback)())
         perror("Failed to set scheduler");
     }
 
-    sigval sv;
-    sv.keepRunning = keepRunning;
-    sv.callback = callback;
+    scheduler_sigdata sigdata;
+    sigdata.keepRunning = keepRunning;
+    sigdata.callback = callback;
 
     struct sigevent sigev;
     sigev.sigev_notify = SIGEV_SIGNAL;
     sigev.sigev_signo = SIGRTMIN + 6;
-    sigev.sigev_value.sival_ptr = &sv;
+    sigev.sigev_value.sival_ptr = &sigdata;
 
     if (timer_create(CLOCK_REALTIME, &sigev, &timerID)) {
         perror("Failed to create timer");
-        *keepRunning = 0;
+        raise(SIGTERM);
     }
 
     //Register signal handler
