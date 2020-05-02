@@ -31,7 +31,7 @@ htcs-vehicle \
 --username krisz.kern@gmail.com \
 --password ***** \
 --client_id 1 \
---topic krisz.kern@gmail.com/hello
+--topic krisz.kern@gmail.com/vehicles
 ```
 
 With Visual Studio on Windows you can set the
@@ -50,4 +50,7 @@ The program requires the following command line arguments to function properly:
     * arbitrary string
     * identifies the vehicle
 * topic
-    * the topic where the vehicle will publish its messages
+    * the topic base of vehicles
+    * the vehicle will automatically subscribe to the topic:
+    `<topic base>/<client_id>/command`
+    it will receive commands from the controller on this topic
