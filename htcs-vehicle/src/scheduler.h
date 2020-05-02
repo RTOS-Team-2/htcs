@@ -2,10 +2,10 @@
 #define HTCS_VEHICLE_SCHEDULER_H
 
 typedef struct scheduler_sigdata {
-    int* keepRunning;
+    _Bool* keepRunning;
     void (*callback)();
 } scheduler_sigdata;
 
-void startRunning(int* keepRunning, int intervalMs, void(*callback)());
+void startRunning(_Bool* keepRunning, int intervalMs, void(*callback)());
 
 #endif //HTCS_VEHICLE_SCHEDULER_H

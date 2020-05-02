@@ -3,12 +3,12 @@
 #include <stdio.h>
 
 void usage() {
-    printf("mqtt_gcloud\\\n");
+    printf("htcs_vehicle\\\n");
     printf("\t--address <mqtt broker, e.g. maqiatto.com>\\\n");
-    printf("\t--username <your username>\\\n");
-    printf("\t--password <your password>\\\n");
-    printf("\t--client_id <your client id>\\\n");
-    printf("\t--topic <topic base>\\\n");
+    printf("\t--username <mqtt username>\\\n");
+    printf("\t--password <mqtt password>\\\n");
+    printf("\t--client_id <arbitrary client id>\\\n");
+    printf("\t--topic <topic base, e.g. krisz.kern@gmail.com/vehicles>\\\n");
     fflush(stdout);
 }
 

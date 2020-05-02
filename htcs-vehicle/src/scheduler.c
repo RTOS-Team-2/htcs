@@ -32,7 +32,7 @@ void handlerTimer(int signal, siginfo_t *si, void* uc)
     }
 }
 
-void startRunning(int* keepRunning, int intervalMs, void(*callback)())
+void startRunning(_Bool* keepRunning, int intervalMs, void(*callback)())
 {
     struct sched_param schedpar;
     schedpar.sched_priority = 12;
@@ -53,7 +53,7 @@ void startRunning(int* keepRunning, int intervalMs, void(*callback)())
 
     if (timer_create(CLOCK_REALTIME, &sigev, &timerID)) {
         perror("Failed to create timer");
-        *keepRunning = 0;
+        raise(SIGTERM);
     }
 
     //Register signal handler

@@ -5,8 +5,25 @@
 #include <windows.h>
 #endif
 #include <string.h>
+#include <signal.h>
 
-MQTTAsync createAndConnect(const Options* opts, void(*messageCallback)(const char*), const int* keepRunning) {
+void onConnect(void* connected, MQTTAsync_successData* response);
+
+void onConnectFailure(void* context, MQTTAsync_failureData* response);
+
+void onDisconnect(void* context, MQTTAsync_successData* response);
+
+void onDisconnectFailure(void* context, MQTTAsync_failureData* response);
+
+void connectionLost(void* context, char *cause);
+
+void onSend(void* context, MQTTAsync_successData* response);
+
+void onSubscribe(void* subscribed, MQTTAsync_successData* response);
+
+void onSubscribeFailure(void* context, MQTTAsync_failureData* response);
+
+MQTTAsync createAndConnect(const Options* opts, int(*messageArrived)(void*, char*, int, MQTTAsync_message*), const _Bool* keepRunning) {
     MQTTAsync client;
     int rc;
     if ((rc = MQTTAsync_create(&client, opts->address, opts->client_id,
@@ -16,7 +33,7 @@ MQTTAsync createAndConnect(const Options* opts, void(*messageCallback)(const cha
         return NULL;
     }
 
-    if ((rc = MQTTAsync_setCallbacks(client, messageCallback, connectionLost, messageArrived, NULL)) != MQTTASYNC_SUCCESS) {
+    if ((rc = MQTTAsync_setCallbacks(client, client, connectionLost, messageArrived, NULL)) != MQTTASYNC_SUCCESS) {
         printf("Failed to set callback, return code %d\n", rc);
         fflush(stdout);
         return NULL;
@@ -29,7 +46,7 @@ MQTTAsync createAndConnect(const Options* opts, void(*messageCallback)(const cha
     conn_opts.password = opts->password;
     conn_opts.onSuccess = onConnect;
     conn_opts.onFailure = onConnectFailure;
-    int connected = 0;
+    _Bool connected = 0;
     conn_opts.context = &connected;
     if ((rc = MQTTAsync_connect(client, &conn_opts)) != MQTTASYNC_SUCCESS) {
         printf("Failed to start connect, return code %d\n", rc);
@@ -49,7 +66,7 @@ MQTTAsync createAndConnect(const Options* opts, void(*messageCallback)(const cha
     return client;
 }
 
-void subscribe(MQTTAsync client, const Options* opts, const int* keepRunning) {
+void subscribe(MQTTAsync client, const Options* opts, const _Bool* keepRunning) {
     // <topic_base>/<client_id>/command, e.g. krisz.kern@gmail.com/vehicles/1/command
     int subscribeTopicLen = (int)strlen(opts->topic) + 1 + (int)strlen(opts->client_id) + 1 + 7;
     char subscribeTopic[subscribeTopicLen];
@@ -64,7 +81,7 @@ void subscribe(MQTTAsync client, const Options* opts, const int* keepRunning) {
     MQTTAsync_responseOptions responseOptions = MQTTAsync_responseOptions_initializer;
     responseOptions.onSuccess = onSubscribe;
     responseOptions.onFailure = onSubscribeFailure;
-    int subscribed = 0;
+    _Bool subscribed = 0;
     responseOptions.context = &subscribed;
     int rc;
     if ((rc = MQTTAsync_subscribe(client, subscribeTopic, 1, &responseOptions)) != MQTTASYNC_SUCCESS)
@@ -79,49 +96,6 @@ void subscribe(MQTTAsync client, const Options* opts, const int* keepRunning) {
         usleep(100000L);
         #endif
     }
-}
-
-void onConnect(void* connected, MQTTAsync_successData* response) {
-    printf("Successful connection\n");
-    fflush(stdout);
-    *((int*)connected) = 1;
-}
-
-void onConnectFailure(void* context, MQTTAsync_failureData* response) {
-    printf("Connect failed, rc: %d, message: %s\n",
-            response ? response->code : 0, response ? response->message : "unknown");
-    fflush(stdout);
-}
-
-void disconnect(MQTTAsync client) {
-    MQTTAsync_disconnectOptions opts = MQTTAsync_disconnectOptions_initializer;
-    opts.onSuccess = onDisconnect;
-    opts.onFailure = onDisconnectFailure;
-    opts.context = client;
-    int rc;
-    if ((rc = MQTTAsync_disconnect(client, &opts)) != MQTTASYNC_SUCCESS) {
-        printf("Failed to start disconnect, return code %d\n", rc);
-        fflush(stdout);
-    }
-}
-
-void onDisconnect(void* context, MQTTAsync_successData* response) {
-    printf("Successful disconnection\n");
-    fflush(stdout);
-    MQTTAsync client = (MQTTAsync) context;
-    MQTTAsync_destroy(&client);
-}
-
-void onDisconnectFailure(void* context, MQTTAsync_failureData* response) {
-    printf("Disconnect failed\n");
-    fflush(stdout);
-    MQTTAsync client = (MQTTAsync) context;
-    MQTTAsync_destroy(&client);
-}
-
-void connectionLost(void *context, char *cause) {
-    printf("\nConnection lost, cause: %s\n", cause);
-    fflush(stdout);
 }
 
 int sendMessage(MQTTAsync client, char* topic, char* payload) {
@@ -142,28 +116,64 @@ int sendMessage(MQTTAsync client, char* topic, char* payload) {
     return rc;
 }
 
+void disconnect(MQTTAsync client) {
+    MQTTAsync_disconnectOptions opts = MQTTAsync_disconnectOptions_initializer;
+    opts.onSuccess = onDisconnect;
+    opts.onFailure = onDisconnectFailure;
+    opts.context = client;
+    int rc;
+    if ((rc = MQTTAsync_disconnect(client, &opts)) != MQTTASYNC_SUCCESS) {
+        printf("Failed to start disconnect, return code %d\n", rc);
+        fflush(stdout);
+    }
+}
+
+void onConnect(void* connected, MQTTAsync_successData* response) {
+    printf("Successful connection\n");
+    fflush(stdout);
+    *((_Bool*)connected) = 1;
+}
+
+void onConnectFailure(void* context, MQTTAsync_failureData* response) {
+    printf("Connect failed, rc: %d, message: %s\n",
+            response ? response->code : 0, response ? response->message : "unknown");
+    fflush(stdout);
+    raise(SIGTERM);
+}
+
+void onDisconnect(void* context, MQTTAsync_successData* response) {
+    printf("Successful disconnection\n");
+    fflush(stdout);
+    MQTTAsync client = (MQTTAsync) context;
+    MQTTAsync_destroy(&client);
+}
+
+void onDisconnectFailure(void* context, MQTTAsync_failureData* response) {
+    printf("Disconnect failed\n");
+    fflush(stdout);
+    MQTTAsync client = (MQTTAsync) context;
+    MQTTAsync_destroy(&client);
+}
+
+void connectionLost(void *context, char *cause) {
+    printf("\nConnection lost, cause: %s\n", cause);
+    fflush(stdout);
+    raise(SIGTERM);
+}
+
 void onSend(void* context, MQTTAsync_successData* response) {
     printf("Message with token value %d delivery confirmed\n", response->token);
     fflush(stdout);
 }
 
-int messageArrived(void* context, char* topicName, int topicLen, MQTTAsync_message* message) {
-    void(*messageCallback)(const char*) = (void(*)(const char*)) context;
-    messageCallback((char*)message->payload);
-    MQTTAsync_freeMessage(&message);
-    MQTTAsync_free(topicName);
-    return 1;
-}
-
-void onSubscribe(void* subscribed, MQTTAsync_successData* response)
-{
+void onSubscribe(void* subscribed, MQTTAsync_successData* response) {
     printf("Subscribe succeeded\n");
     fflush(stdout);
-    *((int*)subscribed) = 1;
+    *((_Bool*)subscribed) = 1;
 }
 
-void onSubscribeFailure(void* context, MQTTAsync_failureData* response)
-{
+void onSubscribeFailure(void* context, MQTTAsync_failureData* response) {
     printf("Subscribe failed, rc %d\n", response->code);
     fflush(stdout);
+    raise(SIGTERM);
 }

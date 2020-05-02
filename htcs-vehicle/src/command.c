@@ -1,14 +1,36 @@
 #include "command.h"
-#include <string.h>
+#include <stdio.h>
 
-Command parseCommand(const char* commandStr) {
-    for (int i = 0; i < sizeof(CommandMapping) / sizeof(CommandMapping[0]); i++) {
-        const char* str = CommandMapping[i].str;
-        if (strncmp(str, commandStr, strlen(str)) == 0) {
-            return CommandMapping[i].val;
-        }
+void keepPace();
+
+void accelerate();
+
+void brake();
+
+void changeLane();
+
+void processCommand(const Command cmd) {
+    switch (cmd) {
+        case KEEP_PACE:
+            printf("Keep pace command received\n");
+            keepPace();
+            break;
+        case ACCELERATE:
+            printf("Accelerate command received\n");
+            accelerate();
+            break;
+        case BRAKE:
+            printf("Brake command received\n");
+            brake();
+            break;
+        case CHANGE_LANE:
+            printf("Change lane command received\n");
+            changeLane();
+            break;
+        default:
+            printf("Unknown command received\n");
     }
-    return UNKNOWN;
+    fflush(stdout);
 }
 
 void keepPace() {
