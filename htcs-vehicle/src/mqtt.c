@@ -68,8 +68,7 @@ MQTTAsync createAndConnect(const Options* opts, int(*messageArrived)(void*, char
 
 void subscribe(MQTTAsync client, const Options* opts, const _Bool* keepRunning) {
     // <topic_base>/<client_id>/command, e.g. krisz.kern@gmail.com/vehicles/1/command
-    int subscribeTopicLen = (int)strlen(opts->topic) + 1 + (int)strlen(opts->client_id) + 1 + 7;
-    char subscribeTopic[subscribeTopicLen];
+    char subscribeTopic[1024];
     strcpy(subscribeTopic, opts->topic);
     strcat(subscribeTopic, "/");
     strcat(subscribeTopic, opts->client_id);

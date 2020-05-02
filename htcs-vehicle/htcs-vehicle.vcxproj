@@ -107,22 +107,20 @@
     <ClCompile />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\command.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\mqtt.c" />
     <ClCompile Include="src\options.c" />
     <ClCompile Include="src\scheduler.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\command.h" />
     <ClInclude Include="src\mqtt.h" />
     <ClInclude Include="src\options.h" />
     <ClInclude Include="src\scheduler.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="build.sh" />
     <None Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
