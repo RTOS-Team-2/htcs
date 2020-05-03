@@ -5,8 +5,13 @@ typedef struct Options {
     char* address;
     char* username;
     char* password;
-    char* client_id;
+    char* clientId;
     char* topic;
+    double preferredSpeed;
+    double maxSpeed;
+    double acceleration;
+    double brakingPower;
+    double size;
 } Options;
 
 void usage();

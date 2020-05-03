@@ -24,8 +24,13 @@ ${BINARY_PATH}/htcs_vehicle \
 --address maqiatto.com \
 --username krisz.kern@gmail.com \
 --password "${MAQIATTO_PASSWORD}" \
---client_id "${CLIENT_ID}" \
+--clientId "${CLIENT_ID}" \
 --topic krisz.kern@gmail.com/vehicles \
+--preferredSpeed 120.0 \
+--maxSpeed 210.0 \
+--acceleration 7.3 \
+--brakingPower 4.5 \
+--size 3.4 \
 &> "${LOG_FILE}" &
 
 echo $!

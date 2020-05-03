@@ -30,8 +30,13 @@ htcs-vehicle \
 --address maqiatto.com \
 --username krisz.kern@gmail.com \
 --password ***** \
---client_id 1 \
---topic krisz.kern@gmail.com/vehicles
+--clientId 1 \
+--topic krisz.kern@gmail.com/vehicles \
+--preferredSpeed 120.0 \
+--maxSpeed 210.0 \
+--acceleration 7.3 \
+--brakingPower 4.5 \
+--size 3.4
 ```
 
 With Visual Studio on Windows you can set the
@@ -46,11 +51,56 @@ The program requires the following command line arguments to function properly:
     * the username for the MQTT broker
 * password
     * the password for the MQTT broker
-* client_id
+* clientId
     * arbitrary string
     * identifies the vehicle
 * topic
     * the topic base of vehicles
-    * the vehicle will automatically subscribe to the topic:
-    `<topic base>/<client_id>/command`
-    it will receive commands from the controller on this topic
+* preferredSpeed
+    * positive double
+    * the preferred travel speed
+    * unit: kilometres per hour
+* maxSpeed
+    * positive double
+    * the maximum speed of the vehicle
+    * unit: kilometres per hour
+* acceleration
+    * positive double
+    * the constant acceleration of the vehicle
+    * unit: the time it takes in seconds for the vehicle to reach 100 km/h from 0 km/h
+* brakingPower
+    * positive double
+    * the constant braking power of the vehicle,
+    * unit: the time it takes in seconds for the vehicle to reach 0 km/h from 100 km/h
+* size
+    * positive double
+    * the length of the vehicle
+    * unit: meter
+
+At the start of the program, the vehicle will automatically subscribe to the topic:
+`<topic base>/<client id>/command`  
+It will receive commands from the controller on this topic.
+
+After the subscription, the vehicle joins the highway traffic,
+i.e. the vehicle publishes once to the topic:
+`<topic base>/<client id>/join`  
+It will send its constant parameters with this message:
+* preferred speed
+* maximum speed
+* acceleration
+* braking power
+* size
+
+After joining, the vehicle starts to move forward with the following default values:
+* speed: 50 km/h
+* distance taken: 0 meter
+* in the merge lane
+* maintaining speed
+
+The vehicle periodically - each second - publishes its state information to the topic:
+`<topic base>/<client id>/state`  
+The following variables are sent with this message:
+* lane
+* distanceTaken
+* speed
+* accelerationState

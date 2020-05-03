@@ -10,15 +10,18 @@
 #include "options.h"
 #include "scheduler.h"
 #include "command.h"
+#include "state.h"
 
-#define PAYLOAD     "Hello World!"
 #define INTERVAL_MS    1000
 
 static struct {
     MQTTAsync client;
     Options opts;
     _Bool keepRunning;
-} G_HTCSV_Context;
+    State state;
+    char topic[1024];
+    char payload[1024];
+} G_CTX;
 
 void signalHandler(int signal);
 
@@ -30,7 +33,7 @@ int main(int argc, char* argv[]) {
 	signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
 
-    int error = getOptions(&G_HTCSV_Context.opts, argc, argv);
+    int error = getOptions(&G_CTX.opts, argc, argv);
     if (error) {
         usage();
         #if defined(_WIN32)
@@ -39,17 +42,29 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    G_HTCSV_Context.keepRunning = 1;
+    initializeState(&G_CTX.state, &G_CTX.opts);
 
-    G_HTCSV_Context.client = createAndConnect(&G_HTCSV_Context.opts, messageArrived, &G_HTCSV_Context.keepRunning);
-    if (G_HTCSV_Context.client == NULL) {
+    G_CTX.keepRunning = 1;
+
+    G_CTX.client = createAndConnect(&G_CTX.opts, messageArrived, &G_CTX.keepRunning);
+    if (G_CTX.client == NULL) {
         return EXIT_FAILURE;
     }
-    subscribe(G_HTCSV_Context.client, &G_HTCSV_Context.opts, &G_HTCSV_Context.keepRunning);
+    subscribe(G_CTX.client, &G_CTX.opts, &G_CTX.keepRunning);
 
-    startRunning(&G_HTCSV_Context.keepRunning, INTERVAL_MS, &schedulerCallback);
+    sprintf(G_CTX.topic, "%s/%s/join", G_CTX.opts.topic, G_CTX.opts.clientId);
 
-    disconnect(G_HTCSV_Context.client);
+    int len = attributesToString(&G_CTX.state.attributes, G_CTX.payload);
+    error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len);
+    if (error) {
+        return error;
+    }
+
+    sprintf(G_CTX.topic, "%s/%s/state", G_CTX.opts.topic, G_CTX.opts.clientId);
+
+    startRunning(&G_CTX.keepRunning, INTERVAL_MS, &schedulerCallback);
+
+    disconnect(G_CTX.client);
     #if defined(_WIN32)
     getchar();
     #endif
@@ -57,13 +72,14 @@ int main(int argc, char* argv[]) {
 }
 
 void signalHandler(int signal) {
-    G_HTCSV_Context.keepRunning = 0;
+    G_CTX.keepRunning = 0;
 }
 
 void schedulerCallback() {
-    int error = sendMessage(G_HTCSV_Context.client, G_HTCSV_Context.opts.topic, PAYLOAD);
-    if (error)
-    {
+    adjustState(&G_CTX.state, INTERVAL_MS);
+    int len = stateToString(&G_CTX.state, G_CTX.payload);
+    int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len);
+    if (error) {
         raise(SIGTERM);
     }
 }
@@ -74,7 +90,7 @@ int messageArrived(void* context, char* topicName, int topicLen, MQTTAsync_messa
 
     Command cmd = ((char*)message->payload)[0] - '0';
 
-    processCommand(cmd);
+    processCommand(cmd, &G_CTX.state);
 
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);

@@ -1,6 +1,7 @@
 #include "options.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void usage() {
     printf("htcs_vehicle\\\n");
@@ -37,9 +38,9 @@ int getOptions(Options* opts, int argc, char** argv) {
             } else {
                 return 4;
             }
-        } else if (strcmp(argv[pos], "--client_id") == 0) {
+        } else if (strcmp(argv[pos], "--clientId") == 0) {
             if (++pos < argc) {
-                opts->client_id = argv[pos];
+                opts->clientId = argv[pos];
             } else {
                 return 5;
             }
@@ -48,6 +49,36 @@ int getOptions(Options* opts, int argc, char** argv) {
                 opts->topic = argv[pos];
             } else {
                 return 6;
+            }
+        } else if (strcmp(argv[pos], "--preferredSpeed") == 0) {
+            if (++pos < argc) {
+                opts->preferredSpeed = strtod(argv[pos], NULL);
+            } else {
+                return 7;
+            }
+        } else if (strcmp(argv[pos], "--maxSpeed") == 0) {
+            if (++pos < argc) {
+                opts->maxSpeed = strtod(argv[pos], NULL);
+            } else {
+                return 8;
+            }
+        } else if (strcmp(argv[pos], "--acceleration") == 0) {
+            if (++pos < argc) {
+                opts->acceleration = strtod(argv[pos], NULL);
+            } else {
+                return 9;
+            }
+        } else if (strcmp(argv[pos], "--brakingPower") == 0) {
+            if (++pos < argc) {
+                opts->brakingPower = strtod(argv[pos], NULL);
+            } else {
+                return 10;
+            }
+        } else if (strcmp(argv[pos], "--size") == 0) {
+            if (++pos < argc) {
+                opts->size = strtod(argv[pos], NULL);
+            } else {
+                return 11;
             }
         }
         pos++;

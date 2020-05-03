@@ -23,10 +23,11 @@ void onSubscribe(void* subscribed, MQTTAsync_successData* response);
 
 void onSubscribeFailure(void* context, MQTTAsync_failureData* response);
 
-MQTTAsync createAndConnect(const Options* opts, int(*messageArrived)(void*, char*, int, MQTTAsync_message*), const _Bool* keepRunning) {
+MQTTAsync createAndConnect(const Options* opts, int(*messageArrived)(void*, char*, int, MQTTAsync_message*),
+        const _Bool* keepRunning) {
     MQTTAsync client;
     int rc;
-    if ((rc = MQTTAsync_create(&client, opts->address, opts->client_id,
+    if ((rc = MQTTAsync_create(&client, opts->address, opts->clientId,
             MQTTCLIENT_PERSISTENCE_NONE, NULL)) != MQTTASYNC_SUCCESS) {
         printf("Failed to create client object, return code %d\n", rc);
         fflush(stdout);
@@ -67,12 +68,8 @@ MQTTAsync createAndConnect(const Options* opts, int(*messageArrived)(void*, char
 }
 
 void subscribe(MQTTAsync client, const Options* opts, const _Bool* keepRunning) {
-    // <topic_base>/<client_id>/command, e.g. krisz.kern@gmail.com/vehicles/1/command
     char subscribeTopic[1024];
-    strcpy(subscribeTopic, opts->topic);
-    strcat(subscribeTopic, "/");
-    strcat(subscribeTopic, opts->client_id);
-    strcat(subscribeTopic, "/command");
+    sprintf(subscribeTopic, "%s/%s/command", opts->topic, opts->clientId);
 
     printf("Subscribing to topic %s\n", subscribeTopic);
     fflush(stdout);
@@ -97,7 +94,7 @@ void subscribe(MQTTAsync client, const Options* opts, const _Bool* keepRunning) 
     }
 }
 
-int sendMessage(MQTTAsync client, char* topic, char* payload) {
+int sendMessage(MQTTAsync client, char* topic, char* payload, int len) {
     MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
     opts.onSuccess = onSend;
     opts.context = client;
