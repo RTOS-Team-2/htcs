@@ -42,6 +42,8 @@ htcs-vehicle \
 With Visual Studio on Windows you can set the
 command line arguments in the Debugger section of the Project properties.
 
+You may have to set the target platform and windows sdk in the project properties, or clicking "retarget-project" in the right-click menu of the project in solution explorer.
+
 The program requires the following command line arguments to function properly:
 
 * address
