@@ -112,12 +112,14 @@
     <ClCompile Include="src\mqtt.c" />
     <ClCompile Include="src\options.c" />
     <ClCompile Include="src\scheduler.c" />
+    <ClCompile Include="src\state.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\command.h" />
     <ClInclude Include="src\mqtt.h" />
     <ClInclude Include="src\options.h" />
     <ClInclude Include="src\scheduler.h" />
+    <ClInclude Include="src\state.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
