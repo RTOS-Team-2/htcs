@@ -2,7 +2,17 @@ cmake_minimum_required(VERSION 3.7)
 project(htcs_vehicle C)
 
 set(CMAKE_C_STANDARD 99)
-set(SOURCES src/main.c src/mqtt.c src/mqtt.h src/options.c src/options.h)
+set(SOURCES
+        src/main.c
+        src/mqtt.c
+        src/mqtt.h
+        src/options.c
+        src/options.h
+        src/scheduler.c
+        src/scheduler.h
+        src/command.c
+        src/command.h
+        src/state.c src/state.h)
 IF (WIN32)
     string(REPLACE "\\" "/" HOME $ENV{USERPROFILE})
     set(SUBMODULE_LIBS "${HOME}/eclipse-paho-mqtt-c-win32-1.3.1/lib")
@@ -18,4 +28,4 @@ link_directories(${SUBMODULE_LIBS})
 
 add_executable(htcs_vehicle ${SOURCES})
 
-target_link_libraries(htcs_vehicle paho-mqtt3as)
+target_link_libraries(htcs_vehicle paho-mqtt3as rt)
