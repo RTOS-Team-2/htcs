@@ -69,12 +69,13 @@ void startRunning(_Bool* keepRunning, int intervalMs, void(*callback)())
     timer.it_value.tv_sec = timer.it_interval.tv_sec;
     timer.it_value.tv_nsec = timer.it_interval.tv_nsec;
 
-    timer_settime(timerID, 0, &timer, NULL);
-
     sigset_t mask, oldmask;
     sigemptyset(&mask);
     sigaddset(&mask, SIGUSR1);
     sigprocmask(SIG_BLOCK, &mask, &oldmask);
+
+    timer_settime(timerID, 0, &timer, NULL);
+
     while (*keepRunning) {
         sigsuspend(&mask);
     }

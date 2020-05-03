@@ -17,10 +17,14 @@ void initializeState(State* state, const Options* opts) {
 void adjustState(State* state, unsigned elapsedMs) {
     state->distanceTaken = state->distanceTaken + state->speed * (elapsedMs / 1000.0);
 
-    if (state->accelerationState == ACCELERATING && state->speed < state->attributes.maxSpeed) {
+    if (state->accelerationState == ACCELERATING) {
         state->speed = state->speed + state->attributes.acceleration * (elapsedMs / 1000.0);
-        if (state->speed > state->attributes.maxSpeed) {
+        if (state->lane == EXPRESS_LANE && state->speed > state->attributes.maxSpeed) {
             state->speed = state->attributes.maxSpeed;
+            state->accelerationState = MAINTAINING_SPEED;
+        } else if (state->speed > state->attributes.preferredSpeed) {
+            state->speed = state->attributes.preferredSpeed;
+            state->accelerationState = MAINTAINING_SPEED;
         }
     } else if (state->accelerationState == BRAKING && state->speed > 0.0) {
         state->speed = state->speed - state->attributes.brakingPower * (elapsedMs / 1000.0);
