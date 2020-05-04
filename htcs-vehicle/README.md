@@ -19,8 +19,10 @@ in order to safely navigate through the traffic.
 1. [Download Eclipse Paho MQTT C](https://www.eclipse.org/downloads/download.php?file=/paho/1.4/eclipse-paho-mqtt-c-win32-1.3.1.zip)
 2. Unzip under %USERPROFILE%\eclipse-paho-mqtt-c-win32-1.3.1\
 3. Add %USERPROFILE%\eclipse-paho-mqtt-c-win32-1.3.1\lib to PATH
-4. Open the Project with Visual Studio
-5. Run with Debug x86
+4.a. (Optional) Add a new local environment variable called VS_WINSDK_VERSION with the value of your installed Windows SDK version (e.g.: 10.0.17763.0)
+4.b. (Optional) Or just open and retarget the solution in Visual Studio to your own installed SDK version
+5. Open the Project with Visual Studio
+6. Run with Debug x86
 
 ## Usage
 
