@@ -22,7 +22,7 @@ void adjustState(State* state, unsigned elapsedMs) {
         if (state->lane == EXPRESS_LANE && state->speed > state->attributes.maxSpeed) {
             state->speed = state->attributes.maxSpeed;
             state->accelerationState = MAINTAINING_SPEED;
-        } else if (state->lane != EXPRESS_LANE && state->speed > state->attributes.preferredSpeed) {
+        } else if (state->speed > state->attributes.preferredSpeed) {
             state->speed = state->attributes.preferredSpeed;
             state->accelerationState = MAINTAINING_SPEED;
         }
@@ -56,12 +56,12 @@ void adjustState(State* state, unsigned elapsedMs) {
 }
 
 int attributesToString(Attributes* attributes, char* attributesStr) {
-    return sprintf(attributesStr, "preferredSpeed:%f;maxSpeed:%f;acceleration:%f;brakingPower:%f;size:%f",
+    return sprintf(attributesStr, "'preferredSpeed':%f,'maxSpeed':%f,'acceleration':%f,'brakingPower':%f,'size':%f",
             attributes->preferredSpeed, attributes->maxSpeed,
             attributes->acceleration, attributes->brakingPower, attributes->size);
 }
 
 int stateToString(State* state, char* stateStr) {
-    return sprintf(stateStr, "lane:%d;distanceTaken:%f;speed:%f;accelerationState:%d",
+    return sprintf(stateStr, "'lane':%d,'distanceTaken':%f,'speed':%f,'accelerationState':%d",
             state->lane, state->distanceTaken, state->speed, state->accelerationState);
 }
