@@ -22,7 +22,7 @@ void adjustState(State* state, unsigned elapsedMs) {
         if (state->lane == EXPRESS_LANE && state->speed > state->attributes.maxSpeed) {
             state->speed = state->attributes.maxSpeed;
             state->accelerationState = MAINTAINING_SPEED;
-        } else if (state->speed > state->attributes.preferredSpeed) {
+        } else if (state->lane != EXPRESS_LANE && state->speed > state->attributes.preferredSpeed) {
             state->speed = state->attributes.preferredSpeed;
             state->accelerationState = MAINTAINING_SPEED;
         }
