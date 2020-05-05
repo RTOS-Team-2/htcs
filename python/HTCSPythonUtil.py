@@ -9,7 +9,7 @@ local_cars = {}
 mqtt_connector = mqtt.Client()
 
 
-def getConnectionConfig():
+def get_connection_config():
     config_dict = dict("".join(l.split()).split("=") for l
                        in open(os.path.dirname(os.path.abspath(__file__)) + "/connection.properties")
                        if not l.strip().startswith("#") )
@@ -19,79 +19,79 @@ def getConnectionConfig():
     return config_dict
 
 
-def onMessage(mqttc, obj, msg):
-    topicParts = msg.topic.split('/')
-    if topicParts[1] == "vehicles":
-        carId = topicParts[-2]
-        msgType = topicParts[-1]
-        if msgType == "join":
-            if carId in local_cars.keys():
+def on_message(mqttc, obj, msg):
+    topic_parts = msg.topic.split('/')
+    if topic_parts[1] == "vehicles":
+        car_id = topic_parts[-2]
+        msg_type = topic_parts[-1]
+        if msg_type == "join":
+            if car_id in local_cars.keys():
                 raise KeyError("Car with already existing id sent a join message")
             specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            local_cars[carId] = Car(0, 0, 0, 0, CarSpecs(**specs))
-        elif msgType == "state":
-            if carId not in local_cars.keys():
+            local_cars[car_id] = Car(0, 0, 0, 0, CarSpecs(**specs))
+        elif msg_type == "state":
+            if car_id not in local_cars.keys():
                 raise KeyError("Car with unrecognized id sent a state message")
             state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            local_cars[carId].updateState(**state)
+            local_cars[car_id].update_state(**state)
 
         else:
             raise NotImplementedError("unrecognized topic")
 
 
-def onConnect(mqttc, obj, flags, rc):
+def on_connect(mqttc, obj, flags, rc):
     if rc == 0:
-        mqtt_connector.connected_flag = True        #set flag
+        mqtt_connector.connected_flag = True
         print("Connected OK. Returned code =", rc)
     else:
         print("Bad connection. Returned code = ", rc)
         exit(rc)
 
 
-def setUpConnector():
-    mqtt_connector.username_pw_set(username=CONNECTION_CONFIG["username"], password=CONNECTION_CONFIG["password"])
-    mqtt_connector.on_connect = onConnect
-    mqtt_connector.on_message = onMessage
-    mqtt_connector.connect(CONNECTION_CONFIG["address"], 1883, 60)
-    mqtt_connector.subscribe(CONNECTION_CONFIG["base_topic"], CONNECTION_CONFIG["quality_of_service"])
+def setup_connector(config):
+    mqtt_connector.username_pw_set(username=config["username"], password=config["password"])
+    mqtt_connector.on_connect = on_connect
+    mqtt_connector.on_message = on_message
+    mqtt_connector.connect(config["address"], 1883, 60)
+    mqtt_connector.subscribe(config["base_topic"], config["quality_of_service"])
 
 
 class CarSpecs:
-    def __init__(self, preferredSpeed, maxSpeed, acceleration, brakingPower, size):
-        self.preferredSpeed = preferredSpeed
-        self.maxSpeed = maxSpeed
-        self.brakingPower = brakingPower
+    def __init__(self, preferred_speed, max_speed, acceleration, braking_power, size):
+        self.preferred_speed = preferred_speed
+        self.max_speed = max_speed
+        self.braking_power = braking_power
         self.acceleration = acceleration
         self.size = size
 
 
 class Car:
-    def __init__(self, distanceTaken, lane, speed, accelerationState, specs: CarSpecs):
+    def __init__(self, distance_taken, lane, speed, acceleration_state, specs: CarSpecs):
         """
-        :param distanceTaken: distance taken along the single axis
+        :param distance_taken: distance taken along the single axis
         :param lane: ENUM TODO: what means what + typehint
         :param speed:
-        :param accelerationState: enum TODO: what means what + typehint
+        :param acceleration_state: enum TODO: what means what + typehint
         :param specs: constant parameters of the car
         """
-        self.distanceTaken = distanceTaken
+        self.distance_taken = distance_taken
         self.lane = lane
         self.speed = speed
-        self.accelerationState = accelerationState
+        self.acceleration_state = acceleration_state
         self.specs = specs
 
     @classmethod
-    def forVisualization(cls, distanceTaken, lane, size):
+    def for_visualization(cls, distance_taken, lane, size):
         """
         Second constructor, since the visualization doesn't need the whole class
         """
-        return cls(distanceTaken, lane, None, None, CarSpecs(None, None, None, None, size))
+        return cls(distance_taken, lane, None, None, CarSpecs(None, None, None, None, size))
 
-    def updateState(self, lane, distanceTaken, speed, accelerationState):
+    def update_state(self, lane, distance_taken, speed, acceleration_state):
         self.lane = lane
-        self.distanceTaken = distanceTaken
+        self.distance_taken = distance_taken
         self.speed = speed
-        self.accelerationState = accelerationState
+        self.acceleration_state = acceleration_state
 
-    def getRelativePosition(self):
-        return self.distanceTaken / CONNECTION_CONFIG["position_bound"]
+    def get_relative_position(self, config):
+        return self.distance_taken / config["position_bound"]
