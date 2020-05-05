@@ -34,7 +34,6 @@ def on_message_vis(mqttc, obj, msg):
     if topic_parts[1] == "vehicles":
         car_id = topic_parts[-2]
         msg_type = topic_parts[-1]
-        print(msg_type)
         if msg_type == "join":
             if car_id in local_cars.keys():
                 raise KeyError("Car with already existing id sent a join message")
@@ -47,7 +46,8 @@ def on_message_vis(mqttc, obj, msg):
                 raise KeyError("Car with unrecognized id sent a state message")
 
             state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            local_cars[car_id].car.updateState(**state)
+            print(state)
+            local_cars[car_id].car.update_state(**state)
 
         else:
             raise NotImplementedError("unrecognized topic")
@@ -90,7 +90,7 @@ class CarImage:
 
     def get_x_slice(self):
         possible_maximum = map_length - self.straight.shape[1]
-        start = np.floor(possible_maximum * self.car.get_relative_position()).astype(np.int32)
+        start = np.floor(possible_maximum * self.car.get_relative_position(CONNECTION_CONFIG)).astype(np.int32)
         return slice(start, start + self.straight.shape[1])
 
     def get_image(self):
@@ -114,7 +114,7 @@ def display_state(cars):
         current_offset -= 30
     elif c == ord('d'):
         current_offset += 30
-    if c == ord('w'):
+    elif c == ord('w'):
         if current_region_width > map_length * 0.1:
             currentRegionWidth = np.floor(current_region_width * 0.95).astype(np.int32)
             _, _, wW, wH = cv2.getWindowImageRect(WINDOW_NAME)
@@ -127,9 +127,12 @@ def display_state(cars):
             cv2.resizeWindow(WINDOW_NAME, window_w, int(window_h * 0.95))
         else:
             current_region_width = map_length
+    elif c == ord('x'):
+        return False
     current_offset = max(min(current_offset, map_length - current_region_width), 0)
 
     cv2.imshow(WINDOW_NAME, vis[:, current_offset: current_offset + current_region_width, :])
+    return True
 
 
 if __name__ == "__main__":
@@ -143,6 +146,7 @@ if __name__ == "__main__":
     cv2.namedWindow(WINDOW_NAME, flags=cv2.WINDOW_NORMAL)
     cv2.resizeWindow(WINDOW_NAME, 1800, 250)
 
-    while True:
-        display_state(local_cars)
+    go_on = True
+    while go_on:
+        go_on = display_state(local_cars)
 
