@@ -21,8 +21,8 @@ in order to safely navigate through the traffic.
 3. Add %USERPROFILE%\eclipse-paho-mqtt-c-win32-1.3.1\lib to PATH
 4. Optional
    1. Add two new local environment variables:
-      1. VS_WINSDK_VERSION  : <Your installed Windows SDK version> (e.g.: 10.0.17763.0)
-      2. VS_TOOLSET_VERSION : <Your installed Windows Platform tools version> (e.g.: v141)
+      1. VS_WINSDK_VERSION  : (Your installed Windows SDK version) (e.g.: 10.0.17763.0)
+      2. VS_TOOLSET_VERSION : (Your installed Windows Platform tools version) (e.g.: v141)
    2. Or open and retarget the solution in Visual Studio to your own installed SDK version
 5. Open the Project with Visual Studio
 6. Run with Debug x86
