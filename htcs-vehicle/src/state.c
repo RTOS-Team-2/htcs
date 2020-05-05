@@ -35,30 +35,27 @@ void adjustState(State* state, unsigned elapsedMs) {
     }
 
     // if we are changing lanes, increment the elapsed time
-    switch (state->lane)
-    {
-    case MERGE_TO_TRAFFIC:
-    case TRAFFIC_TO_EXPRESS:
-    case EXPRESS_TO_TRAFFIC:
-        state->laneChangeElapsed += elapsedMs;
-        break;
+    switch (state->lane) {
+        case MERGE_TO_TRAFFIC:
+        case TRAFFIC_TO_EXPRESS:
+        case EXPRESS_TO_TRAFFIC:
+            state->laneChangeElapsed += elapsedMs;
+            break;
     }
 
     // now if the counter is over the required time, we just zero it, and execute the lane change
-    if (state->laneChangeElapsed > LANE_CHANGE_MS)
-    {
+    if (state->laneChangeElapsed > LANE_CHANGE_MS) {
         state->laneChangeElapsed = 0;
-        switch (state->lane)
-        {
-        case MERGE_TO_TRAFFIC:
-            state->lane = TRAFFIC_LANE;
-            break;
-        case TRAFFIC_TO_EXPRESS:
-            state->lane = EXPRESS_LANE;
-            break;
-        case EXPRESS_TO_TRAFFIC:
-            state->lane = TRAFFIC_LANE;
-            break;
+        switch (state->lane) {
+            case MERGE_TO_TRAFFIC:
+                state->lane = TRAFFIC_LANE;
+                break;
+            case TRAFFIC_TO_EXPRESS:
+                state->lane = EXPRESS_LANE;
+                break;
+            case EXPRESS_TO_TRAFFIC:
+                state->lane = TRAFFIC_LANE;
+                break;
         }
     }
 }
