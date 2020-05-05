@@ -19,10 +19,10 @@ blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/ca
 blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2right.png")
 # for calculations
 map_length = im_map.shape[1]
-center_fast_lane = 176
-center_slow_lane = 298
+center_fast_lane = 180
+center_slow_lane = 300
 center_merge_lane = 420
-max_car_size_pixel = center_slow_lane - center_fast_lane
+max_car_size_pixel = int(0.86 * (center_slow_lane - center_fast_lane))
 # for navigation
 current_offset = 0
 current_region_width = map_length
@@ -68,8 +68,8 @@ class CarImage:
             self.right = blue_car_right
         # Scale to correct size
         orig_h, orig_w = self.straight.shape[:2]
-        new_w = np.round(max_car_size_pixel * self.car.specs.size / CONNECTION_CONFIG["max_car_size"]).astype(np.int32)
-        new_h = np.round(orig_h * new_w / orig_w).astype(np.int32)
+        new_h = np.round(max_car_size_pixel * self.car.specs.size / CONNECTION_CONFIG["max_car_size"]).astype(np.int32)
+        new_w = np.round(orig_w * new_h / orig_h).astype(np.int32)
         self.straight = cv2.resize(self.straight, (new_w, new_h))
         self.left = cv2.resize(self.left, (new_w, new_h))
         self.right = cv2.resize(self.right, (new_w, new_h))
