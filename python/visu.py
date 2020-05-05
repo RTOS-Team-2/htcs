@@ -2,10 +2,13 @@ import os
 import cv2
 import ast
 import random
+import logging
 import numpy as np
 from HTCSPythonUtil import mqtt_connector, get_connection_config, local_cars, Car, on_connect
 
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("HTCS_Visualization")
 # SOME GLOBAL VARIABLES
 CONNECTION_CONFIG = get_connection_config()
 # image resources
@@ -27,7 +30,7 @@ max_car_size_pixel = int(0.86 * (center_slow_lane - center_fast_lane))
 current_offset = 0
 current_region_width = map_length
 
-
+commands = dict([(0, "Maintain speed!"), (1, "Accelerate!"), (2, "Brake!"), (3, "Switch lanes!")])
 # TODO: error raising does not do anything on that thread
 def on_message_vis(mqttc, obj, msg):
     topic_parts = msg.topic.split('/')
@@ -36,20 +39,29 @@ def on_message_vis(mqttc, obj, msg):
         msg_type = topic_parts[-1]
         if msg_type == "join":
             if car_id in local_cars.keys():
-                raise KeyError("Car with already existing id sent a join message")
-
-            specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            local_cars[car_id] = CarImage(0, 0, specs['size'])
-
+                logger.warning(f"Car with already existing id ({car_id}) sent a join message")
+            else:
+                try:
+                    specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
+                    local_cars[car_id] = CarImage(0, 0, specs['size'])
+                except TypeError:
+                    logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
         elif msg_type == "state":
             if car_id not in local_cars.keys():
-                raise KeyError("Car with unrecognized id sent a state message")
-
-            state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            local_cars[car_id].car.update_state(**state)
-
+                logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
+            else:
+                try:
+                    state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
+                    local_cars[car_id].car.update_state(**state)
+                except TypeError:
+                    logger.warning(f"Received a badly formatted state message from id {car_id}: {msg.payload.decode('utf-8')}")
+        elif msg_type == "command":
+            if car_id in local_cars.keys():
+                logger.info(f"Car with id {car_id} received a command: {commands[int(msg.payload.decode('utf-8'))]}")
+            else:
+                logger.warning(f"Car with unrecognized id ({car_id}) received a command: {commands[int(msg.payload.decode('utf-8'))]}")
         else:
-            raise NotImplementedError("unrecognized topic")
+            logger.warning(f"Unrecognized topic: {msg_type}")
 
 
 # class for visualization
