@@ -1,21 +1,22 @@
+import os
 import ast
 import paho.mqtt.client as mqtt
 
 
 # TODO: set C level maximum for position
 # TODO: maybe create shared constants (enums) between c and python
-POSITION_BOUND = 10000
-MAX_CAR_SIZE = 6
-CARSTARTINGSPEED = 13.888889
+local_cars = {}
+mqtt_connector = mqtt.Client()
 
 
-localCars = {}
-MQTTCONNECTOR = mqtt.Client()
-PASSWORD = "password"
-USERNAME = "krisz.kern@gmail.com"
-ADDRESS = "maqiatto.com"
-BASETOPIC = "krisz.kern@gmail.com/vehicles/#"
-QUALITYOFSERVICE = 1
+def getConnectionConfig():
+    config_dict = dict("".join(l.split()).split("=") for l
+                       in open(os.path.dirname(os.path.abspath(__file__)) + "/connection.properties")
+                       if not l.strip().startswith("#") )
+    config_dict["position_bound"] = int(config_dict["position_bound"])
+    config_dict["max_car_size"] = int(config_dict["max_car_size"])
+    config_dict["quality_of_service"] = int(config_dict["quality_of_service"])
+    return config_dict
 
 
 def onMessage(mqttc, obj, msg):
@@ -24,15 +25,15 @@ def onMessage(mqttc, obj, msg):
         carId = topicParts[-2]
         msgType = topicParts[-1]
         if msgType == "join":
-            if carId in localCars.keys():
+            if carId in local_cars.keys():
                 raise KeyError("Car with already existing id sent a join message")
             specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            localCars[carId] = Car(0, 0, CARSTARTINGSPEED, 0, CarSpecs(**specs))
+            local_cars[carId] = Car(0, 0, 0, 0, CarSpecs(**specs))
         elif msgType == "state":
-            if carId not in localCars.keys():
+            if carId not in local_cars.keys():
                 raise KeyError("Car with unrecognized id sent a state message")
             state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            localCars[carId].updateState(**state)
+            local_cars[carId].updateState(**state)
 
         else:
             raise NotImplementedError("unrecognized topic")
@@ -40,7 +41,7 @@ def onMessage(mqttc, obj, msg):
 
 def onConnect(mqttc, obj, flags, rc):
     if rc == 0:
-        MQTTCONNECTOR.connected_flag = True  #set flag
+        mqtt_connector.connected_flag = True        #set flag
         print("Connected OK. Returned code =", rc)
     else:
         print("Bad connection. Returned code = ", rc)
@@ -48,11 +49,11 @@ def onConnect(mqttc, obj, flags, rc):
 
 
 def setUpConnector():
-    MQTTCONNECTOR.username_pw_set(username=USERNAME, password=PASSWORD)
-    MQTTCONNECTOR.on_connect = onConnect
-    MQTTCONNECTOR.on_message = onMessage
-    MQTTCONNECTOR.connect(ADDRESS, 1883, 60)
-    MQTTCONNECTOR.subscribe(BASETOPIC, QUALITYOFSERVICE)
+    mqtt_connector.username_pw_set(username=CONNECTION_CONFIG["username"], password=CONNECTION_CONFIG["password"])
+    mqtt_connector.on_connect = onConnect
+    mqtt_connector.on_message = onMessage
+    mqtt_connector.connect(CONNECTION_CONFIG["address"], 1883, 60)
+    mqtt_connector.subscribe(CONNECTION_CONFIG["base_topic"], CONNECTION_CONFIG["quality_of_service"])
 
 
 class CarSpecs:
@@ -93,4 +94,4 @@ class Car:
         self.accelerationState = accelerationState
 
     def getRelativePosition(self):
-        return self.distanceTaken / POSITION_BOUND
+        return self.distanceTaken / CONNECTION_CONFIG["position_bound"]
