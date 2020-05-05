@@ -1,6 +1,7 @@
 #ifndef HTCS_VEHICLE_STATE_H
 #define HTCS_VEHICLE_STATE_H
 #include "options.h"
+#include "mutex.h"
 
 #define STARTING_SPEED 13.8888889   // [m/s] (=50 km/h)
 #define LANE_CHANGE_MS 2000         // [millisec] time to spend between the two lanes
@@ -39,7 +40,7 @@ typedef struct State {
 
 void initializeState(State* state, const Options* opts);
 
-void adjustState(State* state, unsigned elapsedMs);
+void adjustState(State* state, unsigned elapsedMs, MUTEX* stateMutex);
 
 int attributesToString(Attributes* attributes, char* attributesStr);
 

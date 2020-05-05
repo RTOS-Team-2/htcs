@@ -24,7 +24,8 @@ void progressLaneChange(State* state, Lane lane, unsigned elapsedMs) {
     }
 }
 
-void adjustState(State* state, unsigned elapsedMs) {
+void adjustState(State* state, unsigned elapsedMs, MUTEX* stateMutex) {
+    mutex_lock(stateMutex);
     state->distanceTaken = state->distanceTaken + state->speed * (elapsedMs / 1000.0);
 
     if (state->accelerationState == ACCELERATING) {
@@ -54,6 +55,7 @@ void adjustState(State* state, unsigned elapsedMs) {
             progressLaneChange(state, TRAFFIC_LANE, elapsedMs);
             break;
     }
+    mutex_unlock(stateMutex);
 }
 
 int attributesToString(Attributes* attributes, char* attributesStr) {

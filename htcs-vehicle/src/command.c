@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <signal.h>
 
-void processCommand(const Command cmd, State* state) {
+void processCommand(const Command cmd, State* state, MUTEX* stateMutex) {
+    mutex_lock(stateMutex);
     switch (cmd) {
         case MAINTAIN_SPEED:
             printf("Maintain speed command received\n");
@@ -39,4 +40,5 @@ void processCommand(const Command cmd, State* state) {
             printf("Unknown command received\n");
     }
     fflush(stdout);
+    mutex_unlock(stateMutex);
 }

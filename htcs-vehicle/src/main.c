@@ -11,6 +11,7 @@
 #include "scheduler.h"
 #include "command.h"
 #include "state.h"
+#include "mutex.h"
 
 #define INTERVAL_MS    250
 
@@ -21,6 +22,7 @@ static struct {
     State state;
     char topic[1024];
     char payload[1024];
+    MUTEX stateMutex;
 } G_CTX;
 
 void signalHandler(int signal);
@@ -44,6 +46,7 @@ int main(int argc, char* argv[]) {
 
     initializeState(&G_CTX.state, &G_CTX.opts);
 
+    mutex_init(&G_CTX.stateMutex);
     G_CTX.keepRunning = 1;
 
     G_CTX.client = createAndConnect(&G_CTX.opts, messageArrived, &G_CTX.keepRunning);
@@ -76,7 +79,7 @@ void signalHandler(int signal) {
 }
 
 void schedulerCallback() {
-    adjustState(&G_CTX.state, INTERVAL_MS);
+    adjustState(&G_CTX.state, INTERVAL_MS, &G_CTX.stateMutex);
     int len = stateToString(&G_CTX.state, G_CTX.payload);
     int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len);
     if (error) {
@@ -90,7 +93,7 @@ int messageArrived(void* context, char* topicName, int topicLen, MQTTAsync_messa
 
     Command cmd = ((char*)message->payload)[0] - '0';
 
-    processCommand(cmd, &G_CTX.state);
+    processCommand(cmd, &G_CTX.state, &G_CTX.stateMutex);
 
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);

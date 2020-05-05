@@ -113,6 +113,7 @@
     <ClCompile Include="src\options.c" />
     <ClCompile Include="src\scheduler.c" />
     <ClCompile Include="src\state.c" />
+    <ClCompile Include="src\mutex.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\command.h" />
@@ -120,6 +121,7 @@
     <ClInclude Include="src\options.h" />
     <ClInclude Include="src\scheduler.h" />
     <ClInclude Include="src\state.h" />
+    <ClInclude Include="src\mutex.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

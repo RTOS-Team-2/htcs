@@ -33,6 +33,9 @@
     <ClCompile Include="src\state.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\mutex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\mqtt.h">
@@ -48,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mutex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
