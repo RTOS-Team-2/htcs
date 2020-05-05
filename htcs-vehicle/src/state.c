@@ -15,6 +15,15 @@ void initializeState(State* state, const Options* opts) {
     state->attributes.size = opts->size;
 }
 
+void progressLaneChange(State* state, Lane lane, unsigned elapsedMs) {
+    if (state->laneChangeElapsed > LANE_CHANGE_MS) {
+        state->laneChangeElapsed = 0;
+        state->lane = lane;
+    } else {
+        state->laneChangeElapsed += elapsedMs;
+    }
+}
+
 void adjustState(State* state, unsigned elapsedMs) {
     state->distanceTaken = state->distanceTaken + state->speed * (elapsedMs / 1000.0);
 
@@ -34,29 +43,16 @@ void adjustState(State* state, unsigned elapsedMs) {
         }
     }
 
-    // if we are changing lanes, increment the elapsed time
     switch (state->lane) {
         case MERGE_TO_TRAFFIC:
-        case TRAFFIC_TO_EXPRESS:
-        case EXPRESS_TO_TRAFFIC:
-            state->laneChangeElapsed += elapsedMs;
+            progressLaneChange(state, TRAFFIC_LANE, elapsedMs);
             break;
-    }
-
-    // now if the counter is over the required time, we just zero it, and execute the lane change
-    if (state->laneChangeElapsed > LANE_CHANGE_MS) {
-        state->laneChangeElapsed = 0;
-        switch (state->lane) {
-            case MERGE_TO_TRAFFIC:
-                state->lane = TRAFFIC_LANE;
-                break;
-            case TRAFFIC_TO_EXPRESS:
-                state->lane = EXPRESS_LANE;
-                break;
-            case EXPRESS_TO_TRAFFIC:
-                state->lane = TRAFFIC_LANE;
-                break;
-        }
+        case TRAFFIC_TO_EXPRESS:
+            progressLaneChange(state, EXPRESS_LANE, elapsedMs);
+            break;
+        case EXPRESS_TO_TRAFFIC:
+            progressLaneChange(state, TRAFFIC_LANE, elapsedMs);
+            break;
     }
 }
 
