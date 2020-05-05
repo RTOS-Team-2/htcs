@@ -19,10 +19,10 @@ blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/ca
 blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2right.png")
 # for calculations
 map_length = im_map.shape[1]
-center_fast_lane = 176
-center_slow_lane = 298
+center_fast_lane = 180
+center_slow_lane = 300
 center_merge_lane = 420
-max_car_size_pixel = center_slow_lane - center_fast_lane
+max_car_size_pixel = int(0.86 * (center_slow_lane - center_fast_lane))
 # for navigation
 current_offset = 0
 current_region_width = map_length
@@ -68,8 +68,8 @@ class CarImage:
             self.right = blue_car_right
         # Scale to correct size
         orig_h, orig_w = self.straight.shape[:2]
-        new_w = np.round(max_car_size_pixel * self.car.specs.size / CONNECTION_CONFIG["max_car_size"]).astype(np.int32)
-        new_h = np.round(orig_h * new_w / orig_w).astype(np.int32)
+        new_h = np.round(max_car_size_pixel * self.car.specs.size / CONNECTION_CONFIG["max_car_size"]).astype(np.int32)
+        new_w = np.round(orig_w * new_h / orig_h).astype(np.int32)
         self.straight = cv2.resize(self.straight, (new_w, new_h))
         self.left = cv2.resize(self.left, (new_w, new_h))
         self.right = cv2.resize(self.right, (new_w, new_h))
@@ -77,13 +77,13 @@ class CarImage:
     def get_y_slice(self):
         if self.car.lane == 0:
             start = int(center_merge_lane - self.straight.shape[0] / 2)
-        elif self.car.lane in [1, 2]:
+        elif self.car.lane == 1:
             start = int((center_merge_lane + center_slow_lane) / 2 - self.straight.shape[0] / 2)
-        elif self.car.lane == 3:
+        elif self.car.lane == 2:
             start = int(center_slow_lane - self.straight.shape[0] / 2)
-        elif self.car.lane in [4, 5, 6, 7]:
+        elif self.car.lane in [3, 4]:
             start = int((center_slow_lane + center_fast_lane) / 2 - self.straight.shape[0] / 2)
-        else:   # 8
+        elif self.car.lane == 5:
             start = int(center_fast_lane - self.straight.shape[0] / 2)
         return slice(start, start + self.straight.shape[0])
 
@@ -93,11 +93,11 @@ class CarImage:
         return slice(start, start + self.straight.shape[1])
 
     def get_image(self):
-        if self.car.lane in [0, 3, 8]:
+        if self.car.lane in [0, 2, 5]:
             return self.straight
-        elif self.car.lane in [1, 2, 4, 5]:
+        elif self.car.lane in [1, 3]:
             return self.left
-        elif self.car.lane in [6, 7]:
+        elif self.car.lane == 4:
             return self.right
 
 

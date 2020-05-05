@@ -20,13 +20,13 @@ void processCommand(const Command cmd, State* state) {
             printf("Change lane command received\n");
             switch (state->lane) {
                 case MERGE_LANE:
-                    state->lane = MERGE_TO_TRAFFIC_1;
+                    state->lane = MERGE_TO_TRAFFIC;
                     break;
                 case TRAFFIC_LANE:
-                    state->lane = TRAFFIC_TO_EXPRESS_1;
+                    state->lane = TRAFFIC_TO_EXPRESS;
                     break;
                 case EXPRESS_LANE:
-                    state->lane = EXPRESS_TO_TRAFFIC_1;
+                    state->lane = EXPRESS_TO_TRAFFIC;
                     break;
                 default:
                     printf("Already changing lane");

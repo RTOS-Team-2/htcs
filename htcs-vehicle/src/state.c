@@ -5,6 +5,7 @@ void initializeState(State* state, const Options* opts) {
     state->lane = MERGE_LANE;
     state->distanceTaken = 0.0;
     state->speed = STARTING_SPEED;
+    state->laneChangeElapsed = 0;
     state->accelerationState = MAINTAINING_SPEED;
 
     state->attributes.preferredSpeed = opts->preferredSpeed / 3.6;
@@ -12,6 +13,15 @@ void initializeState(State* state, const Options* opts) {
     state->attributes.acceleration = 1 / (0.036 * opts->acceleration);
     state->attributes.brakingPower = 1 / (0.036 * opts->brakingPower);
     state->attributes.size = opts->size;
+}
+
+void progressLaneChange(State* state, Lane lane, unsigned elapsedMs) {
+    if (state->laneChangeElapsed > LANE_CHANGE_MS) {
+        state->laneChangeElapsed = 0;
+        state->lane = lane;
+    } else {
+        state->laneChangeElapsed += elapsedMs;
+    }
 }
 
 void adjustState(State* state, unsigned elapsedMs) {
@@ -34,23 +44,14 @@ void adjustState(State* state, unsigned elapsedMs) {
     }
 
     switch (state->lane) {
-        case MERGE_TO_TRAFFIC_1:
-            state->lane = MERGE_TO_TRAFFIC_2;
+        case MERGE_TO_TRAFFIC:
+            progressLaneChange(state, TRAFFIC_LANE, elapsedMs);
             break;
-        case MERGE_TO_TRAFFIC_2:
-            state->lane = TRAFFIC_LANE;
+        case TRAFFIC_TO_EXPRESS:
+            progressLaneChange(state, EXPRESS_LANE, elapsedMs);
             break;
-        case TRAFFIC_TO_EXPRESS_1:
-            state->lane = TRAFFIC_TO_EXPRESS_2;
-            break;
-        case TRAFFIC_TO_EXPRESS_2:
-            state->lane = EXPRESS_LANE;
-            break;
-        case EXPRESS_TO_TRAFFIC_1:
-            state->lane = EXPRESS_TO_TRAFFIC_2;
-            break;
-        case EXPRESS_TO_TRAFFIC_2:
-            state->lane = TRAFFIC_LANE;
+        case EXPRESS_TO_TRAFFIC:
+            progressLaneChange(state, TRAFFIC_LANE, elapsedMs);
             break;
     }
 }
