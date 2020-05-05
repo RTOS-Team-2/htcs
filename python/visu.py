@@ -116,7 +116,7 @@ def display_state(cars):
         current_offset += 30
     elif c == ord('w'):
         if current_region_width > map_length * 0.1:
-            currentRegionWidth = np.floor(current_region_width * 0.95).astype(np.int32)
+            current_region_width = np.floor(current_region_width * 0.95).astype(np.int32)
             _, _, wW, wH = cv2.getWindowImageRect(WINDOW_NAME)
             cv2.resizeWindow(WINDOW_NAME, wW, int(wH / 0.95))
     elif c == ord('s'):
