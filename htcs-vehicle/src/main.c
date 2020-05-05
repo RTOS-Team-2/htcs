@@ -12,7 +12,7 @@
 #include "command.h"
 #include "state.h"
 
-#define INTERVAL_MS    50
+#define INTERVAL_MS    250
 
 static struct {
     MQTTAsync client;

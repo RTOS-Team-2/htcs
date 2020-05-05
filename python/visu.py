@@ -77,13 +77,13 @@ class CarImage:
     def get_y_slice(self):
         if self.car.lane == 0:
             start = int(center_merge_lane - self.straight.shape[0] / 2)
-        elif self.car.lane in [1, 2]:
+        elif self.car.lane == 1:
             start = int((center_merge_lane + center_slow_lane) / 2 - self.straight.shape[0] / 2)
-        elif self.car.lane == 3:
+        elif self.car.lane == 2:
             start = int(center_slow_lane - self.straight.shape[0] / 2)
-        elif self.car.lane in [4, 5, 6, 7]:
+        elif self.car.lane in [3, 4]:
             start = int((center_slow_lane + center_fast_lane) / 2 - self.straight.shape[0] / 2)
-        else:   # 8
+        elif self.car.lane == 5:
             start = int(center_fast_lane - self.straight.shape[0] / 2)
         return slice(start, start + self.straight.shape[0])
 
@@ -93,11 +93,11 @@ class CarImage:
         return slice(start, start + self.straight.shape[1])
 
     def get_image(self):
-        if self.car.lane in [0, 3, 8]:
+        if self.car.lane in [0, 2, 5]:
             return self.straight
-        elif self.car.lane in [1, 2, 4, 5]:
+        elif self.car.lane in [1, 3]:
             return self.left
-        elif self.car.lane in [6, 7]:
+        elif self.car.lane == 4:
             return self.right
 
 

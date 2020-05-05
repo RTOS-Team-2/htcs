@@ -2,17 +2,15 @@
 #define HTCS_VEHICLE_STATE_H
 #include "options.h"
 
-#define STARTING_SPEED 13.8888889 // 50 km/h
+#define STARTING_SPEED 13.8888889   // [m/s] (=50 km/h)
+#define LANE_CHANGE_MS 2000         // [millisec] time to spend between the two lanes
 
 typedef enum Lanes {
     MERGE_LANE,
-    MERGE_TO_TRAFFIC_1,
-    MERGE_TO_TRAFFIC_2,
+    MERGE_TO_TRAFFIC,
     TRAFFIC_LANE,
-    TRAFFIC_TO_EXPRESS_1,
-    TRAFFIC_TO_EXPRESS_2,
-    EXPRESS_TO_TRAFFIC_1,
-    EXPRESS_TO_TRAFFIC_2,
+    TRAFFIC_TO_EXPRESS,
+    EXPRESS_TO_TRAFFIC,
     EXPRESS_LANE
 } Lane;
 
@@ -34,6 +32,7 @@ typedef struct State {
     Lane lane;
     double distanceTaken;
     double speed;
+    unsigned laneChangeElapsed;
     AccelerationState accelerationState;
     Attributes attributes;
 } State;
