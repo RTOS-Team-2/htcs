@@ -10,13 +10,13 @@ from HTCSPythonUtil import mqtt_connector, get_connection_config, local_cars, Ca
 CONNECTION_CONFIG = get_connection_config()
 # image resources
 WINDOW_NAME = "Highway Traffic Control System Visualization"
-im_map = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/map.png")
-red_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/car1.png")
-red_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/car1left.png")
-red_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/car1right.png")
-blue_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/car2.png")
-blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/car2left.png")
-blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/car2right.png")
+im_map = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/map.png")
+red_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car1.png")
+red_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car1left.png")
+red_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car1right.png")
+blue_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2.png")
+blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2left.png")
+blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2right.png")
 # for calculations
 map_length = im_map.shape[1]
 center_fast_lane = 176
