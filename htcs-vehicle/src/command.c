@@ -1,5 +1,6 @@
 #include "command.h"
 #include <stdio.h>
+#include <signal.h>
 
 void processCommand(const Command cmd, State* state) {
     switch (cmd) {
@@ -31,6 +32,9 @@ void processCommand(const Command cmd, State* state) {
                     printf("Already changing lane");
             }
             break;
+        case TERMINATE:
+            printf("Terminate command received");
+            raise(SIGTERM);
         default:
             printf("Unknown command received\n");
     }

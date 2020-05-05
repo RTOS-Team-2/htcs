@@ -7,7 +7,8 @@ typedef enum Commands {
     MAINTAIN_SPEED,
     ACCELERATE,
     BRAKE,
-    CHANGE_LANE
+    CHANGE_LANE,
+    TERMINATE
 } Command;
 
 void processCommand(Command cmd, State* state);
