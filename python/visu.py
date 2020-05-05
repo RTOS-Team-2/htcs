@@ -40,19 +40,21 @@ def on_message_vis(mqttc, obj, msg):
         if msg_type == "join":
             if car_id in local_cars.keys():
                 logger.warning(f"Car with already existing id ({car_id}) sent a join message")
-            try:
-                specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-                local_cars[car_id] = CarImage(0, 0, specs['size'])
-            except TypeError:
-                logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
+            else:
+                try:
+                    specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
+                    local_cars[car_id] = CarImage(0, 0, specs['size'])
+                except TypeError:
+                    logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
         elif msg_type == "state":
             if car_id not in local_cars.keys():
                 logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
-            try:
-                state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-                local_cars[car_id].car.update_state(**state)
-            except TypeError:
-                logger.warning(f"Received a badly formatted state message from id {car_id}: {msg.payload.decode('utf-8')}")
+            else:
+                try:
+                    state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
+                    local_cars[car_id].car.update_state(**state)
+                except TypeError:
+                    logger.warning(f"Received a badly formatted state message from id {car_id}: {msg.payload.decode('utf-8')}")
         elif msg_type == "command":
             if car_id in local_cars.keys():
                 logger.info(f"Car with id {car_id} received a command: {commands[int(msg.payload.decode('utf-8'))]}")
