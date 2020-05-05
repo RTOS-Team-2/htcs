@@ -3,8 +3,7 @@ import cv2
 import ast
 import random
 import numpy as np
-from typing import List
-import python.HTCSPythonUtil as HTCSCOmmon
+import HTCSPythonUtil as HTCSCommon
 
 
 # SOME GLOBAL VARIABLES
@@ -24,30 +23,30 @@ centerSlowLane = 298
 centerMergeLane = 420
 maxCarSizePixel = centerSlowLane - centerFastLane
 # for navigation
-currentZoom = 0
 currentOffset = 0
-maxOffset = 0
 currentRegionWidth = mapLength
 
 
+# TODO: error raising does not do anything on that thread
 def onMessageVis(mqttc, obj, msg):
     topicParts = msg.topic.split('/')
     if topicParts[1] == "vehicles":
         carId = topicParts[-2]
         msgType = topicParts[-1]
+        print(msgType)
         if msgType == "join":
-            if carId in HTCSCOmmon.localCars.keys():
+            if carId in HTCSCommon.localCars.keys():
                 raise KeyError("Car with already existing id sent a join message")
 
             specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            HTCSCOmmon.localCars[carId] = CarImage(0, 0, specs['size'])
+            HTCSCommon.localCars[carId] = CarImage(0, 0, specs['size'])
 
         elif msgType == "state":
-            if carId not in HTCSCOmmon.localCars.keys():
+            if carId not in HTCSCommon.localCars.keys():
                 raise KeyError("Car with unrecognized id sent a state message")
 
             state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            HTCSCOmmon.localCars[carId].car.updateState(**state)
+            HTCSCommon.localCars[carId].car.updateState(**state)
 
         else:
             raise NotImplementedError("unrecognized topic")
@@ -57,7 +56,7 @@ def onMessageVis(mqttc, obj, msg):
 class CarImage:
     def __init__(self, distanceTaken, lane, size):
         # Create Car
-        self.car = HTCSCOmmon.Car.forVisualization(distanceTaken, lane, size)
+        self.car = HTCSCommon.Car.forVisualization(distanceTaken, lane, size)
         # Red or Blue
         if bool(random.getrandbits(1)):
             self.straight = redCarStraight
@@ -69,7 +68,7 @@ class CarImage:
             self.right = blueCarRight
         # Scale to correct size
         origH, origW = self.straight.shape[:2]
-        newW = np.round(maxCarSizePixel * self.car.specs.size / HTCSCOmmon.MAX_CAR_SIZE).astype(np.int32)
+        newW = np.round(maxCarSizePixel * self.car.specs.size / HTCSCommon.MAX_CAR_SIZE).astype(np.int32)
         newH = np.round(origH * newW / origW).astype(np.int32)
         self.straight = cv2.resize(self.straight, (newW, newH))
         self.left = cv2.resize(self.left, (newW, newH))
@@ -103,7 +102,7 @@ class CarImage:
 
 
 def display_state(cars):
-    global currentZoom, currentOffset, maxOffset, currentRegionWidth
+    global currentOffset, currentRegionWidth
 
     vis = imMap.copy()
     for carId, car in cars.items():
@@ -115,38 +114,34 @@ def display_state(cars):
     elif c == ord('d'):
         currentOffset += 30
     if c == ord('w'):
-        if currentZoom < 3:
-            currentZoom += 1
-            currentRegionWidth = np.floor(currentRegionWidth / 2).astype(np.int32)
+        if currentRegionWidth > mapLength * 0.1:
+            currentRegionWidth = np.floor(currentRegionWidth * 0.95).astype(np.int32)
             _, _, wW, wH = cv2.getWindowImageRect(WINDOW_NAME)
-            cv2.resizeWindow(WINDOW_NAME, wW, wH * 2)
+            cv2.resizeWindow(WINDOW_NAME, wW, int(wH / 0.95))
     elif c == ord('s'):
-        if currentZoom > 0:
-            currentZoom -= 1
-            # here we cannot just multiply
-            halving = 0
-            currentRegionWidth = mapLength
-            while halving < currentZoom:
-                currentRegionWidth = np.floor(currentRegionWidth / 2).astype(np.int32)
-                halving += 1
+        newRegionWidth = np.floor(currentRegionWidth / 0.95).astype(np.int32)
+        if newRegionWidth <= mapLength:
+            currentRegionWidth = newRegionWidth
             _, _, wW, wH = cv2.getWindowImageRect(WINDOW_NAME)
-            cv2.resizeWindow(WINDOW_NAME, wW, int(wH / 2))
+            cv2.resizeWindow(WINDOW_NAME, wW, int(wH * 0.95))
+        else:
+            currentRegionWidth = mapLength
     currentOffset = max(min(currentOffset, mapLength - currentRegionWidth), 0)
 
     cv2.imshow(WINDOW_NAME, vis[:, currentOffset: currentOffset + currentRegionWidth, :])
 
 
 if __name__ == "__main__":
-    HTCSCOmmon.MQTTCONNECTOR.username_pw_set(username=HTCSCOmmon.USERNAME, password=HTCSCOmmon.PASSWORD)
-    HTCSCOmmon.MQTTCONNECTOR.on_connect = HTCSCOmmon.onConnect
-    HTCSCOmmon.MQTTCONNECTOR.on_message = onMessageVis
-    HTCSCOmmon.MQTTCONNECTOR.connect(HTCSCOmmon.ADDRESS, 1883, 60)
-    HTCSCOmmon.MQTTCONNECTOR.subscribe(HTCSCOmmon.BASETOPIC, HTCSCOmmon.QUALITYOFSERVICE)
-    HTCSCOmmon.MQTTCONNECTOR.loop_start()
+    HTCSCommon.MQTTCONNECTOR.username_pw_set(username=HTCSCommon.USERNAME, password=HTCSCommon.PASSWORD)
+    HTCSCommon.MQTTCONNECTOR.on_connect = HTCSCommon.onConnect
+    HTCSCommon.MQTTCONNECTOR.on_message = onMessageVis
+    HTCSCommon.MQTTCONNECTOR.connect(HTCSCommon.ADDRESS, 1883, 60)
+    HTCSCommon.MQTTCONNECTOR.subscribe(HTCSCommon.BASETOPIC, HTCSCommon.QUALITYOFSERVICE)
+    HTCSCommon.MQTTCONNECTOR.loop_start()
 
     cv2.namedWindow(WINDOW_NAME, flags=cv2.WINDOW_NORMAL)
     cv2.resizeWindow(WINDOW_NAME, 1800, 250)
 
     while True:
-        display_state(HTCSCOmmon.localCars)
+        display_state(HTCSCommon.localCars)
 
