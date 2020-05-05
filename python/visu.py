@@ -46,7 +46,6 @@ def on_message_vis(mqttc, obj, msg):
                 raise KeyError("Car with unrecognized id sent a state message")
 
             state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            print(state)
             local_cars[car_id].car.update_state(**state)
 
         else:
@@ -149,4 +148,6 @@ if __name__ == "__main__":
     go_on = True
     while go_on:
         go_on = display_state(local_cars)
+
+    mqtt_connector.loop_stop()
 

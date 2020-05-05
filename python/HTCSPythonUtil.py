@@ -88,7 +88,6 @@ class Car:
         return cls(distance_taken, lane, None, None, CarSpecs(None, None, None, None, size))
 
     def update_state(self, lane, distance_taken, speed, acceleration_state):
-        print(lane, distance_taken, speed, acceleration_state)
         self.lane = lane
         self.distance_taken = distance_taken
         self.speed = speed
