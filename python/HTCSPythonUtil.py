@@ -1,8 +1,11 @@
 import os
 import ast
+import logging
 import paho.mqtt.client as mqtt
 
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("MQTT_Connector")
 # TODO: set C level maximum for position
 # TODO: maybe create shared constants (enums) between c and python
 local_cars = {}
@@ -26,17 +29,24 @@ def on_message(mqttc, obj, msg):
         msg_type = topic_parts[-1]
         if msg_type == "join":
             if car_id in local_cars.keys():
-                raise KeyError("Car with already existing id sent a join message")
-            specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            local_cars[car_id] = Car(0, 0, 0, 0, CarSpecs(**specs))
+                logger.warning(f"Car with already existing id ({car_id}) sent a join message")
+            try:
+                specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
+                local_cars[car_id] = Car(0, 0, 0, 0, CarSpecs(**specs))
+            except TypeError:
+                logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
         elif msg_type == "state":
             if car_id not in local_cars.keys():
-                raise KeyError("Car with unrecognized id sent a state message")
-            state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-            local_cars[car_id].update_state(**state)
-
+                logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
+            try:
+                state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
+                local_cars[car_id].update_state(**state)
+            except TypeError:
+                logger.warning(f"Received a badly formatted state message from id {car_id}: {msg.payload.decode('utf-8')}")
+        elif msg_type == "command":
+            pass                # I think only visualizer should print in this case, but add an info message if needed
         else:
-            raise NotImplementedError("unrecognized topic")
+            logger.warning(f"Unrecognized topic: {msg_type}")
 
 
 def on_connect(mqttc, obj, flags, rc):
