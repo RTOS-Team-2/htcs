@@ -27,6 +27,10 @@ void signalHandler(int signal);
 
 void schedulerCallback();
 
+void joinTraffic();
+
+void exitTraffic();
+
 int messageArrived(void* context, char* topicName, int topicLen, MQTTAsync_message* message);
 
 int main(int argc, char* argv[]) {
@@ -52,17 +56,13 @@ int main(int argc, char* argv[]) {
     }
     subscribe(G_CTX.client, &G_CTX.opts, &G_CTX.keepRunning);
 
-    sprintf(G_CTX.topic, "%s/%s/join", G_CTX.opts.topic, G_CTX.opts.clientId);
-
-    int len = attributesToString(&G_CTX.state.attributes, G_CTX.payload);
-    error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len);
-    if (error) {
-        return error;
-    }
+    joinTraffic();
 
     sprintf(G_CTX.topic, "%s/%s/state", G_CTX.opts.topic, G_CTX.opts.clientId);
 
     startRunning(&G_CTX.keepRunning, INTERVAL_MS, &schedulerCallback);
+
+    exitTraffic();
 
     disconnect(G_CTX.client);
     #if defined(_WIN32)
@@ -78,9 +78,35 @@ void signalHandler(int signal) {
 void schedulerCallback() {
     adjustState(&G_CTX.state, INTERVAL_MS);
     int len = stateToString(&G_CTX.state, G_CTX.payload);
-    int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len);
+    int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len, 0);
     if (error) {
         raise(SIGTERM);
+    }
+}
+
+void joinTraffic() {
+    sprintf(G_CTX.topic, "%s/%s/join", G_CTX.opts.topic, G_CTX.opts.clientId);
+    int len = attributesToString(&G_CTX.state.attributes, G_CTX.payload);
+    int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len, 1);
+    if (error) {
+        printf("Failed to join traffic, rc: %d\n", error);
+        raise(SIGTERM);
+    } else {
+        printf("Joined traffic\n");
+        fflush(stdout);
+    }
+}
+
+void exitTraffic() {
+    sprintf(G_CTX.topic, "%s/%s/join", G_CTX.opts.topic, G_CTX.opts.clientId);
+    G_CTX.payload[0] = '\0'; // empty message
+    int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, 1, 1);
+    if (error) {
+        printf("Failed to exit traffic, rc: %d\n", error);
+        fflush(stdout);
+    } else {
+        printf("Exited traffic\n");
+        fflush(stdout);
     }
 }
 

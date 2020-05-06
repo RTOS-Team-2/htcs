@@ -11,6 +11,6 @@ void subscribe(MQTTAsync client, const Options* opts, const _Bool* keepRunning);
 
 void disconnect(MQTTAsync client);
 
-int sendMessage(MQTTAsync client, char* topic, char* payload, int len);
+int sendMessage(MQTTAsync client, char* topic, char* payload, int len, int retained);
 
 #endif //HTCS_VEHICLE_MQTT_H

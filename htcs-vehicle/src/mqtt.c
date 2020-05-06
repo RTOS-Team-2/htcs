@@ -94,7 +94,7 @@ void subscribe(MQTTAsync client, const Options* opts, const _Bool* keepRunning) 
     }
 }
 
-int sendMessage(MQTTAsync client, char* topic, char* payload, int len) {
+int sendMessage(MQTTAsync client, char* topic, char* payload, int len, int retained) {
     MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
     opts.onSuccess = onSend;
     opts.context = client;
@@ -103,7 +103,7 @@ int sendMessage(MQTTAsync client, char* topic, char* payload, int len) {
     message.payload = payload;
     message.payloadlen = (int)strlen(payload);
     message.qos = 1;
-    message.retained = 0;
+    message.retained = retained;
     int rc;
     if ((rc = MQTTAsync_sendMessage(client, topic, &message, &opts)) != MQTTASYNC_SUCCESS) {
         printf("Failed to start sendMessage, return code %d\n", rc);
