@@ -14,8 +14,10 @@
 #define MUTEX pthread_mutex_t
 #endif
 
-int mutex_init(MUTEX *mutex);
-int mutex_lock(MUTEX *mutex);
-int mutex_unlock(MUTEX *mutex);
+int mutex_init(MUTEX* mutex);
+
+int mutex_lock(MUTEX* mutex);
+
+int mutex_unlock(MUTEX* mutex);
 
 #endif //HTCS_VEHICLE_MUTEX_H

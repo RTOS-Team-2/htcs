@@ -79,8 +79,11 @@ void signalHandler(int signal) {
 }
 
 void schedulerCallback() {
+	mutex_lock(&G_CTX.stateMutex);
     adjustState(&G_CTX.state, INTERVAL_MS, &G_CTX.stateMutex);
     int len = stateToString(&G_CTX.state, G_CTX.payload);
+	mutex_unlock(&G_CTX.stateMutex);
+
     int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len);
     if (error) {
         raise(SIGTERM);
@@ -93,7 +96,9 @@ int messageArrived(void* context, char* topicName, int topicLen, MQTTAsync_messa
 
     Command cmd = ((char*)message->payload)[0] - '0';
 
-    processCommand(cmd, &G_CTX.state, &G_CTX.stateMutex);
+	mutex_lock(&G_CTX.stateMutex);
+    processCommand(cmd, &G_CTX.state);
+	mutex_unlock(&G_CTX.stateMutex);
 
     MQTTAsync_freeMessage(&message);
     MQTTAsync_free(topicName);

@@ -2,8 +2,7 @@
 #include <stdio.h>
 #include <signal.h>
 
-void processCommand(const Command cmd, State* state, MUTEX* stateMutex) {
-    mutex_lock(stateMutex);
+void processCommand(const Command cmd, State* state) {
     switch (cmd) {
         case MAINTAIN_SPEED:
             printf("Maintain speed command received\n");
@@ -30,15 +29,14 @@ void processCommand(const Command cmd, State* state, MUTEX* stateMutex) {
                     state->lane = EXPRESS_TO_TRAFFIC;
                     break;
                 default:
-                    printf("Already changing lane");
+                    printf("Already changing lane\n");
             }
             break;
         case TERMINATE:
-            printf("Terminate command received");
+            printf("Terminate command received\n");
             raise(SIGTERM);
         default:
             printf("Unknown command received\n");
     }
     fflush(stdout);
-    mutex_unlock(stateMutex);
 }
