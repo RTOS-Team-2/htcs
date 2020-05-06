@@ -80,6 +80,8 @@ void schedulerCallback() {
     int len = stateToString(&G_CTX.state, G_CTX.payload);
     int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len, 0);
     if (error) {
+        printf("Failed to send state msg, rc: %d\n", error);
+        fflush(stdout);
         raise(SIGTERM);
     }
 }

@@ -6,7 +6,7 @@ void initializeState(State* state, const Options* opts) {
     state->distanceTaken = 0.0;
     state->speed = STARTING_SPEED;
     state->laneChangeElapsed = 0;
-    state->accelerationState = MAINTAINING_SPEED;
+    state->accelerationState = ACCELERATING;
 
     state->attributes.preferredSpeed = opts->preferredSpeed / 3.6;
     state->attributes.maxSpeed = opts->maxSpeed / 3.6;
@@ -16,7 +16,7 @@ void initializeState(State* state, const Options* opts) {
 }
 
 void progressLaneChange(State* state, Lane lane, unsigned elapsedMs) {
-    if (state->laneChangeElapsed > LANE_CHANGE_MS) {
+    if (state->laneChangeElapsed >= LANE_CHANGE_MS) {
         state->laneChangeElapsed = 0;
         state->lane = lane;
     } else {
