@@ -34,7 +34,9 @@ void processCommand(const Command cmd, State* state) {
             break;
         case TERMINATE:
             printf("Terminate command received");
+            fflush(stdout);
             raise(SIGTERM);
+            break;
         default:
             printf("Unknown command received\n");
     }

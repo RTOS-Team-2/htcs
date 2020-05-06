@@ -80,8 +80,6 @@ void schedulerCallback() {
     int len = stateToString(&G_CTX.state, G_CTX.payload);
     int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len, 0);
     if (error) {
-        printf("Failed to send state msg, rc: %d\n", error);
-        fflush(stdout);
         raise(SIGTERM);
     }
 }
@@ -91,7 +89,8 @@ void joinTraffic() {
     int len = attributesToString(&G_CTX.state.attributes, G_CTX.payload);
     int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len, 1);
     if (error) {
-        printf("Failed to join traffic, rc: %d\n", error);
+        fprintf(stderr, "Failed to join traffic, rc: %d\n", error);
+        fflush(stderr);
         raise(SIGTERM);
     } else {
         printf("Joined traffic\n");
@@ -104,8 +103,8 @@ void exitTraffic() {
     G_CTX.payload[0] = '\0'; // empty message
     int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, 1, 1);
     if (error) {
-        printf("Failed to exit traffic, rc: %d\n", error);
-        fflush(stdout);
+        fprintf(stderr, "Failed to exit traffic, rc: %d\n", error);
+        fflush(stderr);
     } else {
         printf("Exited traffic\n");
         fflush(stdout);
