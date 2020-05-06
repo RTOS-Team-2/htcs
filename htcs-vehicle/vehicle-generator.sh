@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 echo "Initializing default values..."
-VEHILE_PIDS=""
 
 GEN_INTERVAL_MIN=3  # in seconds
 GEN_INTERVAL_MAX=10 # in seconds
@@ -19,16 +18,6 @@ SIZE_MAX=10
 
 LOG_FOLDER="logs/generation-$(date +"%Y%m%d%H%M%S")"
 mkdir -p "${LOG_FOLDER}"
-
-# Traps the signal and terminates all vehicles created
-trap_term() {
-  echo "Signal received, terminating vehicles by pids: ${VEHICLE_PIDS}"
-  for PID in ${VEHILE_PIDS}; do kill ${PID}; done
-  exit 0
-}
-
-trap trap_term SIGINT
-trap trap_term SIGTERM
 
 rand() {
   decimals=${3}
@@ -55,7 +44,6 @@ while true; do
   ./run.sh)
 
   echo "Generated vehicle no. ${counter} with PID: ${VEHICLE_PID}"
-  VEHICLE_PIDS="${VEHICLE_PIDS} ${VEHICLE_PID}"
 
   SLEEP_TIME=$(rand ${GEN_INTERVAL_MIN} ${GEN_INTERVAL_MAX} 0)
   echo "Generating next vehicle in ${SLEEP_TIME} seconds"

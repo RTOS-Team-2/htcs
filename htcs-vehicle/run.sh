@@ -31,5 +31,6 @@ ${BINARY_PATH}/htcs_vehicle \
 --brakingPower "${BRAKING_POWER}" \
 --size "${SIZE}" \
 &> "${LOG_FILE}" &
-
+# start in background with &
+# $! is the PID of the most recent background command
 echo $!
