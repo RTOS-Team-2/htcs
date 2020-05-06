@@ -60,7 +60,7 @@ def on_connect(mqttc, obj, flags, rc):
         exit(rc)
 
 
-def setup_connector(config):
+def setup_connector(config,on_connect=on_connect,on_message=on_message):
     mqtt_connector.username_pw_set(username=config["username"], password=config["password"])
     mqtt_connector.on_connect = on_connect
     mqtt_connector.on_message = on_message
