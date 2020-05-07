@@ -19,10 +19,12 @@ def get_connection_config():
     config_dict["position_bound"] = int(config_dict["position_bound"])
     config_dict["max_car_size"] = int(config_dict["max_car_size"])
     config_dict["quality_of_service"] = int(config_dict["quality_of_service"])
+    config_dict["base_topic"] = config_dict["listening_topic"][:-2]
     return config_dict
 
 
 def on_message(mqttc, obj, msg):
+    # TODO: error handling
     topic_parts = msg.topic.split('/')
     if topic_parts[1] == "vehicles":
         car_id = topic_parts[-2]
@@ -65,7 +67,7 @@ def setup_connector(config,on_connect=on_connect,on_message=on_message):
     mqtt_connector.on_connect = on_connect
     mqtt_connector.on_message = on_message
     mqtt_connector.connect(config["address"], 1883, 60)
-    mqtt_connector.subscribe(config["base_topic"], config["quality_of_service"])
+    mqtt_connector.subscribe(config["listening_topic"], config["quality_of_service"])
 
 
 class CarSpecs:
