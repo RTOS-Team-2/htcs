@@ -24,7 +24,11 @@ Run the python script. Zoom with W / S keys, move with A / D keys. Exit from the
 
 ## Known issues
 
-OpenCV's GUI (ismhow) fails to work on some linux distributions using Qt.
+OpenCV's GUI (imshow) fails to work on some linux distributions using Qt.
+
+Workaround:
+Do not use virtual environment, install OpenCV on your machine from apt:
+`sudo apt-get install libopencv-dev`
 
 ## TODO
 
