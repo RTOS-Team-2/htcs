@@ -1,4 +1,12 @@
-# HTCS Controller and Visualizer
+# HTCS Controller
+
+Very basic controller logic, it blindly commands all cars in the merge lane to switch to the traffic lane
+
+Has to be started before any car is connected, just like the visualizer
+
+Controlling start after STARTING_DELAY_SEC seconds (default is 10 seconds), so there is time to start the car client(s), can be modified in htcs-controller.py: line 8
+
+# HTCS Visualizer
 
 This Python project contains two separate programs, that share the abstract model of the Car object, and the MQTT connector.
 
