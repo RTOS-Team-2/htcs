@@ -10,7 +10,7 @@ from HTCSPythonUtil import mqtt_connector, get_connection_config, Car, setup_con
 
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("HTCS_Visualization")
+logger = logging.getLogger(__name__)
 # SOME GLOBAL VARIABLES
 CONNECTION_CONFIG = get_connection_config()
 local_cars = {}
