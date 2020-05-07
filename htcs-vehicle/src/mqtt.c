@@ -132,10 +132,10 @@ void disconnect(MQTTAsync client) {
     MQTTAsync_disconnectOptions opts = MQTTAsync_disconnectOptions_initializer;
     opts.onSuccess = onDisconnect;
     opts.onFailure = onDisconnectFailure;
-    opts.context = client;
     _Bool disconnected = 0;
+    opts.context = &disconnected;
     int rc;
-    if ((rc = MQTTAsync_disconnect(&disconnected, &opts)) != MQTTASYNC_SUCCESS) {
+    if ((rc = MQTTAsync_disconnect(client, &opts)) != MQTTASYNC_SUCCESS) {
         fprintf(stderr, "Failed to start disconnect, return code %d\n", rc);
         fflush(stderr);
         return;
