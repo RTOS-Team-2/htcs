@@ -13,7 +13,7 @@
 #include "state.h"
 #include "mutex.h"
 
-#define INTERVAL_MS    250
+#define INTERVAL_MS    50
 
 static struct {
     MQTTAsync client;

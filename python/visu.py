@@ -42,6 +42,9 @@ y_stretch = visu_window_height / im_bigmap.shape[0]
 center_fast_lane = 42.5 * y_stretch
 center_slow_lane = 103.5 * y_stretch
 center_merge_lane = 164 * y_stretch
+center_fast_lane_mini = 32
+center_slow_lane_mini = 80
+center_merge_lane_mini = 130
 car_height = int((center_slow_lane - center_fast_lane) * 0.7)
 # will change
 go_on = True
@@ -98,10 +101,12 @@ class CarImage:
             self.straight = red_car_straight
             self.left = red_car_left
             self.right = red_car_right
+            self.color = (0, 0, 255) # BGR
         else:
             self.straight = blue_car_straight
             self.left = blue_car_left
             self.right = blue_car_right
+            self.color = (255, 0, 0) # BGR
         # Scale to correct size
         new_w = int(size * x_scale_bigmap * visu_window_width / region_width_bigmap_pixel)
         self.straight = cv2.resize(self.straight, (new_w, car_height))
@@ -139,7 +144,18 @@ class CarImage:
                self.car.distance_taken - self.car.specs.size < offset_meter + region_width_meter
 
     def get_point_on_minimap(self):
-        pass
+        if self.car.lane == 0:
+            cy = center_merge_lane_mini
+        elif self.car.lane == 1:
+            cy = int((center_merge_lane_mini + center_slow_lane_mini) / 2)
+        elif self.car.lane == 2:
+            cy = center_slow_lane_mini
+        elif self.car.lane in [3, 4]:
+            cy = int((center_slow_lane_mini + center_fast_lane_mini) / 2)
+        elif self.car.lane == 5:
+            cy = center_fast_lane_mini
+        cx = int(self.car.distance_taken / map_length_meter * minimap_length_pixel)
+        return cx, cy
 
     def get_image(self):
         if self.car.lane in [0, 2, 5]:
@@ -183,12 +199,6 @@ if __name__ == "__main__":
             (cur_im_minimap[:, : offset_minimap_pixel, :] * 0.6).astype(np.int32)
         cur_im_minimap[:, offset_minimap_pixel + region_width_minimap_pixel:, :] = \
             (cur_im_minimap[:, offset_minimap_pixel + region_width_minimap_pixel:, :] * 0.6).astype(np.int32)
-        # scale up
-        cur_im_minimap[:, offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel, :] = \
-            cv2.resize(cur_im_minimap[int(minimap_height_pixel * 0.05): int(minimap_height_pixel * 0.90),
-                                      offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel,
-                                      :],
-                       (region_width_minimap_pixel, minimap_height_pixel))
         # orange lines
         cv2.line(cur_im_minimap,
                  (offset_minimap_pixel, 0),
@@ -200,9 +210,8 @@ if __name__ == "__main__":
                  (offset_minimap_pixel + region_width_minimap_pixel, minimap_height_pixel),
                  (0, 140, 255),
                  3)
-        cv2.imshow(WINDOW_NAME_MINIMAP, cur_im_minimap)
 
-        # on visualizer
+        # visualizer scaling.... :/
         offset_bigmap_pixel = int(offset_meter * x_scale_bigmap)
         vis = cv2.resize(im_bigmap[:, offset_bigmap_pixel: offset_bigmap_pixel + region_width_bigmap_pixel, :],
                          (visu_window_width, visu_window_height),
@@ -210,10 +219,20 @@ if __name__ == "__main__":
         with lock:
             cars = list(local_cars.values())
         for car in cars:
+            x, y = car.get_point_on_minimap()
+            cv2.circle(cur_im_minimap, (x, y), 3, car.color, cv2.FILLED)
             if car.is_in_region():
                 x_slice_vis, x_slice_car = car.get_x_slice()
                 vis[car.get_y_slice(), x_slice_vis, :] = car.get_image()[:, x_slice_car, :]
 
+        # scale up
+        cur_im_minimap[:, offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel, :] = \
+            cv2.resize(cur_im_minimap[int(minimap_height_pixel * 0.05): int(minimap_height_pixel * 0.90),
+                                      offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel,
+                                      :],
+                       (region_width_minimap_pixel, minimap_height_pixel))
+
+        cv2.imshow(WINDOW_NAME_MINIMAP, cur_im_minimap)
         cv2.imshow(WINDOW_NAME_VISU, vis)
         cv2.waitKey(16)
 
