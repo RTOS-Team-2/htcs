@@ -80,7 +80,7 @@ void subscribe(MQTTAsync client, const Options* opts, const _Bool* keepRunning) 
     _Bool subscribed = 0;
     responseOptions.context = &subscribed;
     int rc;
-    if ((rc = MQTTAsync_subscribe(client, subscribeTopic, 1, &responseOptions)) != MQTTASYNC_SUCCESS)
+    if ((rc = MQTTAsync_subscribe(client, subscribeTopic, QOS, &responseOptions)) != MQTTASYNC_SUCCESS)
     {
         printf("Failed to start subscribe, return code %d\n", rc);
         fflush(stdout);
@@ -101,8 +101,8 @@ int sendMessage(MQTTAsync client, char* topic, char* payload, int len) {
 
     MQTTAsync_message message = MQTTAsync_message_initializer;
     message.payload = payload;
-    message.payloadlen = (int)strlen(payload);
-    message.qos = 1;
+    message.payloadlen = len;
+    message.qos = QOS;
     message.retained = 0;
     int rc;
     if ((rc = MQTTAsync_sendMessage(client, topic, &message, &opts)) != MQTTASYNC_SUCCESS) {
