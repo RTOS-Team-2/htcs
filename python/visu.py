@@ -3,6 +3,7 @@ import cv2
 import ast
 import random
 import logging
+import threading
 import numpy as np
 from typing import List
 from HTCSPythonUtil import mqtt_connector, get_connection_config, Car, setup_connector
@@ -46,6 +47,7 @@ def on_message_vis(mqttc, obj, msg):
                 try:
                     specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
                     local_cars[car_id] = CarImage(0, 0, specs['size'])
+                    logger.info(f"Car with {car_id} joined traffic")
                 except TypeError:
                     logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
         elif msg_type == "state":
@@ -149,15 +151,18 @@ def display_state(cars: List[CarImage]):
 
 
 if __name__ == "__main__":
-    setup_connector(CONNECTION_CONFIG,on_message=on_message_vis)
+    setup_connector(CONNECTION_CONFIG, on_message=on_message_vis)
     mqtt_connector.loop_start()
 
     cv2.namedWindow(WINDOW_NAME, flags=cv2.WINDOW_NORMAL)
     cv2.resizeWindow(WINDOW_NAME, 1800, 250)
 
+    lock = threading.Lock()
+
     go_on = True
     while go_on:
-        go_on = display_state(list(local_cars.values()))
+        with lock:
+            go_on = display_state(list(local_cars.values()))
 
     mqtt_connector.loop_stop()
 
