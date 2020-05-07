@@ -4,11 +4,10 @@ import time
 import signal
 import random
 import subprocess
-from pathlib import Path
 from HTCSPythonUtil import get_connection_config
 
 
-repo_root_dir = str(Path(__file__).parent.parent)
+repo_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 executable_name_windows = repo_root_dir + "/htcs-vehicle/Debug/htcs-vehicle.exe"
 executable_name_linux = "TODO"
 CONNECTION_CONFIG = get_connection_config()
@@ -37,13 +36,15 @@ class GracefulKiller:
     def exit_gracefully(self, signum, frame):
         self.kill_now = True
         for pid in running_children:
-            # TODO: WHAT IF THEY ARE ALREADY TERMINATED
+            # TODO: WHAT IF THEY ARE ALREADY TERMINATED (maybe nothing)
             pid.terminate()
 
 
 if __name__ == "__main__":
+    print(executable_name_windows)
     killer = GracefulKiller()
-    while not killer.kill_now:
+    file_h = open("cars_log.txt", "w")
+    while not killer.kill_now and len(running_children) < 2:
         sleep_time = random.random() * GENERATE_TIME_INTERVAL_WIDTH + GENERATE_TIME_INTERVAL_MIN
         params_string = f"--address {CONNECTION_CONFIG['address']} " \
                         f"--username {CONNECTION_CONFIG['username']} " \
@@ -57,8 +58,11 @@ if __name__ == "__main__":
                         f"--size {random.random() * SIZE_INTERVAL_WIDTH + SIZE_INTERVAL_MIN}"
 
         if os.name == 'nt':
-            running_children.append(subprocess.Popen(executable_name_windows + " " + params_string))
+            running_children.append(subprocess.Popen(executable_name_windows + " " + params_string, stdout=file_h))
         else:
             raise NotImplementedError("implement linux call")
 
         time.sleep(sleep_time)
+
+    while not killer.kill_now:
+        time.sleep(1)
