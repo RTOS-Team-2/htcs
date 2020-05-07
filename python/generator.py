@@ -28,8 +28,6 @@ SIZE_INTERVAL_MIN = 2
 SIZE_INTERVAL_WIDTH = CONNECTION_CONFIG["max_car_size"] - SIZE_INTERVAL_MIN       # uh...  too many connections :D
 running_children = []
 
-os.putenv("LD_LIBRARY_PATH", os.getenv("HOME") + "/Eclipse-Paho-MQTT-C-1.3.1-Linux/lib")
-
 
 class GracefulKiller:
     kill_now = False
@@ -46,6 +44,9 @@ class GracefulKiller:
 
 
 if __name__ == "__main__":
+    if os.name is not 'nt':
+        os.putenv("LD_LIBRARY_PATH", os.getenv("HOME") + "/Eclipse-Paho-MQTT-C-1.3.1-Linux/lib")
+
     killer = GracefulKiller()
     now = datetime.datetime.now()
     now_str = now.strftime('%Y%m%d%H%M%S')
@@ -67,9 +68,9 @@ if __name__ == "__main__":
 
         file_h = open(current_logs_dir + "/htcs_vehicle-" + client_id + ".log", "w")
         if os.name == 'nt':
-            running_children.append(subprocess.Popen(executable_name_windows + " " + params_string, stdout=file_h))
+            running_children.append(subprocess.Popen(executable_name_windows + " " + params_string,
+                                                     shell=True, stdout=file_h, stderr=file_h))
         else:
             running_children.append(subprocess.Popen(executable=executable_name_linux, args=params_string.split(' '),
                                                      shell=True, stdout=file_h, stderr=file_h))
-
         time.sleep(sleep_time)
