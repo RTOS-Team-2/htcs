@@ -32,7 +32,7 @@ minimap_length_pixel = im_minimap.shape[1]
 minimap_height_pixel = im_minimap.shape[0]
 bigmap_length_pixel = im_bigmap.shape[1]
 map_length_meter = CONNECTION_CONFIG["position_bound"]
-map_width_meter = 14
+map_width_meter = 20
 x_scale_minimap = minimap_length_pixel / map_length_meter
 x_scale_bigmap = bigmap_length_pixel / map_length_meter
 region_width_meter = 250
@@ -42,7 +42,7 @@ y_stretch = visu_window_height / im_bigmap.shape[0]
 center_fast_lane = 42.5 * y_stretch
 center_slow_lane = 103.5 * y_stretch
 center_merge_lane = 164 * y_stretch
-car_height = int((center_slow_lane * center_fast_lane) * 0.7)
+car_height = int((center_slow_lane - center_fast_lane) * 0.7)
 # will change
 go_on = True
 is_dragging = False
@@ -122,10 +122,21 @@ class CarImage:
         return slice(start, start + self.straight.shape[0])
 
     def get_x_slice(self):
-        pass
+        on_vis_slice_x_end = int((self.car.distance_taken - offset_meter) / region_width_meter * visu_window_width)
+        on_vis_slice_x_start = on_vis_slice_x_end - self.straight.shape[1]
+        on_car_slice_x_start = 0
+        on_car_slice_x_end = self.straight.shape[1]
+        if on_vis_slice_x_end > visu_window_width:
+            on_car_slice_x_end -= on_vis_slice_x_end - visu_window_width
+            on_vis_slice_x_end = visu_window_width
+        elif on_vis_slice_x_start < 0:
+            on_car_slice_x_start -= on_vis_slice_x_start
+            on_vis_slice_x_start = 0
+        return slice(on_vis_slice_x_start, on_vis_slice_x_end), slice(on_car_slice_x_start, on_car_slice_x_end)
 
     def is_in_region(self):
-        return True
+        return self.car.distance_taken > offset_meter and \
+               self.car.distance_taken - self.car.specs.size < offset_meter + region_width_meter
 
     def get_point_on_minimap(self):
         pass
@@ -196,6 +207,13 @@ if __name__ == "__main__":
         vis = cv2.resize(im_bigmap[:, offset_bigmap_pixel: offset_bigmap_pixel + region_width_bigmap_pixel, :],
                          (visu_window_width, visu_window_height),
                          interpolation=cv2.INTER_NEAREST)
+        with lock:
+            cars = list(local_cars.values())
+        for car in cars:
+            if car.is_in_region():
+                x_slice_vis, x_slice_car = car.get_x_slice()
+                vis[car.get_y_slice(), x_slice_vis, :] = car.get_image()[:, x_slice_car, :]
+
         cv2.imshow(WINDOW_NAME_VISU, vis)
         cv2.waitKey(16)
 
