@@ -25,20 +25,6 @@ SIZE_MAX=10
 LOG_FOLDER="logs/generation-$(date +"%Y%m%d%H%M%S")"
 mkdir -p "${LOG_FOLDER}"
 
-VEHICLE_PIDS=""
-
-signal_handler () {
-  echo "Terminating vehicles:${VEHICLE_PIDS}"
-  for PID in ${VEHICLE_PIDS}; do
-    kill -INT ${PID}
-    wait ${PID}
-  done
-  exit
-}
-
-trap signal_handler SIGINT
-trap signal_handler SIGTERM
-
 rand() {
   decimals=${3}
   zeros=$(printf "%0.s0" $(seq 1 "${decimals}"))
@@ -72,8 +58,6 @@ while ${RUNNING}; do
   --size "$(rand ${SIZE_MIN} ${SIZE_MAX} 3)" \
   &> "${LOG_FILE}" &
 
-  VEHICLE_PID=$!
-  VEHICLE_PIDS="${VEHICLE_PIDS} ${VEHICLE_PID}"
   echo "Generated vehicle no. ${counter} with PID: ${VEHICLE_PID}"
 
   SLEEP_TIME=$(rand ${GEN_INTERVAL_MIN} ${GEN_INTERVAL_MAX} 0)
