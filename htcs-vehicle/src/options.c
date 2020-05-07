@@ -8,7 +8,7 @@ void usage() {
 		"\t--address <mqtt broker, e.g. maqiatto.com>\\\n"
 		"\t--username <mqtt username>\\\n"
 		"\t--password <mqtt password>\\\n"
-		"\t--client_id <arbitrary client id>\\\n"
+		"\t--clientId <arbitrary client id>\\\n"
 		"\t--topic <topic base, e.g. krisz.kern@gmail.com/vehicles>\\\n"
 		"\t--preferredSpeed <positive double in km/h, e.g. 120>\\\n"
 		"\t--maxSpeed <positive double in km/h, e.g. 210>\\\n"
