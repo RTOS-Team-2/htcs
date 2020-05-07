@@ -4,13 +4,15 @@ import ast
 import random
 import logging
 import numpy as np
-from HTCSPythonUtil import mqtt_connector, get_connection_config, local_cars, Car, setup_connector
+from typing import List
+from HTCSPythonUtil import mqtt_connector, get_connection_config, Car, setup_connector
 
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("HTCS_Visualization")
 # SOME GLOBAL VARIABLES
 CONNECTION_CONFIG = get_connection_config()
+local_cars = {}
 # image resources
 WINDOW_NAME = "Highway Traffic Control System Visualization"
 im_map = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/map.png")
@@ -29,9 +31,9 @@ max_car_size_pixel = int(0.86 * (center_slow_lane - center_fast_lane))
 # for navigation
 current_offset = 0
 current_region_width = map_length
+commands = dict([(0, "Maintain speed!"), (1, "Accelerate!"), (2, "Brake!"), (3, "Switch lanes!"), (4, "Terminate!")])
 
-commands = dict([(0, "Maintain speed!"), (1, "Accelerate!"), (2, "Brake!"), (3, "Switch lanes!")])
-# TODO: error raising does not do anything on that thread
+
 def on_message_vis(mqttc, obj, msg):
     topic_parts = msg.topic.split('/')
     if topic_parts[1] == "vehicles":
@@ -113,14 +115,14 @@ class CarImage:
             return self.right
 
 
-def display_state(cars):
+def display_state(cars: List[CarImage]):
     global current_offset, current_region_width
 
     vis = im_map.copy()
-    for carId, car in cars.items():
+    for car in cars:
         vis[car.get_y_slice(), car.get_x_slice(), :] = car.get_image()
 
-    c = cv2.waitKey(20)
+    c = cv2.waitKey(16)
     if c == ord('a'):
         current_offset -= 30
     elif c == ord('d'):
@@ -155,7 +157,7 @@ if __name__ == "__main__":
 
     go_on = True
     while go_on:
-        go_on = display_state(local_cars)
+        go_on = display_state(list(local_cars.values()))
 
     mqtt_connector.loop_stop()
 
