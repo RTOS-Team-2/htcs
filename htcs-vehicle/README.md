@@ -109,3 +109,30 @@ The following variables are sent with this message:
 * distanceTaken
 * speed
 * accelerationState
+
+# Vehicle Generator
+
+The `vehicle-generator.sh` bash script generates randomized vehicles in
+random intervals in an endless loop.
+
+You can adjust the parameter intervals in the beginning of the script.
+
+Note that interrupting the script (Ctrl+C) will also make sure that all vehicles generated
+by it will be interrupted too.
+
+## Prerequisites
+1. Set MQTT_PASSWORD environment variable
+2. `cd /path/to/repo/htcs-vehicle`
+3. `./build.sh`
+    1. requires `gcc`
+
+## Requirements
+
+The following GNU tools should be available in the bash for the generator script:
+- `echo`
+- `printf`
+- `sleep`
+- `bc`
+- `seq`
+- `date`
+- `shuf`
