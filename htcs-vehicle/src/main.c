@@ -105,8 +105,7 @@ void joinTraffic() {
 
 void exitTraffic() {
     sprintf(G_CTX.topic, "%s/%s/join", G_CTX.opts.topic, G_CTX.opts.clientId);
-    G_CTX.payload[0] = '\0'; // empty message
-    int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, 1, 1);
+    int error = sendMessage(G_CTX.client, G_CTX.topic, NULL, 0, 1);
     if (error) {
         fprintf(stderr, "Failed to exit traffic, rc: %d\n", error);
         fflush(stderr);

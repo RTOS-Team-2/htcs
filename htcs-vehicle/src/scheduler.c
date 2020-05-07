@@ -21,8 +21,7 @@ void startRunning(int* keepRunning, int intervalMs, void(*callback)())
 
 timer_t timerID;
 
-void handlerTimer(int signal, siginfo_t *si, void* uc)
-{
+void handlerTimer(int signal, siginfo_t *si, void* uc) {
     scheduler_sigdata* sigdata = si->si_value.sival_ptr;
     if (sigdata->keepRunning) {
         sigdata->callback();
@@ -32,8 +31,7 @@ void handlerTimer(int signal, siginfo_t *si, void* uc)
     }
 }
 
-void startRunning(_Bool* keepRunning, int intervalMs, void(*callback)())
-{
+void startRunning(_Bool* keepRunning, int intervalMs, void(*callback)()) {
     struct sched_param schedpar;
     schedpar.sched_priority = 12;
 

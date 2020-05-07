@@ -52,12 +52,10 @@ MQTTAsync createAndConnect(const Options* opts, int(*messageArrived)(void*, char
 
     char joinTopic[1024];
     sprintf(joinTopic, "%s/%s/join", opts->topic, opts->clientId);
-    char lwtPayload[1];
-    lwtPayload[0] = '\0';
     MQTTAsync_willOptions willOptions = MQTTAsync_willOptions_initializer;
     willOptions.topicName = joinTopic;
-    willOptions.payload.data = lwtPayload;
-    willOptions.payload.len = 1;
+    willOptions.payload.data = NULL;
+    willOptions.payload.len = 0;
     willOptions.qos = QOS;
     willOptions.retained = 1;
     conn_opts.will = &willOptions;
