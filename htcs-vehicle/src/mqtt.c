@@ -11,9 +11,9 @@ void onConnect(void* connected, MQTTAsync_successData* response);
 
 void onConnectFailure(void* context, MQTTAsync_failureData* response);
 
-void onDisconnect(void* context, MQTTAsync_successData* response);
+void onDisconnect(void* disconnected, MQTTAsync_successData* response);
 
-void onDisconnectFailure(void* context, MQTTAsync_failureData* response);
+void onDisconnectFailure(void* disconnected, MQTTAsync_failureData* response);
 
 void connectionLost(void* context, char *cause);
 
@@ -133,11 +133,21 @@ void disconnect(MQTTAsync client) {
     opts.onSuccess = onDisconnect;
     opts.onFailure = onDisconnectFailure;
     opts.context = client;
+    _Bool disconnected = 0;
     int rc;
-    if ((rc = MQTTAsync_disconnect(client, &opts)) != MQTTASYNC_SUCCESS) {
+    if ((rc = MQTTAsync_disconnect(&disconnected, &opts)) != MQTTASYNC_SUCCESS) {
         fprintf(stderr, "Failed to start disconnect, return code %d\n", rc);
         fflush(stderr);
+        return;
     }
+    while (!disconnected) {
+        #if defined(_WIN32)
+        Sleep(100);
+        #else
+        usleep(100000L);
+        #endif
+    }
+    MQTTAsync_destroy(&client);
 }
 
 void onConnect(void* connected, MQTTAsync_successData* response) {
@@ -153,18 +163,16 @@ void onConnectFailure(void* context, MQTTAsync_failureData* response) {
     raise(SIGTERM);
 }
 
-void onDisconnect(void* context, MQTTAsync_successData* response) {
+void onDisconnect(void* disconnected, MQTTAsync_successData* response) {
     printf("Successful disconnection\n");
     fflush(stdout);
-    MQTTAsync client = (MQTTAsync) context;
-    MQTTAsync_destroy(&client);
+    *((_Bool*)disconnected) = 1;
 }
 
-void onDisconnectFailure(void* context, MQTTAsync_failureData* response) {
+void onDisconnectFailure(void* disconnected, MQTTAsync_failureData* response) {
     fprintf(stderr, "Disconnect failed\n");
     fflush(stderr);
-    MQTTAsync client = (MQTTAsync) context;
-    MQTTAsync_destroy(&client);
+    *((_Bool*)disconnected) = 1;
 }
 
 void connectionLost(void *context, char *cause) {
