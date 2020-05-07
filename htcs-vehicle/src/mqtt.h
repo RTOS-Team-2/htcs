@@ -4,6 +4,8 @@
 #include <MQTTAsync.h>
 #include "options.h"
 
+#define QOS 1
+
 MQTTAsync createAndConnect(const Options* opts, int(*messageArrived)(void*, char*, int, MQTTAsync_message*),
         const _Bool* keepRunning);
 

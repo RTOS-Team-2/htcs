@@ -12,7 +12,10 @@ set(SOURCES
         src/scheduler.h
         src/command.c
         src/command.h
-        src/state.c src/state.h)
+        src/state.c
+        src/state.h
+        src/mutex.c
+        src/mutex.h)
 IF (WIN32)
     string(REPLACE "\\" "/" HOME $ENV{USERPROFILE})
     set(SUBMODULE_LIBS "${HOME}/eclipse-paho-mqtt-c-win32-1.3.1/lib")

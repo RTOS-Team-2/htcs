@@ -1,5 +1,6 @@
 #ifndef HTCS_VEHICLE_STATE_H
 #define HTCS_VEHICLE_STATE_H
+
 #include "options.h"
 
 #define STARTING_SPEED 13.8888889   // [m/s] (=50 km/h)

@@ -29,11 +29,11 @@ void processCommand(const Command cmd, State* state) {
                     state->lane = EXPRESS_TO_TRAFFIC;
                     break;
                 default:
-                    printf("Already changing lane");
+                    printf("Already changing lane\n");
             }
             break;
         case TERMINATE:
-            printf("Terminate command received");
+            printf("Terminate command received\n");
             fflush(stdout);
             raise(SIGTERM);
             break;

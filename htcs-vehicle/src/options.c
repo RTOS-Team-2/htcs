@@ -4,12 +4,17 @@
 #include <stdlib.h>
 
 void usage() {
-    printf("htcs_vehicle\\\n");
-    printf("\t--address <mqtt broker, e.g. maqiatto.com>\\\n");
-    printf("\t--username <mqtt username>\\\n");
-    printf("\t--password <mqtt password>\\\n");
-    printf("\t--client_id <arbitrary client id>\\\n");
-    printf("\t--topic <topic base, e.g. krisz.kern@gmail.com/vehicles>\\\n");
+	printf("htcs_vehicle\\\n"
+		"\t--address <mqtt broker, e.g. maqiatto.com>\\\n"
+		"\t--username <mqtt username>\\\n"
+		"\t--password <mqtt password>\\\n"
+		"\t--client_id <arbitrary client id>\\\n"
+		"\t--topic <topic base, e.g. krisz.kern@gmail.com/vehicles>\\\n"
+		"\t--preferredSpeed <positive double in km/h, e.g. 120>\\\n"
+		"\t--maxSpeed <positive double in km/h, e.g. 210>\\\n"
+		"\t--acceleration <positive double, 0-100 km/h in seconds, e.g. 7.4>\\\n"
+		"\t--brakingPower <positive double, 100-0 km/h in seconds, e.g. 9.2>\\\n"
+		"\t--size <positive double in meters, e.g. 2.5>\\\n");
     fflush(stdout);
 }
 
@@ -83,5 +88,13 @@ int getOptions(Options* opts, int argc, char** argv) {
         }
         pos++;
     }
+
+	if (opts->address == NULL || opts->username == NULL || opts->password == NULL ||
+		opts->clientId == NULL || opts->topic == NULL || opts->preferredSpeed <= 0.0 ||
+		opts->maxSpeed <= 0.0 || opts->acceleration <= 0.0 || opts->brakingPower <= 0.0 ||
+		opts->size <= 0.0) {
+		return 2;
+	}
+
     return 0;
 }
