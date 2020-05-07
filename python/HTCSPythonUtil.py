@@ -19,11 +19,12 @@ def get_connection_config():
     config_dict["position_bound"] = int(config_dict["position_bound"])
     config_dict["max_car_size"] = int(config_dict["max_car_size"])
     config_dict["quality_of_service"] = int(config_dict["quality_of_service"])
-    config_dict["base_topic"] = config_dict["listening_topic"][:-1]
+    config_dict["base_topic"] = config_dict["listening_topic"][:-2]
     return config_dict
 
 
 def on_message(mqttc, obj, msg):
+    # TODO: error handling
     topic_parts = msg.topic.split('/')
     if topic_parts[1] == "vehicles":
         car_id = topic_parts[-2]

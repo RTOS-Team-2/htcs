@@ -1,8 +1,7 @@
 from HTCSPythonUtil import mqtt_connector, get_connection_config, local_cars, Car, setup_connector
-from time import sleep
 from pprint import pprint
-import copy
 import time
+import copy
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -41,7 +40,7 @@ def cars_needing_control(all_cars, order_by_priority=True):
 def control_lane_change(cars_priority_list):
     for car in cars_priority_list:
         if is_in_merge_lane(car) and can_change_lane(car, cars_priority_list):
-            topic = CONNECTION_CONFIG["base_topic"] + str(car.id) + "/command"
+            topic = CONNECTION_CONFIG["base_topic"] + "/" + str(car.id) + "/command"
             message = 3
             qos = CONNECTION_CONFIG["quality_of_service"]
             pprint(topic)
@@ -67,15 +66,15 @@ if __name__ == "__main__":
 
     interval_sec = INTERVAL_MS / 1000
     
-    sleep(STARTING_DELAY_SEC)
+    time.sleep(STARTING_DELAY_SEC)
     while True:
         time_start = time.time()
         control_traffic()
         remaining_sec = time_start + interval_sec - time.time()
         if remaining_sec <= 0:
-            logger.warning("Controller if feeling overloaded, it ha sno time to sleep! :(")
+            logger.warning("Controller if feeling overloaded, it has no time to sleep! :(")
         else:
-            sleep(remaining_sec)
+            time.sleep(remaining_sec)
 
     mqtt_connector.loop_stop()
 
