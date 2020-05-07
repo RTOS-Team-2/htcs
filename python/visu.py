@@ -3,14 +3,17 @@ import cv2
 import ast
 import random
 import logging
+import threading
 import numpy as np
-from HTCSPythonUtil import mqtt_connector, get_connection_config, local_cars, Car, setup_connector
+from typing import List
+from HTCSPythonUtil import mqtt_connector, get_connection_config, Car, setup_connector
 
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("HTCS_Visualization")
+logger = logging.getLogger(__name__)
 # SOME GLOBAL VARIABLES
 CONNECTION_CONFIG = get_connection_config()
+local_cars = {}
 # image resources
 WINDOW_NAME = "Highway Traffic Control System Visualization"
 im_map = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/map.png")
@@ -29,9 +32,9 @@ max_car_size_pixel = int(0.86 * (center_slow_lane - center_fast_lane))
 # for navigation
 current_offset = 0
 current_region_width = map_length
+commands = dict([(0, "Maintain speed!"), (1, "Accelerate!"), (2, "Brake!"), (3, "Switch lanes!"), (4, "Terminate!")])
 
-commands = dict([(0, "Maintain speed!"), (1, "Accelerate!"), (2, "Brake!"), (3, "Switch lanes!")])
-# TODO: error raising does not do anything on that thread
+
 def on_message_vis(mqttc, obj, msg):
     topic_parts = msg.topic.split('/')
     if topic_parts[1] == "vehicles":
@@ -44,6 +47,7 @@ def on_message_vis(mqttc, obj, msg):
                 try:
                     specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
                     local_cars[car_id] = CarImage(0, 0, specs['size'])
+                    logger.info(f"Car with {car_id} joined traffic")
                 except TypeError:
                     logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
         elif msg_type == "state":
@@ -113,14 +117,14 @@ class CarImage:
             return self.right
 
 
-def display_state(cars):
+def display_state(cars: List[CarImage]):
     global current_offset, current_region_width
 
     vis = im_map.copy()
-    for carId, car in cars.items():
+    for car in cars:
         vis[car.get_y_slice(), car.get_x_slice(), :] = car.get_image()
 
-    c = cv2.waitKey(20)
+    c = cv2.waitKey(16)
     if c == ord('a'):
         current_offset -= 30
     elif c == ord('d'):
@@ -147,15 +151,18 @@ def display_state(cars):
 
 
 if __name__ == "__main__":
-    setup_connector(CONNECTION_CONFIG,on_message=on_message_vis)
+    setup_connector(CONNECTION_CONFIG, on_message=on_message_vis)
     mqtt_connector.loop_start()
 
     cv2.namedWindow(WINDOW_NAME, flags=cv2.WINDOW_NORMAL)
     cv2.resizeWindow(WINDOW_NAME, 1800, 250)
 
+    lock = threading.Lock()
+
     go_on = True
     while go_on:
-        go_on = display_state(local_cars)
+        with lock:
+            go_on = display_state(list(local_cars.values()))
 
     mqtt_connector.loop_stop()
 
