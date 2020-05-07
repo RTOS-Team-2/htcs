@@ -35,7 +35,6 @@ while true; do
   counter=$((counter + 1))
 
   VEHICLE_PID=$(LOG_FOLDER=${LOG_FOLDER} \
-  CLIENT_ID=${counter} \
   PREFERRED_SPEED=$(rand ${PREF_SPEED_MIN} ${PREF_SPEED_MAX} 3) \
   MAX_SPEED=$(rand ${MAX_SPEED_MIN} ${MAX_SPEED_MAX} 3) \
   ACCELERATION=$(rand ${ACCELERATION_MIN} ${ACCELERATION_MAX} 3) \

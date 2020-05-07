@@ -9,7 +9,7 @@ if [ -z "${TOPIC}" ]; then TOPIC="krisz.kern@gmail.com/vehicles"; fi
 
 if [ -z "${BINARY_PATH}" ]; then BINARY_PATH="./build"; fi
 if [ -z "${LOG_FOLDER}" ]; then mkdir -p logs && LOG_FOLDER="logs"; fi
-LOG_FILE=${LOG_FOLDER}/htcs_vehicle-${CLIENT_ID}-$(date +"%Y%m%d%H%M%S").log
+LOG_FILE=${LOG_FOLDER}/htcs_vehicle-${CLIENT_ID}.log
 
 # default vehicle parameters
 if [ -z "${PREFERRED_SPEED}" ]; then PREFERRED_SPEED="120.0"; fi
