@@ -4,7 +4,7 @@ import ast
 import random
 import logging
 import numpy as np
-from HTCSPythonUtil import mqtt_connector, get_connection_config, local_cars, Car, on_connect
+from HTCSPythonUtil import mqtt_connector, get_connection_config, local_cars, Car, setup_connector
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -147,11 +147,7 @@ def display_state(cars):
 
 
 if __name__ == "__main__":
-    mqtt_connector.username_pw_set(username=CONNECTION_CONFIG["username"], password=CONNECTION_CONFIG["password"])
-    mqtt_connector.on_connect = on_connect
-    mqtt_connector.on_message = on_message_vis
-    mqtt_connector.connect(CONNECTION_CONFIG["address"], 1883, 60)
-    mqtt_connector.subscribe(CONNECTION_CONFIG["base_topic"], CONNECTION_CONFIG["quality_of_service"])
+    setup_connector(CONNECTION_CONFIG,on_message=on_message_vis)
     mqtt_connector.loop_start()
 
     cv2.namedWindow(WINDOW_NAME, flags=cv2.WINDOW_NORMAL)

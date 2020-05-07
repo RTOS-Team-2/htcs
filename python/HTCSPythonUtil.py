@@ -33,7 +33,7 @@ def on_message(mqttc, obj, msg):
             else:
                 try:
                     specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-                    local_cars[car_id] = Car(0, 0, 0, 0, CarSpecs(**specs))
+                    local_cars[car_id] = Car(car_id,0, 0, 0, 0, CarSpecs(**specs))
                 except TypeError:
                     logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
         elif msg_type == "state":
@@ -60,7 +60,7 @@ def on_connect(mqttc, obj, flags, rc):
         exit(rc)
 
 
-def setup_connector(config):
+def setup_connector(config,on_connect=on_connect,on_message=on_message):
     mqtt_connector.username_pw_set(username=config["username"], password=config["password"])
     mqtt_connector.on_connect = on_connect
     mqtt_connector.on_message = on_message
@@ -78,7 +78,7 @@ class CarSpecs:
 
 
 class Car:
-    def __init__(self, distance_taken, lane, speed, acceleration_state, specs: CarSpecs):
+    def __init__(self, car_id, distance_taken, lane, speed, acceleration_state, specs: CarSpecs):
         """
         :param distance_taken: distance taken along the single axis
         :param lane: ENUM TODO: what means what + typehint
@@ -86,6 +86,8 @@ class Car:
         :param acceleration_state: enum TODO: what means what + typehint
         :param specs: constant parameters of the car
         """
+        
+        self.id = car_id
         self.distance_taken = distance_taken
         self.lane = lane
         self.speed = speed
@@ -97,7 +99,7 @@ class Car:
         """
         Second constructor, since the visualization doesn't need the whole class
         """
-        return cls(distance_taken, lane, None, None, CarSpecs(None, None, None, None, size))
+        return cls(None, distance_taken, lane, None, None, CarSpecs(None, None, None, None, size))
 
     def update_state(self, lane, distance_taken, speed, acceleration_state):
         self.lane = lane
