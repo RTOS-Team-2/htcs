@@ -1,10 +1,13 @@
 import os
 import cv2
 import ast
+import time
 import random
 import logging
 import threading
 import numpy as np
+from copy import deepcopy
+from concurrent.futures import ThreadPoolExecutor
 from HTCSPythonUtil import mqtt_connector, get_connection_config, Car, setup_connector
 
 
@@ -14,6 +17,7 @@ logger = logging.getLogger(__name__)
 commands = dict([(0, "Maintain speed!"), (1, "Accelerate!"), (2, "Brake!"), (3, "Switch lanes!"), (4, "Terminate!")])
 CONNECTION_CONFIG = get_connection_config()
 local_cars = {}
+executor = ThreadPoolExecutor(max_workers=20)
 # image resources
 WINDOW_NAME_MINIMAP = "Highway Traffic Control System Minimap"
 WINDOW_NAME_VISU = "Highway Traffic Control System Visualization"
@@ -46,7 +50,6 @@ center_slow_lane_mini = 80
 center_merge_lane_mini = 130
 car_height = int((center_slow_lane - center_fast_lane) * 0.7)
 # will change
-go_on = True
 is_dragging = False
 offset_meter = 0
 offset_minimap_pixel = int(offset_meter * x_scale_minimap)
@@ -56,38 +59,52 @@ region_width_bigmap_pixel = int(region_width_meter * x_scale_bigmap)
 drag_start_x = 0
 drag_start_offset = 0
 
+msg_counter = 0
+
+
+def process_msg(msg):
+    global msg_counter
+    msg_counter += 1
+    logger.debug(f"msg count = {msg_counter}")
+    try:
+        topic_parts = msg.topic.split('/')
+        if topic_parts[1] == "vehicles":
+            car_id = topic_parts[-2]
+            msg_type = topic_parts[-1]
+            if msg_type == "join":
+                if car_id in local_cars.keys():
+                    logger.warning(f"Car with already existing id ({car_id}) sent a join message")
+                else:
+                    try:
+                        specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
+                        local_cars[car_id] = CarImage(0, 0, specs['size'])
+                        logger.info(f"Car with id {car_id} joined traffic")
+                    except TypeError:
+                        logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
+                logger.info("sleep on join")
+                time.sleep(5)
+            elif msg_type == "state":
+                if car_id not in local_cars.keys():
+                    logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
+                else:
+                    try:
+                        state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
+                        local_cars[car_id].car.update_state(**state)
+                    except TypeError:
+                        logger.warning(f"Received a badly formatted state message from id {car_id}: {msg.payload.decode('utf-8')}")
+            elif msg_type == "command":
+                if car_id in local_cars.keys():
+                    logger.info(f"Car with id {car_id} received a command: {commands[int(msg.payload.decode('utf-8'))]}")
+                else:
+                    logger.warning(f"Car with unrecognized id ({car_id}) received a command: {commands[int(msg.payload.decode('utf-8'))]}")
+            else:
+                logger.warning(f"Unrecognized topic: {msg_type}")
+    except:
+        logger.warning("HIBAAAAAAAAAAAAAAAA")
+
 
 def on_message_vis(mqttc, obj, msg):
-    topic_parts = msg.topic.split('/')
-    if topic_parts[1] == "vehicles":
-        car_id = topic_parts[-2]
-        msg_type = topic_parts[-1]
-        if msg_type == "join":
-            if car_id in local_cars.keys():
-                logger.warning(f"Car with already existing id ({car_id}) sent a join message")
-            else:
-                try:
-                    specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-                    local_cars[car_id] = CarImage(0, 0, specs['size'])
-                    logger.info(f"Car with {car_id} joined traffic")
-                except TypeError:
-                    logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
-        elif msg_type == "state":
-            if car_id not in local_cars.keys():
-                logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
-            else:
-                try:
-                    state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-                    local_cars[car_id].car.update_state(**state)
-                except TypeError:
-                    logger.warning(f"Received a badly formatted state message from id {car_id}: {msg.payload.decode('utf-8')}")
-        elif msg_type == "command":
-            if car_id in local_cars.keys():
-                logger.info(f"Car with id {car_id} received a command: {commands[int(msg.payload.decode('utf-8'))]}")
-            else:
-                logger.warning(f"Car with unrecognized id ({car_id}) received a command: {commands[int(msg.payload.decode('utf-8'))]}")
-        else:
-            logger.warning(f"Unrecognized topic: {msg_type}")
+    executor.submit(process_msg, msg)
 
 
 # class for visualization
@@ -181,7 +198,6 @@ def minimap_move(event, x, y, flags, param):
 if __name__ == "__main__":
     setup_connector(CONNECTION_CONFIG, on_message=on_message_vis)
     mqtt_connector.loop_start()
-
     lock = threading.Lock()
 
     cv2.namedWindow(WINDOW_NAME_MINIMAP, cv2.WINDOW_FREERATIO)

@@ -34,7 +34,7 @@ def on_message(mqttc, obj, msg):
             else:
                 try:
                     specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-                    local_cars[car_id] = Car(car_id,0, 0, 0, 0, CarSpecs(**specs))
+                    local_cars[car_id] = Car(car_id, 0, 0, 0, 0, CarSpecs(**specs))
                 except TypeError:
                     logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
         elif msg_type == "state":
@@ -61,12 +61,12 @@ def on_connect(mqttc, obj, flags, rc):
         exit(rc)
 
 
-def setup_connector(config,on_connect=on_connect,on_message=on_message):
+def setup_connector(config, on_connect=on_connect, on_message=on_message):
     mqtt_connector.username_pw_set(username=config["username"], password=config["password"])
     mqtt_connector.on_connect = on_connect
     mqtt_connector.on_message = on_message
     mqtt_connector.connect(config["address"], 1883, 60)
-    mqtt_connector.subscribe(config["listening_topic"], config["quality_of_service"])
+    mqtt_connector.subscribe(config["listening_topic"], config["quality_of_service"], )
 
 
 class CarSpecs:
