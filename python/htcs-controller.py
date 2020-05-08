@@ -1,4 +1,4 @@
-from HTCSPythonUtil import mqtt_connector, get_connection_config, local_cars, Car, setup_connector
+from HTCSPythonUtil import mqtt_client_1, CONFIG, local_cars, Car, setup_connectors, cleanup_connectors
 from pprint import pprint
 import time
 import copy
@@ -7,7 +7,6 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-CONNECTION_CONFIG = get_connection_config()
 INTERVAL_MS = 1000
 STARTING_DELAY_SEC = 10
 
@@ -40,11 +39,11 @@ def cars_needing_control(all_cars, order_by_priority=True):
 def control_lane_change(cars_priority_list):
     for car in cars_priority_list:
         if is_in_merge_lane(car) and can_change_lane(car, cars_priority_list):
-            topic = CONNECTION_CONFIG["base_topic"] + "/" + str(car.id) + "/command"
+            topic = CONFIG["base_topic"] + "/" + str(car.id) + "/command"
             message = 3
-            qos = CONNECTION_CONFIG["quality_of_service"]
+            qos = CONFIG["quality_of_service"]
             pprint(topic)
-            mqtt_connector.publish(topic, message, qos)
+            mqtt_client_1.publish(topic, message, qos)
             
             
 def is_in_merge_lane(car):
@@ -61,8 +60,7 @@ def can_change_lane(changing_car, all_cars):
 
 
 if __name__ == "__main__":
-    setup_connector(CONNECTION_CONFIG)
-    mqtt_connector.loop_start()
+    setup_connectors()
 
     interval_sec = INTERVAL_MS / 1000
     
@@ -75,6 +73,3 @@ if __name__ == "__main__":
             logger.warning("Controller is feeling overloaded, it has no time to sleep! :(")
         else:
             time.sleep(remaining_sec)
-
-    mqtt_connector.loop_stop()
-
