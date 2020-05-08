@@ -5,7 +5,6 @@ import random
 import logging
 import threading
 import numpy as np
-from typing import List
 from HTCSPythonUtil import mqtt_connector, get_connection_config, Car, setup_connector
 
 
@@ -35,7 +34,7 @@ map_length_meter = CONNECTION_CONFIG["position_bound"]
 map_width_meter = 20
 x_scale_minimap = minimap_length_pixel / map_length_meter
 x_scale_bigmap = bigmap_length_pixel / map_length_meter
-region_width_meter = 250
+region_width_meter = 350
 visu_window_width = 1800
 visu_window_height = int(visu_window_width * map_width_meter / region_width_meter)
 y_stretch = visu_window_height / im_bigmap.shape[0]
@@ -173,7 +172,7 @@ def minimap_move(event, x, y, flags, param):
         drag_start_offset = offset_minimap_pixel
         is_dragging = True
     elif event == cv2.EVENT_MOUSEMOVE and is_dragging:
-        offset_minimap_pixel = max(0, min(drag_start_offset + x - drag_start_x, minimap_length_pixel))
+        offset_minimap_pixel = max(0, min(drag_start_offset + x - drag_start_x, minimap_length_pixel - region_width_minimap_pixel))
         offset_meter = offset_minimap_pixel / x_scale_minimap
     elif event == cv2.EVENT_LBUTTONUP:
         is_dragging = False
@@ -234,7 +233,7 @@ if __name__ == "__main__":
 
         cv2.imshow(WINDOW_NAME_MINIMAP, cur_im_minimap)
         cv2.imshow(WINDOW_NAME_VISU, vis)
-        cv2.waitKey(16)
+        cv2.waitKey(1)
 
     mqtt_connector.loop_stop()
     cv2.destroyAllWindows()
