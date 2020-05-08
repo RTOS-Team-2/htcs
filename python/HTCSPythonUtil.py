@@ -3,6 +3,7 @@ import ast
 import uuid
 import logging
 import paho.mqtt.client as mqtt
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict
 
 
@@ -13,6 +14,7 @@ logger = logging.getLogger("MQTT_Connector")
 local_cars = {}
 mqtt_client_1 = mqtt.Client("main_client_" + str(uuid.uuid4()))
 mqtt_client_2 = mqtt.Client("state_client_" + str(uuid.uuid4()))
+thread_pool_executor = ThreadPoolExecutor(20)
 
 
 def get_connection_config():
@@ -38,7 +40,7 @@ def on_join_message(client, user_data, msg):
         logger.warning(f"Car with already existing id ({car_id}) sent a join message")
 
 
-def on_state_message(client, user_data, msg):
+def process_message(msg):
     car_id = msg.topic.split('/')[-2]
     car = local_cars.get(car_id)
     if car is None:
@@ -46,6 +48,10 @@ def on_state_message(client, user_data, msg):
     else:
         state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
         local_cars[car_id].update_state(**state)
+
+
+def on_state_message(client, user_data, msg):
+    thread_pool_executor.submit(process_message, msg)
 
 
 def on_connect(client, userdata, flags, rc):
