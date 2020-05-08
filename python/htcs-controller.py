@@ -72,7 +72,7 @@ if __name__ == "__main__":
         control_traffic()
         remaining_sec = time_start + interval_sec - time.time()
         if remaining_sec <= 0:
-            logger.warning("Controller if feeling overloaded, it has no time to sleep! :(")
+            logger.warning("Controller is feeling overloaded, it has no time to sleep! :(")
         else:
             time.sleep(remaining_sec)
 
