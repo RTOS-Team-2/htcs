@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
         file_h = open(current_logs_dir + "/htcs_vehicle-" + client_id + ".log", "w")
         if os.name == 'nt':
-            running_children.append(subprocess.Popen(executable_name_windows + " " + params_string,
+            running_children.append(subprocess.Popen(f'"{executable_name_windows}" ' + params_string,
                                                      shell=True, stdout=file_h, stderr=file_h))
         else:
             running_children.append(subprocess.Popen(executable=executable_name_linux, args=params_string.split(' '),
