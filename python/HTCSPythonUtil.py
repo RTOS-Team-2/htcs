@@ -86,7 +86,7 @@ def on_state_message(client, user_data, msg):
     thread_pool_executor.submit(process_message, msg)
 
 
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, user_data, flags, rc):
     if rc == 0:
         client.connected_flag = True
     else:
