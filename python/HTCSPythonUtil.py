@@ -18,9 +18,9 @@ thread_pool_executor = ThreadPoolExecutor(20)
 
 
 def get_connection_config():
-    config_dict = dict("".join(l.split()).split("=") for l
-                       in open(os.path.dirname(os.path.abspath(__file__)) + "/connection.properties")
-                       if not l.strip().startswith("#") )
+    config_dict = dict("".join(l.split()).split("=")
+                       for l in open(os.path.dirname(os.path.abspath(__file__)) + "/connection.properties")
+                       if not l.strip().startswith("#"))
     config_dict["position_bound"] = int(config_dict["position_bound"])
     config_dict["quality_of_service"] = int(config_dict["quality_of_service"])
     return config_dict
