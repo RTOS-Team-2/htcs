@@ -3,7 +3,7 @@
 // Windows Implementation
 #include <windows.h>
 
-void startRunning(int* keepRunning, int intervalMs, void(*callback)())
+void startRunning(_Bool* keepRunning, unsigned intervalMs, void(*callback)())
 {
     while (*keepRunning) {
         callback();
@@ -31,7 +31,7 @@ void handlerTimer(int signal, siginfo_t *si, void* uc) {
     }
 }
 
-void startRunning(_Bool* keepRunning, int intervalMs, void(*callback)()) {
+void startRunning(_Bool* keepRunning, unsigned intervalMs, void(*callback)()) {
     struct sched_param schedpar;
     schedpar.sched_priority = 12;
 

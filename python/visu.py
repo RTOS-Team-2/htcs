@@ -1,23 +1,18 @@
 import os
 import cv2
-import ast
-import time
 import random
 import logging
 import threading
 import numpy as np
-from copy import deepcopy
-from concurrent.futures import ThreadPoolExecutor
-from HTCSPythonUtil import mqtt_connector, get_connection_config, Car, setup_connector
+import mqtt_connector
+from car import Car, CarSpecs
+from HTCSPythonUtil import config, local_cars
 
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 # SOME GLOBAL VARIABLES
 commands = dict([(0, "Maintain speed!"), (1, "Accelerate!"), (2, "Brake!"), (3, "Switch lanes!"), (4, "Terminate!")])
-CONNECTION_CONFIG = get_connection_config()
-local_cars = {}
-executor = ThreadPoolExecutor(max_workers=20)
 # image resources
 WINDOW_NAME_MINIMAP = "Highway Traffic Control System Minimap"
 WINDOW_NAME_VISU = "Highway Traffic Control System Visualization"
@@ -34,7 +29,7 @@ blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/c
 minimap_length_pixel = im_minimap.shape[1]
 minimap_height_pixel = im_minimap.shape[0]
 bigmap_length_pixel = im_bigmap.shape[1]
-map_length_meter = CONNECTION_CONFIG["position_bound"]
+map_length_meter = config["position_bound"]
 map_width_meter = 20
 x_scale_minimap = minimap_length_pixel / map_length_meter
 x_scale_bigmap = bigmap_length_pixel / map_length_meter
@@ -59,59 +54,12 @@ region_width_bigmap_pixel = int(region_width_meter * x_scale_bigmap)
 drag_start_x = 0
 drag_start_offset = 0
 
-msg_counter = 0
-
-
-def process_msg(msg):
-    global msg_counter
-    msg_counter += 1
-    logger.debug(f"msg count = {msg_counter}")
-    try:
-        topic_parts = msg.topic.split('/')
-        if topic_parts[1] == "vehicles":
-            car_id = topic_parts[-2]
-            msg_type = topic_parts[-1]
-            if msg_type == "join":
-                if car_id in local_cars.keys():
-                    logger.warning(f"Car with already existing id ({car_id}) sent a join message")
-                else:
-                    try:
-                        specs = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-                        local_cars[car_id] = CarImage(0, 0, specs['size'])
-                        logger.info(f"Car with id {car_id} joined traffic")
-                    except TypeError:
-                        logger.warning(f"Received a badly formatted join message from id {car_id}: {msg.payload.decode('utf-8')}")
-                logger.info("sleep on join")
-                time.sleep(5)
-            elif msg_type == "state":
-                if car_id not in local_cars.keys():
-                    logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
-                else:
-                    try:
-                        state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-                        local_cars[car_id].car.update_state(**state)
-                    except TypeError:
-                        logger.warning(f"Received a badly formatted state message from id {car_id}: {msg.payload.decode('utf-8')}")
-            elif msg_type == "command":
-                if car_id in local_cars.keys():
-                    logger.info(f"Car with id {car_id} received a command: {commands[int(msg.payload.decode('utf-8'))]}")
-                else:
-                    logger.warning(f"Car with unrecognized id ({car_id}) received a command: {commands[int(msg.payload.decode('utf-8'))]}")
-            else:
-                logger.warning(f"Unrecognized topic: {msg_type}")
-    except:
-        logger.warning("HIBAAAAAAAAAAAAAAAA")
-
-
-def on_message_vis(mqttc, obj, msg):
-    executor.submit(process_msg, msg)
-
 
 # class for visualization
-class CarImage:
-    def __init__(self, distance_taken, lane, size):
+class CarImage(Car):
+    def __init__(self, car_id, specs: CarSpecs):
         # Create Car
-        self.car = Car.for_visualization(distance_taken, lane, size)
+        super().__init__(car_id, specs)
         # Red or Blue
         if bool(random.getrandbits(1)):
             self.straight = red_car_straight
@@ -124,26 +72,27 @@ class CarImage:
             self.right = blue_car_right
             self.color = (255, 0, 0) # BGR
         # Scale to correct size
-        new_w = int(size * x_scale_bigmap * visu_window_width / region_width_bigmap_pixel)
+        new_w = int(self.specs.size * x_scale_bigmap * visu_window_width / region_width_bigmap_pixel)
         self.straight = cv2.resize(self.straight, (new_w, car_height))
         self.left = cv2.resize(self.left, (new_w, car_height))
         self.right = cv2.resize(self.right, (new_w, car_height))
 
     def get_y_slice(self):
-        if self.car.lane == 0:
+        start = 0
+        if self.lane == 0:
             start = int(center_merge_lane - self.straight.shape[0] / 2)
-        elif self.car.lane == 1:
+        elif self.lane == 1:
             start = int((center_merge_lane + center_slow_lane) / 2 - self.straight.shape[0] / 2)
-        elif self.car.lane == 2:
+        elif self.lane == 2:
             start = int(center_slow_lane - self.straight.shape[0] / 2)
-        elif self.car.lane in [3, 4]:
+        elif self.lane in [3, 4]:
             start = int((center_slow_lane + center_fast_lane) / 2 - self.straight.shape[0] / 2)
-        elif self.car.lane == 5:
+        elif self.lane == 5:
             start = int(center_fast_lane - self.straight.shape[0] / 2)
         return slice(start, start + self.straight.shape[0])
 
     def get_x_slice(self):
-        on_vis_slice_x_end = int((self.car.distance_taken - offset_meter) / region_width_meter * visu_window_width)
+        on_vis_slice_x_end = int((self.distance_taken - offset_meter) / region_width_meter * visu_window_width)
         on_vis_slice_x_start = on_vis_slice_x_end - self.straight.shape[1]
         on_car_slice_x_start = 0
         on_car_slice_x_end = self.straight.shape[1]
@@ -156,29 +105,30 @@ class CarImage:
         return slice(on_vis_slice_x_start, on_vis_slice_x_end), slice(on_car_slice_x_start, on_car_slice_x_end)
 
     def is_in_region(self):
-        return self.car.distance_taken > offset_meter and \
-               self.car.distance_taken - self.car.specs.size < offset_meter + region_width_meter
+        return self.distance_taken > offset_meter and \
+               self.distance_taken - self.specs.size < offset_meter + region_width_meter
 
     def get_point_on_minimap(self):
-        if self.car.lane == 0:
+        cy = 0
+        if self.lane == 0:
             cy = center_merge_lane_mini
-        elif self.car.lane == 1:
+        elif self.lane == 1:
             cy = int((center_merge_lane_mini + center_slow_lane_mini) / 2)
-        elif self.car.lane == 2:
+        elif self.lane == 2:
             cy = center_slow_lane_mini
-        elif self.car.lane in [3, 4]:
+        elif self.lane in [3, 4]:
             cy = int((center_slow_lane_mini + center_fast_lane_mini) / 2)
-        elif self.car.lane == 5:
+        elif self.lane == 5:
             cy = center_fast_lane_mini
-        cx = int(self.car.distance_taken / map_length_meter * minimap_length_pixel)
+        cx = int(self.distance_taken / map_length_meter * minimap_length_pixel)
         return cx, cy
 
     def get_image(self):
-        if self.car.lane in [0, 2, 5]:
+        if self.lane in [0, 2, 5]:
             return self.straight
-        elif self.car.lane in [1, 3]:
+        elif self.lane in [1, 3]:
             return self.left
-        elif self.car.lane == 4:
+        elif self.lane == 4:
             return self.right
 
 
@@ -196,8 +146,7 @@ def minimap_move(event, x, y, flags, param):
 
 
 if __name__ == "__main__":
-    setup_connector(CONNECTION_CONFIG, on_message=on_message_vis)
-    mqtt_connector.loop_start()
+    mqtt_connector.setup_connector(CarImage)
     lock = threading.Lock()
 
     cv2.namedWindow(WINDOW_NAME_MINIMAP, cv2.WINDOW_FREERATIO)
@@ -251,6 +200,6 @@ if __name__ == "__main__":
         cv2.imshow(WINDOW_NAME_VISU, vis)
         cv2.waitKey(1)
 
-    mqtt_connector.loop_stop()
     cv2.destroyAllWindows()
+    mqtt_connector.cleanup_connector()
 

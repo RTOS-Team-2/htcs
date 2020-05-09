@@ -12,6 +12,7 @@ typedef struct Options {
     double acceleration;
     double brakingPower;
     double size;
+    unsigned updateFrequency;
 } Options;
 
 void usage();

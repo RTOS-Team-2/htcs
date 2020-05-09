@@ -6,14 +6,13 @@ import random
 import pathlib
 import datetime
 import subprocess
-from HTCSPythonUtil import get_connection_config
+from HTCSPythonUtil import config
 
 
 repo_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 executable_name_windows = repo_root_dir + "/htcs-vehicle/Debug/htcs-vehicle.exe"
 executable_name_linux = repo_root_dir + "/htcs-vehicle/build/htcs_vehicle"
 logs_dir = repo_root_dir + "/python/logs"
-CONNECTION_CONFIG = get_connection_config()
 GENERATE_TIME_INTERVAL_MIN = 4
 GENERATE_TIME_INTERVAL_WIDTH = 1
 PREF_SPEED_INTERVAL_MIN = 50
@@ -55,11 +54,11 @@ if __name__ == "__main__":
     while not killer.kill_now:
         sleep_time = random.random() * GENERATE_TIME_INTERVAL_WIDTH + GENERATE_TIME_INTERVAL_MIN
         client_id = str(uuid.uuid4())
-        params_string = f"--address {CONNECTION_CONFIG['address']} " \
-                        f"--username {CONNECTION_CONFIG['username']} " \
-                        f"--password {CONNECTION_CONFIG['password']} " \
+        params_string = f"--address {config['address']} " \
+                        f"--username {config['username']} " \
+                        f"--password {config['password']} " \
                         f"--clientId {client_id} " \
-                        f"--topic {CONNECTION_CONFIG['base_topic']} " \
+                        f"--topic {config['base_topic']} " \
                         f"--preferredSpeed {random.random() * PREF_SPEED_INTERVAL_WIDTH + PREF_SPEED_INTERVAL_MIN} " \
                         f"--maxSpeed {random.random() * MAX_SPEED_INTERVAL_WIDTH + MAX_SPEED_INTERVAL_MIN} " \
                         f"--acceleration {random.random() * ACCELERATION_INTERVAL_WIDTH + ACCELERATION_INTERVAL_MIN} " \
