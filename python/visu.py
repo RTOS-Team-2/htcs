@@ -130,10 +130,6 @@ class CarImage(Car):
             return self.right
 
 
-def create_car(car_id, specs):
-    return CarImage(car_id, specs)
-
-
 def minimap_move(event, x, y, flags, param):
     global offset_minimap_pixel, drag_start_x, drag_start_offset, is_dragging, offset_meter
     if event == cv2.EVENT_LBUTTONDOWN and offset_minimap_pixel <= x <= offset_minimap_pixel + region_width_minimap_pixel:
@@ -148,7 +144,7 @@ def minimap_move(event, x, y, flags, param):
 
 
 if __name__ == "__main__":
-    setup_connectors(create_car)
+    setup_connectors(model_class=CarImage)
     lock = threading.Lock()
 
     cv2.namedWindow(WINDOW_NAME_MINIMAP, cv2.WINDOW_FREERATIO)
