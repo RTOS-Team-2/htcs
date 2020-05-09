@@ -3,7 +3,7 @@ import uuid
 import logging
 import paho.mqtt.client as mqtt
 from car import Car, CarSpecs
-from typing import List, Dict, Tuple
+from typing import List, Tuple
 from HTCSPythonUtil import config, local_cars
 
 logging.basicConfig(level=logging.DEBUG)
@@ -88,7 +88,7 @@ def setup_connector(_model_class=Car):
     client_1.subscribe(topic=config["base_topic"] + "/+/join", qos=config["quality_of_service"])
 
     for i in range(state_client_pool_size):
-        client_id = "state_client_" + str(i) + str(uuid.uuid4())
+        client_id = "state_client_" + str(i) + "-" + str(uuid.uuid4())
         state_client = mqtt.Client(client_id)
         state_client_pool.append((state_client, []))
         state_client.username_pw_set(username=config["username"], password=config["password"])
