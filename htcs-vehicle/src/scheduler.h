@@ -6,6 +6,6 @@ typedef struct scheduler_sigdata {
     void (*callback)();
 } scheduler_sigdata;
 
-void startRunning(_Bool* keepRunning, int intervalMs, void(*callback)());
+void startRunning(_Bool* keepRunning, unsigned intervalMs, void(*callback)());
 
 #endif //HTCS_VEHICLE_SCHEDULER_H
