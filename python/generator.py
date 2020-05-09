@@ -3,16 +3,19 @@ import uuid
 import time
 import signal
 import random
+import logging
 import pathlib
 import datetime
 import subprocess
 from HTCSPythonUtil import config
 
+logging.basicConfig(level=logging.DEBUG)
 
 repo_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 executable_name_windows = repo_root_dir + "/htcs-vehicle/Debug/htcs-vehicle.exe"
 executable_name_linux = repo_root_dir + "/htcs-vehicle/build/htcs_vehicle"
 logs_dir = repo_root_dir + "/python/logs"
+
 GENERATE_TIME_INTERVAL_MIN = 4
 GENERATE_TIME_INTERVAL_WIDTH = 1
 PREF_SPEED_INTERVAL_MIN = 50
@@ -25,21 +28,30 @@ BRAKING_POWER_INTERVAL_MIN = 3
 BRAKING_POWER_INTERVAL_WIDTH = 11
 SIZE_INTERVAL_MIN = 3
 SIZE_INTERVAL_WIDTH = 3
-running_children = []
+
+VEHICLE_MAX_LIFE_EXPECTANCY = 300  # seconds
 
 
 class GracefulKiller:
     kill_now = False
 
     def __init__(self):
+        self.running_children = []
         signal.signal(signal.SIGINT, self.exit_gracefully)
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
+    def kill_too_old(self):
+        first_child, first_child_created = self.running_children[0]
+        if elapsed >= first_child_created + VEHICLE_MAX_LIFE_EXPECTANCY:
+            self.running_children.pop(0)
+            first_child.terminate()
+            return first_child
+        return None
+
     def exit_gracefully(self, signum, frame):
         self.kill_now = True
-        for pid in running_children:
-            # TODO: WHAT IF THEY ARE ALREADY TERMINATED (maybe nothing)
-            pid.terminate()
+        for child, _ in self.running_children:
+            child.terminate()
 
 
 if __name__ == "__main__":
@@ -51,6 +63,8 @@ if __name__ == "__main__":
     now_str = now.strftime('%Y%m%d%H%M%S')
     current_logs_dir = logs_dir + "/generation-" + now_str
     pathlib.Path(current_logs_dir).mkdir(exist_ok=True, parents=True)
+    logging.info("Starting generation, output dir: " + current_logs_dir)
+    elapsed = 0
     while not killer.kill_now:
         sleep_time = random.random() * GENERATE_TIME_INTERVAL_WIDTH + GENERATE_TIME_INTERVAL_MIN
         client_id = str(uuid.uuid4())
@@ -65,11 +79,20 @@ if __name__ == "__main__":
                         f"--brakingPower {random.random() * BRAKING_POWER_INTERVAL_WIDTH + BRAKING_POWER_INTERVAL_MIN} " \
                         f"--size {random.random() * SIZE_INTERVAL_WIDTH + SIZE_INTERVAL_MIN}"
 
-        file_h = open(current_logs_dir + "/htcs_vehicle-" + client_id + ".log", "w")
+        log_file = open(current_logs_dir + "/htcs_vehicle-" + client_id + ".log", "w")
         if os.name == 'nt':
-            running_children.append(subprocess.Popen(f'"{executable_name_windows}" ' + params_string,
-                                                     shell=True, stdout=file_h, stderr=file_h))
+            process = subprocess.Popen(f'"{executable_name_windows}" ' + params_string,
+                                       shell=True, stdout=log_file, stderr=log_file)
         else:
-            running_children.append(subprocess.Popen(executable=executable_name_linux, args=params_string.split(' '),
-                                                     shell=True, stdout=file_h, stderr=file_h))
+            process = subprocess.Popen(executable=executable_name_linux, args=params_string.split(' '),
+                                       shell=True, stdout=log_file, stderr=log_file)
+
+        killer.running_children.append((process, elapsed))
+        logging.info("Generated vehicle client_id: " + client_id + " process_id: " + str(process.pid)
+                     + ", next vehicle in " + str(sleep_time) + " seconds")
         time.sleep(sleep_time)
+        elapsed += sleep_time
+
+        killed = killer.kill_too_old()
+        if killed is not None:
+            logging.info("Killed too old child process_id: " + str(killed.pid))
