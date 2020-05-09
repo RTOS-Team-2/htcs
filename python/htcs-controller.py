@@ -1,8 +1,9 @@
-from HTCSPythonUtil import mqtt_client_1, CONFIG, local_cars, Car, setup_connectors, cleanup_connectors
+from HTCSPythonUtil import config, local_cars
 from pprint import pprint
 import time
 import copy
 import logging
+import mqtt_connector
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -39,11 +40,11 @@ def cars_needing_control(all_cars, order_by_priority=True):
 def control_lane_change(cars_priority_list):
     for car in cars_priority_list:
         if is_in_merge_lane(car) and can_change_lane(car, cars_priority_list):
-            topic = CONFIG["base_topic"] + "/" + str(car.id) + "/command"
+            topic = config["base_topic"] + "/" + str(car.id) + "/command"
             message = 3
-            qos = CONFIG["quality_of_service"]
+            qos = config["quality_of_service"]
             pprint(topic)
-            mqtt_client_1.publish(topic, message, qos)
+            mqtt_connector.client_1.publish(topic, message, qos)
             
             
 def is_in_merge_lane(car):
@@ -60,7 +61,7 @@ def can_change_lane(changing_car, all_cars):
 
 
 if __name__ == "__main__":
-    setup_connectors()
+    mqtt_connector.setup_connector()
 
     interval_sec = INTERVAL_MS / 1000
     

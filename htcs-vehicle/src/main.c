@@ -13,8 +13,6 @@
 #include "state.h"
 #include "mutex.h"
 
-#define INTERVAL_MS    250
-
 static struct {
     MQTTAsync client;
     Options opts;
@@ -63,7 +61,7 @@ int main(int argc, char* argv[]) {
 
     sprintf(G_CTX.topic, "%s/%s/state", G_CTX.opts.topic, G_CTX.opts.clientId);
 
-    startRunning(&G_CTX.keepRunning, INTERVAL_MS, &schedulerCallback);
+    startRunning(&G_CTX.keepRunning, G_CTX.opts.updateFrequency, &schedulerCallback);
 
     exitTraffic();
 
@@ -80,7 +78,7 @@ void signalHandler(int signal) {
 
 void schedulerCallback() {
 	mutex_lock(&G_CTX.stateMutex);
-    adjustState(&G_CTX.state, INTERVAL_MS);
+    adjustState(&G_CTX.state, G_CTX.opts.updateFrequency);
     int len = stateToString(&G_CTX.state, G_CTX.payload);
     mutex_unlock(&G_CTX.stateMutex);
     int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len, 0);

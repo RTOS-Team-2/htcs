@@ -4,7 +4,9 @@ import random
 import logging
 import threading
 import numpy as np
-from HTCSPythonUtil import CONFIG, Car, CarSpecs, setup_connectors, cleanup_connectors, local_cars
+import mqtt_connector
+from car import Car, CarSpecs
+from HTCSPythonUtil import config, local_cars
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -27,7 +29,7 @@ blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/c
 minimap_length_pixel = im_minimap.shape[1]
 minimap_height_pixel = im_minimap.shape[0]
 bigmap_length_pixel = im_bigmap.shape[1]
-map_length_meter = CONFIG["position_bound"]
+map_length_meter = config["position_bound"]
 map_width_meter = 20
 x_scale_minimap = minimap_length_pixel / map_length_meter
 x_scale_bigmap = bigmap_length_pixel / map_length_meter
@@ -144,7 +146,7 @@ def minimap_move(event, x, y, flags, param):
 
 
 if __name__ == "__main__":
-    setup_connectors(model_class=CarImage)
+    mqtt_connector.setup_connector(CarImage)
     lock = threading.Lock()
 
     cv2.namedWindow(WINDOW_NAME_MINIMAP, cv2.WINDOW_FREERATIO)
@@ -199,5 +201,5 @@ if __name__ == "__main__":
         cv2.waitKey(1)
 
     cv2.destroyAllWindows()
-    cleanup_connectors()
+    mqtt_connector.cleanup_connector()
 

@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define INTERVAL_MS 100
+
 void usage() {
 	printf("htcs_vehicle\\\n"
 		"\t--address <mqtt broker, e.g. maqiatto.com>\\\n"
@@ -14,7 +16,8 @@ void usage() {
 		"\t--maxSpeed <positive double in km/h, e.g. 210>\\\n"
 		"\t--acceleration <positive double, 0-100 km/h in seconds, e.g. 7.4>\\\n"
 		"\t--brakingPower <positive double, 100-0 km/h in seconds, e.g. 9.2>\\\n"
-		"\t--size <positive double in meters, e.g. 2.5>\\\n");
+		"\t--size <positive double in meters, e.g. 2.5>\\\n"
+        "\t--update-frequency <unsigned long in ms, default is 100 ms>\\\n");
     fflush(stdout);
 }
 
@@ -85,6 +88,12 @@ int getOptions(Options* opts, int argc, char** argv) {
             } else {
                 return 11;
             }
+        } else if (strcmp(argv[pos], "--update-frequency") == 0) {
+            if (++pos < argc) {
+                opts->updateFrequency = strtol(argv[pos], NULL, 10);
+            } else {
+                return 11;
+            }
         }
         pos++;
     }
@@ -94,6 +103,10 @@ int getOptions(Options* opts, int argc, char** argv) {
 		opts->maxSpeed <= 0.0 || opts->acceleration <= 0.0 || opts->brakingPower <= 0.0 ||
 		opts->size <= 0.0) {
 		return 2;
+	}
+
+	if (opts->updateFrequency <= 0) {
+	    opts->updateFrequency = INTERVAL_MS;
 	}
 
     return 0;

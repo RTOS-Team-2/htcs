@@ -6,7 +6,7 @@ import random
 import pathlib
 import datetime
 import subprocess
-from HTCSPythonUtil import CONFIG
+from HTCSPythonUtil import config
 
 
 repo_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -54,11 +54,11 @@ if __name__ == "__main__":
     while not killer.kill_now:
         sleep_time = random.random() * GENERATE_TIME_INTERVAL_WIDTH + GENERATE_TIME_INTERVAL_MIN
         client_id = str(uuid.uuid4())
-        params_string = f"--address {CONFIG['address']} " \
-                        f"--username {CONFIG['username']} " \
-                        f"--password {CONFIG['password']} " \
+        params_string = f"--address {config['address']} " \
+                        f"--username {config['username']} " \
+                        f"--password {config['password']} " \
                         f"--clientId {client_id} " \
-                        f"--topic {CONFIG['base_topic']} " \
+                        f"--topic {config['base_topic']} " \
                         f"--preferredSpeed {random.random() * PREF_SPEED_INTERVAL_WIDTH + PREF_SPEED_INTERVAL_MIN} " \
                         f"--maxSpeed {random.random() * MAX_SPEED_INTERVAL_WIDTH + MAX_SPEED_INTERVAL_MIN} " \
                         f"--acceleration {random.random() * ACCELERATION_INTERVAL_WIDTH + ACCELERATION_INTERVAL_MIN} " \
