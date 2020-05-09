@@ -13,7 +13,7 @@ model_class = Car
 
 client_1 = mqtt.Client("main_client_" + str(uuid.uuid4()))
 state_client_pool: List[Tuple[mqtt.Client, List[str]]] = []
-state_client_pool_size = 4
+state_client_pool_size = 8
 
 rr_counter = 0
 
@@ -33,6 +33,7 @@ def unsubscribe_pool(car_id):
         if car_id in car_ids:
             client.unsubscribe(config["base_topic"] + "/" + car_id + "/state")
             car_ids.remove(car_id)
+            local_cars.pop(car_id)
             return
 
 
@@ -78,14 +79,6 @@ def on_disconnect(client, user_data, rc):
 def setup_connector(_model_class=Car):
     global model_class
     model_class = _model_class
-    client_1.username_pw_set(username=config["username"], password=config["password"])
-    client_1.on_connect = on_connect
-    client_1.on_message = on_join_message
-    client_1.on_disconnect = on_disconnect
-
-    client_1.connect(config["address"])
-    client_1.loop_start()
-    client_1.subscribe(topic=config["base_topic"] + "/+/join", qos=config["quality_of_service"])
 
     for i in range(state_client_pool_size):
         client_id = "state_client_" + str(i) + "-" + str(uuid.uuid4())
@@ -97,6 +90,15 @@ def setup_connector(_model_class=Car):
         state_client.on_disconnect = on_disconnect
         state_client.connect(config["address"])
         state_client.loop_start()
+
+    client_1.username_pw_set(username=config["username"], password=config["password"])
+    client_1.on_connect = on_connect
+    client_1.on_message = on_join_message
+    client_1.on_disconnect = on_disconnect
+
+    client_1.connect(config["address"])
+    client_1.loop_start()
+    client_1.subscribe(topic=config["base_topic"] + "/+/join", qos=config["quality_of_service"])
 
 
 def cleanup_connector():
