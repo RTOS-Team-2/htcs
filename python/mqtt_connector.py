@@ -13,7 +13,7 @@ model_class = Car
 
 client_1 = mqtt.Client("main_client_" + str(uuid.uuid4()))
 state_client_pool: List[Tuple[mqtt.Client, List[str]]] = []
-state_client_pool_size = 4
+state_client_pool_size = 8
 
 rr_counter = 0
 
@@ -33,6 +33,7 @@ def unsubscribe_pool(car_id):
         if car_id in car_ids:
             client.unsubscribe(config["base_topic"] + "/" + car_id + "/state")
             car_ids.remove(car_id)
+            local_cars.pop(car_id)
             return
 
 
