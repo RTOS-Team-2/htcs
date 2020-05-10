@@ -21,14 +21,15 @@ screen_height = tk.winfo_screenheight()
 # image resources
 WINDOW_NAME_MINIMAP = "Highway Traffic Control System Minimap"
 WINDOW_NAME_VISU = "Highway Traffic Control System Visualization"
-im_bigmap = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/mapp_big.png")
-im_minimap = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/mapp.png")
+im_bigmap = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/map.png")
+im_minimap = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/minimap.png")
 red_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car1.png")
 red_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car1left.png")
 red_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car1right.png")
 blue_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2.png")
 blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2left.png")
 blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2right.png")
+truck = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/truck.png")
 # to fit screen
 im_minimap = cv2.resize(im_minimap, (screen_width, im_minimap.shape[0]))
 # measure
@@ -37,7 +38,7 @@ minimap_height_pixel = im_minimap.shape[0]
 bigmap_length_pixel = im_bigmap.shape[1]
 # fix parameters
 region_width_meter_start = 100
-map_height_meter = 20
+map_height_meter = 16
 map_length_meter = config["position_bound"]
 center_fast_lane_mini = 32
 center_slow_lane_mini = 80
@@ -58,8 +59,13 @@ class CarImage(Car):
     def __init__(self, car_id, specs: CarSpecs):
         # Create Car
         super().__init__(car_id, specs)
+        if specs.size > 5.6:
+            self.straight = truck
+            self.left = truck
+            self.right = truck
+            self.color = (11, 195, 255)
         # Red or Blue
-        if bool(random.getrandbits(1)):
+        elif bool(random.getrandbits(1)):
             self.straight = red_car_straight
             self.left = red_car_left
             self.right = red_car_right
