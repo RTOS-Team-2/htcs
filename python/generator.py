@@ -76,7 +76,7 @@ class GraveDigger:
 
 def generate_random_specs():
     pref_speed = random.random() * PREF_SPEED_INTERVAL_WIDTH + PREF_SPEED_INTERVAL_MIN
-    max_speed = min(pref_speed, random.random() * MAX_SPEED_INTERVAL_WIDTH + MAX_SPEED_INTERVAL_MIN)
+    max_speed = max(pref_speed, random.random() * MAX_SPEED_INTERVAL_WIDTH + MAX_SPEED_INTERVAL_MIN)
     acceleration = random.random() * ACCELERATION_INTERVAL_WIDTH + ACCELERATION_INTERVAL_MIN
     brake = random.random() * BRAKING_POWER_INTERVAL_WIDTH + BRAKING_POWER_INTERVAL_MIN
     size = random.random() * SIZE_INTERVAL_WIDTH + SIZE_INTERVAL_MIN
@@ -85,7 +85,7 @@ def generate_random_specs():
 
 def generate_params_string(current_id):
     specs = generate_random_specs()
-    entry_dist = config["entry_1_meter"]
+    entry_dist = 0
     if random.random() > 0.70:
         entry_dist = config["entry_2_meter"]
         entry_lane = 0
@@ -99,6 +99,7 @@ def generate_params_string(current_id):
             entry_lane = 2
             start_speed = specs.preferred_speed
         else:
+            entry_dist = config["entry_1_meter"]
             entry_lane = 0
             start_speed = 50
     long_string = f"--address {config['address']} " \

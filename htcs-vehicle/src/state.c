@@ -59,11 +59,11 @@ void adjustState(State *state, unsigned elapsedMs) {
 
 int attributesAndStateToString(State *state, char *attributesStr) {
     return sprintf(attributesStr,
-                   "'preferred_speed':%f,'max_speed':%f,'acceleration':%f,'braking_power':%f,'size':%f,"
-                   "'lane':%d,'distance_taken':%f,'speed':%f,'acceleration_state':%d",
+                   "'preferred_speed':%f,'max_speed':%f,'acceleration':%f,'braking_power':%f,'size':%f|"
+                   "'distance_taken':%f,'lane':%d,'speed':%f,'acceleration_state':%d",
                    state->attributes.preferredSpeed, state->attributes.maxSpeed,
                    state->attributes.acceleration, state->attributes.brakingPower, state->attributes.size,
-                   state->lane, state->distanceTaken, state->speed, state->accelerationState);
+                   state->distanceTaken, state->lane, state->speed, state->accelerationState);
 }
 
 int stateToString(State *state, char *stateStr) {
