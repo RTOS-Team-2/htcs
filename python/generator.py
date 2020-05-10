@@ -12,7 +12,6 @@ from typing import List, Tuple
 from HTCSPythonUtil import config
 
 logger = logging.getLogger("Vehicle_generator")
-logger.setLevel(level=logging.DEBUG)
 
 repo_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 executable_name_windows = repo_root_dir + "/htcs-vehicle/Debug/htcs-vehicle.exe"
@@ -41,37 +40,46 @@ class GraveDigger:
 
     def __init__(self):
         self.running_children: List[Tuple[subprocess.Popen, int, int, str]] = []
-        self.ready_to_archive: List[Tuple[int, str]] = []
+        self.last_archive_time = time.time()
+        self.archive_start_id = 1
         signal.signal(signal.SIGINT, self.exit_gracefully)
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
     def archive_logs(self):
-        if len(self.ready_to_archive) == ARCHIVE_LOG_ZIP_SIZE:
-            client_no_first = self.ready_to_archive[0][0]
-            client_no_last = self.ready_to_archive[len(self.ready_to_archive) - 1][0]
-            zip_file_name = current_logs_dir + "/archive/" + str(client_no_first) + "-" + str(client_no_last) + ".zip"
-            with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zf:
-                for _client_id, _log_file in self.ready_to_archive:
-                    base_name = os.path.basename(os.path.normpath(_log_file))
-                    zf.write(_log_file, base_name)
-                    os.remove(_log_file)
-            self.ready_to_archive.clear()
-            return True
-        return False
+        _now = time.time()
+
+        if self.last_archive_time > (_now - (ARCHIVE_LOG_ZIP_SIZE + 1) * VEHICLE_MAX_LIFE_EXPECTANCY):
+            return False
+
+        start_idx = self.archive_start_id
+        end_idx = self.archive_start_id + ARCHIVE_LOG_ZIP_SIZE
+        zip_file_name = current_logs_dir + "/archive/" + str(start_idx) + "-" + str(end_idx - 1) + ".zip"
+        with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zf:
+            for i in range(start_idx, end_idx):
+                base_name = "htcs_vehicle-" + str(i) + "-" + now_str + ".log"
+                full_name = os.path.join(current_logs_dir, base_name)
+                zf.write(full_name, base_name)
+                os.remove(full_name)
+
+        self.archive_start_id = end_idx
+        self.last_archive_time = _now
+        return True
+
+    def bury_zombies(self):
+        self.running_children = [child for child in self.running_children if child[0].poll() is None]
 
     def kill_too_old(self):
-        first_child, first_child_created, client_no, _log_file_name = self.running_children[0]
-        if elapsed >= first_child_created + VEHICLE_MAX_LIFE_EXPECTANCY:
+        first_child = self.running_children[0]
+        if elapsed >= first_child[1] + VEHICLE_MAX_LIFE_EXPECTANCY:
             self.running_children.pop(0)
-            self.ready_to_archive.append((client_no, _log_file_name))
-            first_child.terminate()
-            return first_child
+            first_child[0].terminate()
+            return first_child[0]
         return None
 
     def exit_gracefully(self, signum, frame):
         self.kill_now = True
-        for child, _, _, _ in self.running_children:
-            child.terminate()
+        for _process, _, _, _ in self.running_children:
+            _process.terminate()
 
 
 def generate_random_specs():
@@ -151,8 +159,9 @@ if __name__ == "__main__":
         time.sleep(sleep_time)
         elapsed += sleep_time
 
+        grave_digger.bury_zombies()
         killed = grave_digger.kill_too_old()
         if killed is not None:
-            logger.info("Killed too old child process_id: " + str(killed.pid))
+            logger.info(f"Killed too old child process_id: {killed.pid}")
         if grave_digger.archive_logs():
             logger.info("Archived logs")
