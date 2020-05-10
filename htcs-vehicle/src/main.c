@@ -89,7 +89,7 @@ void schedulerCallback() {
 
 void joinTraffic() {
     sprintf(G_CTX.topic, "%s/%s/join", G_CTX.opts.topic, G_CTX.opts.clientId);
-    int len = attributesToString(&G_CTX.state.attributes, G_CTX.payload);
+    int len = attributesAndStateToString(&G_CTX.state, G_CTX.payload);
     int error = sendMessage(G_CTX.client, G_CTX.topic, G_CTX.payload, len, 1);
     if (error) {
         fprintf(stderr, "Failed to join traffic, rc: %d\n", error);

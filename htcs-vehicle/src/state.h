@@ -41,7 +41,7 @@ void initializeState(State* state, const Options* opts);
 
 void adjustState(State* state, unsigned elapsedMs);
 
-int attributesToString(Attributes* attributes, char* attributesStr);
+int attributesAndStateToString(State *state, char* attributesStr);
 
 int stateToString(State* state, char* stateStr);
 

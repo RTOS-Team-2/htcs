@@ -63,7 +63,7 @@ int getOptions(Options* opts, int argc, char** argv) {
             }
         } else if (strcmp(argv[pos], "--startingLane") == 0) {
             if (++pos < argc) {
-                opts->startingLane = atoi(argv[pos], NULL);         // This is a plain integer now
+                opts->startingLane = strtol(argv[pos], NULL, 10);
             }
             else {
                 return 7;
