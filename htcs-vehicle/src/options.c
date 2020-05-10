@@ -15,12 +15,12 @@ void usage() {
         "\t--startingLane <0 for merge, 2 for traffic, 5 for express lane>"
         "\t--startingDistance <positive double [meter]>"
         "\t--startingSpeed <positive double [km/h]>"
-		"\t--preferredSpeed <positive double in km/h, e.g. 120>\\\n"
-		"\t--maxSpeed <positive double in km/h, e.g. 210>\\\n"
-		"\t--acceleration <positive double, 0-100 km/h in seconds, e.g. 7.4>\\\n"
-		"\t--brakingPower <positive double, 100-0 km/h in seconds, e.g. 9.2>\\\n"
-		"\t--size <positive double in meters, e.g. 2.5>\\\n"
-        "\t--update-frequency <unsigned long in ms, default is 100 ms>\\\n");
+		"\t--preferredSpeed <positive double [km/h], e.g. 120>\\\n"
+		"\t--maxSpeed <positive double [km/h], e.g. 210>\\\n"
+		"\t--acceleration <positive double [m/s^2], e.g. 7.4>\\\n"
+		"\t--brakingPower <positive double [m/s^2], e.g. 9.2>\\\n"
+		"\t--size <positive double [meter], e.g. 4.5>\\\n"
+        "\t--update-frequency <unsigned long [ms], default is 100 ms>\\\n");
     fflush(stdout);
 }
 
