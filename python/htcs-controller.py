@@ -63,10 +63,11 @@ def give_command(car, command):
 
 
 def get_follow_distance(car):
-    follow_distance = 0
-    #TODO: Kiszámolni követési távolságot az autó sebességéből és fékezési kapacitásából
     # follow_distance = az a táv ami alatt meg tud állni 0-ra az autó az aktuális sebességről
-    return follow_distance
+    # time to stop = speed / deceleration
+    # distance traveled = aree under the function of speed(time)
+    # which is a line from current speed at zero time, and zero speed at time to stop
+    return (car.speed / 2.0) * (car.speed / car.specs.braking_power)
 
 
 def is_in_merge_lane(car):
