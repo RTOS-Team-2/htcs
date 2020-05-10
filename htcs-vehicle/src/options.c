@@ -13,12 +13,12 @@ void usage() {
 		"\t--clientId <arbitrary client id>\\\n"
 		"\t--topic <topic base, e.g. krisz.kern@gmail.com/vehicles>\\\n"
         "\t--startingLane <0 for merge, 2 for traffic, 5 for express lane>"
-        "\t--startingDistance <positive double [meter]>"
-        "\t--startingSpeed <positive double [km/h]>"
+        "\t--startingDistance <positive double [meter], e.g. 0>"
+        "\t--startingSpeed <positive double [km/h], e.g. 55.6>"
 		"\t--preferredSpeed <positive double [km/h], e.g. 120>\\\n"
 		"\t--maxSpeed <positive double [km/h], e.g. 210>\\\n"
-		"\t--acceleration <positive double [m/s^2], e.g. 7.4>\\\n"
-		"\t--brakingPower <positive double [m/s^2], e.g. 9.2>\\\n"
+		"\t--acceleration <positive double [s/100km/h], e.g. 7.4>\\\n"
+		"\t--brakingPower <positive double [s/100km/h], e.g. 9.2>\\\n"
 		"\t--size <positive double [meter], e.g. 4.5>\\\n"
         "\t--update-frequency <unsigned long [ms], default is 100 ms>\\\n");
     fflush(stdout);
