@@ -1,20 +1,30 @@
 from HTCSPythonUtil import config, local_cars
 from pprint import pprint
+from enum import Enum
 import time
 import copy
 import logging
 import mqtt_connector
 
 logger = logging.getLogger(__name__)
-#logger.setLevel(level=logging.WARNING)
+logger.setLevel(level=logging.INFO)
 
 INTERVAL_MS = 1000
+
+
+class Command(Enum):
+    MAINTAIN_SPEED = 0
+    ACCELERATE = 1
+    BRAKE = 2
+    CHANGE_LANE = 3
+    TERMINATE = 4
 
 
 def control_traffic():
     # Make a copy because local_cars can get modified durring calculations
     all_cars_snapshot = copy.deepcopy(local_cars)
-    #TODO - implement logic for cars already being treated
+#    sorted_cars = sort-
+    #TODO - implement logic for cars already being controlled
     currently_controlled_cars = "TODO"
     #TODO
     #cars_priority_list = cars_needing_control(all_cars_snapshot,True)
@@ -39,12 +49,16 @@ def cars_needing_control(all_cars, order_by_priority=True):
 def control_lane_change(cars_priority_list):
     for car in cars_priority_list:
         if is_in_merge_lane(car) and can_change_lane(car, cars_priority_list):
-            topic = config["base_topic"] + "/" + str(car.id) + "/command"
-            message = 3
-            qos = config["quality_of_service"]
-            logger.debug(topic)
-            mqtt_connector.client_1.publish(topic, message, qos)
-            
+            give_command(car,Command.CHANGE_LANE)
+
+
+def give_command(car,command):
+    qos = config["quality_of_service"]
+    topic = config["base_topic"] + "/" + str(car.id) + "/command"
+    logger.debug(topic)
+    message = command.value
+    mqtt_connector.client_1.publish(topic, message, qos)
+
             
 def is_in_merge_lane(car):
     return car.lane == 0
