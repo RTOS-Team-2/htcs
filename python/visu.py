@@ -60,24 +60,23 @@ if __name__ == "__main__":
     cv2.namedWindow(WINDOW_NAME)
     cv2.moveWindow(WINDOW_NAME, 0, 0)
     cv2.setMouseCallback(WINDOW_NAME, minimap_move)
-    src_points = np.float32([[0, 0],
-                             [0, int(vis.minimap_height_pixel * 0.05)],
-                             [region_width_minimap_pixel, int(vis.minimap_height_pixel * 0.05)],
-                             [region_width_minimap_pixel, 0]])
 
     while cv2.getWindowProperty(WINDOW_NAME, 0) >= 0:
-        dst_points = np.float32([[offset_minimap_pixel, vis.minimap_height_pixel],
-                                 [0, vis.minimap_height_pixel + vis.black_region_height],
-                                 [vis.window_width, vis.minimap_height_pixel + vis.black_region_height],
-                                 [offset_minimap_pixel + region_width_minimap_pixel, vis.minimap_height_pixel]])
-        canvas = cv2.warpPerspective(vis.im_minimap[:-1 * int(vis.minimap_height_pixel * 0.05),
-                                                    offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel, :],
-                                     cv2.getPerspectiveTransform(src_points, dst_points),
-                                     (vis.window_width, vis.minimap_height_pixel + vis.black_region_height + current_detail_height),
-                                     flags=cv2.INTER_LINEAR)
+        canvas = np.zeros((vis.minimap_height_pixel + vis.black_region_height + current_detail_height,
+                           vis.window_width, 3),
+                          np.uint8)
+        # put title in cone
+        canvas[vis.minimap_height_pixel: vis.minimap_height_pixel + vis.black_region_height, :, :] = vis.title
+        cv2.fillConvexPoly(canvas, np.int32(((0, vis.minimap_height_pixel),
+                                             (0, vis.minimap_height_pixel + vis.black_region_height),
+                                             (offset_minimap_pixel, vis.minimap_height_pixel))), (0, 0, 0))
+        cv2.fillConvexPoly(canvas, np.int32(((offset_minimap_pixel + region_width_minimap_pixel, vis.minimap_height_pixel),
+                                             (vis.window_width, vis.minimap_height_pixel + vis.black_region_height),
+                                             (vis.window_width, vis.minimap_height_pixel))), (0, 0, 0))
+        # get current part of the map
         cur_im_detail = cv2.resize(vis.im_bigmap[:, offset_bigmap_pixel:offset_bigmap_pixel + region_width_bigmap_pixel, :],
-                         (vis.window_width, vis.detail_height),
-                         interpolation=cv2.INTER_NEAREST)
+                                   (vis.window_width, vis.detail_height),
+                                   interpolation=cv2.INTER_NEAREST)
         # gray out
         canvas[:vis.minimap_height_pixel, : offset_minimap_pixel, :] = \
             (vis.im_minimap[:, : offset_minimap_pixel, :] * 0.6).astype(np.int32)
@@ -85,9 +84,8 @@ if __name__ == "__main__":
             (vis.im_minimap[:, offset_minimap_pixel + region_width_minimap_pixel:, :] * 0.6).astype(np.int32)
         # zoom in
         canvas[:vis.minimap_height_pixel, offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel, :] = \
-            cv2.resize(vis.im_minimap[0: int(vis.minimap_height_pixel * 0.95),
-                                      offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel,
-                                      :],
+            cv2.resize(vis.im_minimap[int(vis.minimap_height_pixel * 0.05): int(vis.minimap_height_pixel * 0.94),
+                                      offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel, :],
                        (region_width_minimap_pixel, vis.minimap_height_pixel))
         # put on cars
         with lock:
@@ -102,22 +100,22 @@ if __name__ == "__main__":
         cv2.line(canvas,
                  (offset_minimap_pixel, 0),
                  (offset_minimap_pixel, vis.minimap_height_pixel),
-                 (0, 140, 255),
+                 (0, 211, 255),
                  3)
         cv2.line(canvas,
                  (offset_minimap_pixel + region_width_minimap_pixel, 0),
                  (offset_minimap_pixel + region_width_minimap_pixel, vis.minimap_height_pixel),
-                 (0, 140, 255),
+                 (0, 211, 255),
                  3)
         cv2.line(canvas,
                  (offset_minimap_pixel, vis.minimap_height_pixel),
                  (0, vis.minimap_height_pixel + vis.black_region_height),
-                 (0, 140, 255),
+                 (0, 211, 255),
                  3)
         cv2.line(canvas,
                  (offset_minimap_pixel + region_width_minimap_pixel, vis.minimap_height_pixel),
                  (vis.window_width, vis.minimap_height_pixel + vis.black_region_height),
-                 (0, 140, 255),
+                 (0, 211, 255),
                  3)
         # set correct height
         canvas[vis.minimap_height_pixel + vis.black_region_height:, :, :] = \
