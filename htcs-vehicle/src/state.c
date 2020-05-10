@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 void initializeState(State* state, const Options* opts) {
-    state->lane = MERGE_LANE;
+    state->lane = (Lane)opts->startingLane;
     state->distanceTaken = opts->startingDistance;
     state->speed = opts->startingSpeed / 3.6;
     state->laneChangeElapsed = 0;

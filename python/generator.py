@@ -19,7 +19,7 @@ executable_name_windows = repo_root_dir + "/htcs-vehicle/Debug/htcs-vehicle.exe"
 executable_name_linux = repo_root_dir + "/htcs-vehicle/build/htcs_vehicle"
 logs_dir = repo_root_dir + "/python/logs"
 
-GENERATE_TIME_INTERVAL_MIN = 5
+GENERATE_TIME_INTERVAL_MIN = 4
 GENERATE_TIME_INTERVAL_WIDTH = 1
 PREF_SPEED_INTERVAL_MIN = 100
 PREF_SPEED_INTERVAL_WIDTH = 90
