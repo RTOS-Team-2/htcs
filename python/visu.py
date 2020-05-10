@@ -9,8 +9,9 @@ from car import Car, CarSpecs
 from HTCSPythonUtil import config, local_cars
 
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.DEBUG)
+
 # SOME GLOBAL VARIABLES
 commands = dict([(0, "Maintain speed!"), (1, "Accelerate!"), (2, "Brake!"), (3, "Switch lanes!"), (4, "Terminate!")])
 # image resources
