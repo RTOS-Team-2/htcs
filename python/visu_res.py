@@ -8,9 +8,6 @@ from HTCSPythonUtil import config
 if os.name == "nt":
     # https://github.com/opencv/opencv/issues/11360
     import ctypes
-    # Query DPI Awareness (Windows 10 and 8)
-    awareness = ctypes.c_int()
-    _ = ctypes.windll.shcore.GetProcessDpiAwareness(0, ctypes.byref(awareness))
     # Set DPI Awareness  (Windows 10 and 8)
     _ = ctypes.windll.shcore.SetProcessDpiAwareness(2)
     # the argument is the awareness level, which can be 0, 1 or 2:
@@ -32,14 +29,9 @@ red_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/ca
 blue_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2.png")
 blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2left.png")
 blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2right.png")
-
-# resize images to fit screen
-new_width = int(im_minimap.shape[1]*(float(screen_width) / float(im_minimap.shape[1])))
-im_minimap = cv2.resize(im_minimap, (new_width, im_minimap.shape[0]))
-
-new_width = int(im_bigmap.shape[1]*(float(screen_width) / float(im_bigmap.shape[1])))
-im_bigmap = cv2.resize(im_bigmap, (new_width, im_bigmap.shape[0]))
-
+# to fit screen
+im_minimap = cv2.resize(im_minimap, (screen_width, im_minimap.shape[0]))
+# measure
 minimap_length_pixel = im_minimap.shape[1]
 minimap_height_pixel = im_minimap.shape[0]
 bigmap_length_pixel = im_bigmap.shape[1]
