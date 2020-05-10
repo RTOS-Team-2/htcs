@@ -6,8 +6,8 @@ from car import Car, CarSpecs
 from typing import List, Tuple, Dict
 from HTCSPythonUtil import config, local_cars
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger("MQTT_Connector")
+logger.setLevel(level=logging.WARNING)
 
 model_class = Car
 
