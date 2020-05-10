@@ -6,16 +6,6 @@ import mqtt_connector
 import visu_res as vis
 from HTCSPythonUtil import local_cars
 
-# https://github.com/opencv/opencv/issues/11360
-import ctypes
-# Query DPI Awareness (Windows 10 and 8)
-awareness = ctypes.c_int()
-_ = ctypes.windll.shcore.GetProcessDpiAwareness(0, ctypes.byref(awareness))
-# Set DPI Awareness  (Windows 10 and 8)
-_ = ctypes.windll.shcore.SetProcessDpiAwareness(2)
-# the argument is the awareness level, which can be 0, 1 or 2:
-# for 1-to-1 pixel control I seem to need it to be non-zero (I'm using level 2)
-
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -69,6 +59,7 @@ if __name__ == "__main__":
     lock = threading.Lock()
 
     cv2.namedWindow(WINDOW_NAME)
+    cv2.moveWindow(WINDOW_NAME, 0, 0)
     cv2.setMouseCallback(WINDOW_NAME, minimap_move)
     src_points = np.float32([[0, 0],
                              [0, int(vis.minimap_height_pixel * 0.05)],
