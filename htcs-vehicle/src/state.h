@@ -3,7 +3,6 @@
 
 #include "options.h"
 
-#define STARTING_SPEED 13.8888889   // [m/s] (=50 km/h)
 #define LANE_CHANGE_MS 2000         // [millisec] time to spend between the two lanes
 
 typedef enum Lanes {
@@ -42,7 +41,7 @@ void initializeState(State* state, const Options* opts);
 
 void adjustState(State* state, unsigned elapsedMs);
 
-int attributesToString(Attributes* attributes, char* attributesStr);
+int attributesAndStateToString(State *state, char* attributesStr);
 
 int stateToString(State* state, char* stateStr);
 

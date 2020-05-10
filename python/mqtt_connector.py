@@ -45,8 +45,12 @@ def on_join_message(client, user_data, msg):
     # non-empty message - joinTraffic
     if message:
         if car is None:
-            specs = ast.literal_eval("{" + message + "}")
-            local_cars[car_id] = model_class(car_id, CarSpecs(**specs))
+            specs_part = message.split('|')[0]
+            state_part = message.split('|')[1]
+            specs = ast.literal_eval("{" + specs_part + "}")
+            state = ast.literal_eval("{" + state_part + "}")
+            local_cars[car_id] = model_class(car_id, CarSpecs(**specs), **state)
+
             round_robin_state_subscribe(car_id)
         else:
             logger.warning(f"Car with already existing id ({car_id}) sent a join message")

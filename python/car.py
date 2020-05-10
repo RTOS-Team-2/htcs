@@ -18,7 +18,6 @@ class Car:
         :param acceleration_state: enum TODO: what means what + typehint
         :param specs: constant parameters of the car
         """
-
         self.id = car_id
         self.distance_taken = distance_taken
         self.lane = lane

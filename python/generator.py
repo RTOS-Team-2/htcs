@@ -7,8 +7,9 @@ import pathlib
 import zipfile
 import datetime
 import subprocess
-from HTCSPythonUtil import config
+from car import CarSpecs
 from typing import List, Tuple
+from HTCSPythonUtil import config
 
 logger = logging.getLogger("Vehicle_generator")
 
@@ -19,16 +20,16 @@ logs_dir = repo_root_dir + "/python/logs"
 
 GENERATE_TIME_INTERVAL_MIN = 4
 GENERATE_TIME_INTERVAL_WIDTH = 1
-PREF_SPEED_INTERVAL_MIN = 50
-PREF_SPEED_INTERVAL_WIDTH = 110
-MAX_SPEED_INTERVAL_MIN = 100
+PREF_SPEED_INTERVAL_MIN = 100
+PREF_SPEED_INTERVAL_WIDTH = 90
+MAX_SPEED_INTERVAL_MIN = 120
 MAX_SPEED_INTERVAL_WIDTH = 180
 ACCELERATION_INTERVAL_MIN = 3
 ACCELERATION_INTERVAL_WIDTH = 11
 BRAKING_POWER_INTERVAL_MIN = 3
 BRAKING_POWER_INTERVAL_WIDTH = 11
-SIZE_INTERVAL_MIN = 3
-SIZE_INTERVAL_WIDTH = 3
+SIZE_INTERVAL_MIN = 3.5
+SIZE_INTERVAL_WIDTH = 5.5
 
 VEHICLE_MAX_LIFE_EXPECTANCY = 300  # seconds
 ARCHIVE_LOG_ZIP_SIZE = 50
@@ -81,6 +82,50 @@ class GraveDigger:
             _process.terminate()
 
 
+def generate_random_specs():
+    pref_speed = random.random() * PREF_SPEED_INTERVAL_WIDTH + PREF_SPEED_INTERVAL_MIN
+    max_speed = max(pref_speed, random.random() * MAX_SPEED_INTERVAL_WIDTH + MAX_SPEED_INTERVAL_MIN)
+    acceleration = random.random() * ACCELERATION_INTERVAL_WIDTH + ACCELERATION_INTERVAL_MIN
+    brake = random.random() * BRAKING_POWER_INTERVAL_WIDTH + BRAKING_POWER_INTERVAL_MIN
+    size = random.random() * SIZE_INTERVAL_WIDTH + SIZE_INTERVAL_MIN
+    return CarSpecs(pref_speed, max_speed, acceleration, brake, size)
+
+
+def generate_params_string(current_id):
+    specs = generate_random_specs()
+    entry_dist = 0
+    if random.random() > 0.70:
+        entry_dist = config["entry_2_meter"]
+        entry_lane = 0
+        start_speed = 50
+    else:
+        lane_random = random.random()
+        if lane_random > 0.75:
+            entry_lane = 5
+            start_speed = specs.preferred_speed
+        elif lane_random > 0.5:
+            entry_lane = 2
+            start_speed = specs.preferred_speed
+        else:
+            entry_dist = config["entry_1_meter"]
+            entry_lane = 0
+            start_speed = 50
+    long_string = f"--address {config['address']} " \
+                  f"--username {config['username']} " \
+                  f"--password {config['password']} " \
+                  f"--clientId {current_id} " \
+                  f"--topic {config['base_topic']} " \
+                  f"--startingLane {entry_lane} " \
+                  f"--startingDistance {entry_dist} " \
+                  f"--startingSpeed {start_speed} " \
+                  f"--preferredSpeed {specs.preferred_speed} " \
+                  f"--maxSpeed {specs.max_speed} " \
+                  f"--acceleration {specs.acceleration} " \
+                  f"--brakingPower {specs.braking_power} " \
+                  f"--size {specs.size}"
+    return long_string
+
+
 if __name__ == "__main__":
     if os.name is not 'nt':
         os.putenv("LD_LIBRARY_PATH", os.getenv("HOME") + "/Eclipse-Paho-MQTT-C-1.3.1-Linux/lib")
@@ -95,34 +140,23 @@ if __name__ == "__main__":
     counter = 0
     while not grave_digger.kill_now:
         counter = counter + 1
-        sleep_time = random.random() * GENERATE_TIME_INTERVAL_WIDTH + GENERATE_TIME_INTERVAL_MIN
         client_id = str(counter) + "-" + now_str
-        params_string = f"--address {config['address']} " \
-                        f"--username {config['username']} " \
-                        f"--password {config['password']} " \
-                        f"--clientId {client_id} " \
-                        f"--topic {config['base_topic']} " \
-                        f"--preferredSpeed {random.random() * PREF_SPEED_INTERVAL_WIDTH + PREF_SPEED_INTERVAL_MIN} " \
-                        f"--maxSpeed {random.random() * MAX_SPEED_INTERVAL_WIDTH + MAX_SPEED_INTERVAL_MIN} " \
-                        f"--acceleration {random.random() * ACCELERATION_INTERVAL_WIDTH + ACCELERATION_INTERVAL_MIN} " \
-                        f"--brakingPower {random.random() * BRAKING_POWER_INTERVAL_WIDTH + BRAKING_POWER_INTERVAL_MIN} " \
-                        f"--size {random.random() * SIZE_INTERVAL_WIDTH + SIZE_INTERVAL_MIN}"
-
         log_file_name = current_logs_dir + "/htcs_vehicle-" + client_id + ".log"
         log_file = open(log_file_name, "w")
+        params_string = generate_params_string(client_id)
+
         if os.name == 'nt':
             process = subprocess.Popen(f'"{executable_name_windows}" ' + params_string,
                                        shell=True, stdout=log_file, stderr=log_file)
         else:
             process = subprocess.Popen(executable=executable_name_linux, args=params_string.split(' '),
                                        shell=True, stdout=log_file, stderr=log_file)
-
         grave_digger.running_children.append((process, elapsed, counter, log_file_name))
-        logger.info(f"Generated vehicle client_id: {client_id} process_id: {process.pid} "
-                    f"next vehicle in {sleep_time:.3f} seconds")
 
+        sleep_time = random.random() * GENERATE_TIME_INTERVAL_WIDTH + GENERATE_TIME_INTERVAL_MIN
+        logger.info("Generated vehicle client_id: " + client_id + " process_id: " + str(process.pid)
+                    + ", next vehicle in " + str(sleep_time) + " seconds")
         time.sleep(sleep_time)
-
         elapsed += sleep_time
 
         grave_digger.bury_zombies()
