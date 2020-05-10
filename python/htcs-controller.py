@@ -4,7 +4,9 @@ from enum import Enum
 import time
 import copy
 import logging
+from car import Car
 import mqtt_connector
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
@@ -20,22 +22,22 @@ class Command(Enum):
     TERMINATE = 4
 
 
+def print_all_distances(all_cars):
+    for car in all_cars:
+        print(f"{car.id}: {car.distance_taken}m")
+
+
 def control_traffic():
-    # Make a copy because local_cars can get modified durring calculations
-    all_cars_snapshot = copy.deepcopy(local_cars)
-#    sorted_cars = sort-
-    #TODO - implement logic for cars already being controlled
-    currently_controlled_cars = "TODO"
-    #TODO
-    #cars_priority_list = cars_needing_control(all_cars_snapshot,True)
-    cars_priority_list = cars_needing_control(all_cars_snapshot,False)
+    cars_list = list(local_cars.values())
+    cars_list.sort(key=Car.Distance_taken)
+    
+    cars_priority_list = get_cars_needing_control(cars_list, False)
     control_lane_change(cars_priority_list)
 
 
-def cars_needing_control(all_cars, order_by_priority=True):
-    # FIXME: erre a pycharm dob warningot: shadows name from outer scope. ugyanaz a változó neve mint a függvénynek
+def get_cars_needing_control(all_cars, order_by_priority=True):
     cars_needing_control = []
-    for car in all_cars.values():
+    for car in all_cars:
         if is_in_merge_lane(car) or not is_in_preferred_speed(car):
             cars_needing_control.append(car)
     if not order_by_priority:
@@ -49,17 +51,17 @@ def cars_needing_control(all_cars, order_by_priority=True):
 def control_lane_change(cars_priority_list):
     for car in cars_priority_list:
         if is_in_merge_lane(car) and can_change_lane(car, cars_priority_list):
-            give_command(car,Command.CHANGE_LANE)
+            give_command(car, Command.CHANGE_LANE)
 
 
-def give_command(car,command):
+def give_command(car, command):
     qos = config["quality_of_service"]
     topic = config["base_topic"] + "/" + str(car.id) + "/command"
     logger.debug(topic)
     message = command.value
     mqtt_connector.client_1.publish(topic, message, qos)
 
-            
+
 def is_in_merge_lane(car):
     return car.lane == 0
 
@@ -75,7 +77,7 @@ def can_change_lane(changing_car, all_cars):
 
 if __name__ == "__main__":
     mqtt_connector.setup_connector()
-    
+    time.sleep(1)
     interval_sec = INTERVAL_MS / 1000
     while True:
         time_start = time.time()

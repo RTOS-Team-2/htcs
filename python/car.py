@@ -32,3 +32,5 @@ class Car:
         self.speed = speed
         self.acceleration_state = acceleration_state
 
+    def Distance_taken(self):
+        return self.distance_taken
