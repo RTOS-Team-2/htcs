@@ -30,6 +30,7 @@ blue_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/re
 blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2left.png")
 blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2right.png")
 truck = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/truck.png")
+explosion = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/explosion.png")
 # to fit screen
 im_minimap = cv2.resize(im_minimap, (screen_width, im_minimap.shape[0]))
 # measure
@@ -132,7 +133,9 @@ class CarImage(Car):
         return slice(on_vis_slice_x_start, on_vis_slice_x_end), self.get_image(w_px_car, car_x_slice)
 
     def get_image(self, car_width_pixel, x_slice):
-        if self.lane in [1, 3]:
+        if self.distance_taken > map_length_meter - 30:
+            im = explosion
+        elif self.lane in [1, 3]:
             im = self.left
         elif self.lane == 4:
             im = self.right
