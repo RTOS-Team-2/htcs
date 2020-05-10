@@ -10,7 +10,7 @@ import subprocess
 from HTCSPythonUtil import config
 from typing import List, Tuple
 
-logger = logging.getLogger("MQTT_Generator")
+logger = logging.getLogger("Vehicle_generator")
 logger.setLevel(level=logging.DEBUG)
 
 repo_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
