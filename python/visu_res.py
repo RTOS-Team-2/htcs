@@ -79,6 +79,7 @@ class CarImage(Car):
         self.straight = cv2.resize(self.straight, (self.straight.shape[0], car_height))
         self.left = cv2.resize(self.left, (self.left.shape[0], car_height))
         self.right = cv2.resize(self.right, (self.right.shape[0], car_height))
+        self.exploded = False
 
     def get_point_on_minimap(self):
         cy = 0
@@ -132,7 +133,7 @@ class CarImage(Car):
         return slice(on_vis_slice_x_start, on_vis_slice_x_end), self.get_image(w_px_car, car_x_slice)
 
     def get_image(self, car_width_pixel, x_slice):
-        if self.distance_taken > map_length_meter - 30:
+        if self.distance_taken > map_length_meter - 30 or self.exploded:
             im = explosion
         elif self.lane in [1, 3]:
             im = self.left
