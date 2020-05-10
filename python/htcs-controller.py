@@ -62,6 +62,13 @@ def give_command(car, command):
     mqtt_connector.client_1.publish(topic, message, qos)
 
 
+def get_follow_distance(car):
+    follow_distance = 0
+    #TODO: Kiszámolni követési távolságot az autó sebességéből és fékezési kapacitásából
+    # follow_distance = az a táv ami alatt meg tud állni 0-ra az autó az aktuális sebességről
+    return follow_distance
+
+
 def is_in_merge_lane(car):
     return car.lane == 0
 
