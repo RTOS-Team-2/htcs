@@ -10,7 +10,7 @@ import subprocess
 from HTCSPythonUtil import config
 from typing import List, Tuple
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
 
 repo_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 executable_name_windows = repo_root_dir + "/htcs-vehicle/Debug/htcs-vehicle.exe"
@@ -39,37 +39,51 @@ class GraveDigger:
 
     def __init__(self):
         self.running_children: List[Tuple[subprocess.Popen, int, int, str]] = []
-        self.ready_to_archive: List[Tuple[int, str]] = []
+        self.ready_to_archive: List[Tuple[subprocess.Popen, int, int, str]] = []
         signal.signal(signal.SIGINT, self.exit_gracefully)
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
     def archive_logs(self):
-        if len(self.ready_to_archive) == ARCHIVE_LOG_ZIP_SIZE:
-            client_no_first = self.ready_to_archive[0][0]
-            client_no_last = self.ready_to_archive[len(self.ready_to_archive) - 1][0]
-            zip_file_name = current_logs_dir + "/archive/" + str(client_no_first) + "-" + str(client_no_last) + ".zip"
-            with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zf:
-                for _client_id, _log_file in self.ready_to_archive:
-                    base_name = os.path.basename(os.path.normpath(_log_file))
-                    zf.write(_log_file, base_name)
-                    os.remove(_log_file)
-            self.ready_to_archive.clear()
-            return True
-        return False
+        _now = time.time()
+        externally_terminated_children = [child for child in self.running_children
+                                          if child[0].poll() is not None and
+                                          child not in self.ready_to_archive]
+        if len(externally_terminated_children) > 0:
+            logging.debug(f"Found externally terminated children: {externally_terminated_children}")
+            for child in externally_terminated_children:
+                self.ready_to_archive.append(child)
+                self.running_children.remove(child)
+            self.ready_to_archive.sort(key=lambda child: child[2])
+
+        if len(self.ready_to_archive) < ARCHIVE_LOG_ZIP_SIZE:
+            logging.debug(f"Not enough logs to be archived just yet: {len(self.ready_to_archive)}")
+            return False
+
+        logging.debug(f"Archiving logs: {self.ready_to_archive}")
+        _now_str = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+        zip_file_name = current_logs_dir + "/archive/archive-" + _now_str + ".zip"
+        with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zf:
+            for child in self.ready_to_archive:
+                base_name = os.path.basename(os.path.normpath(child[3]))
+                zf.write(child[3], base_name)
+                os.remove(child[3])
+
+        self.ready_to_archive.clear()
+        return True
 
     def kill_too_old(self):
-        first_child, first_child_created, client_no, _log_file_name = self.running_children[0]
-        if elapsed >= first_child_created + VEHICLE_MAX_LIFE_EXPECTANCY:
+        first_child = self.running_children[0]
+        if elapsed >= first_child[1] + VEHICLE_MAX_LIFE_EXPECTANCY:
             self.running_children.pop(0)
-            self.ready_to_archive.append((client_no, _log_file_name))
-            first_child.terminate()
-            return first_child
+            self.ready_to_archive.append(first_child)
+            first_child[0].terminate()
+            return first_child[0]
         return None
 
     def exit_gracefully(self, signum, frame):
         self.kill_now = True
-        for child, _, _, _ in self.running_children:
-            child.terminate()
+        for _process, _, _, _ in self.running_children:
+            _process.terminate()
 
 
 if __name__ == "__main__":
@@ -109,8 +123,8 @@ if __name__ == "__main__":
                                        shell=True, stdout=log_file, stderr=log_file)
 
         grave_digger.running_children.append((process, elapsed, counter, log_file_name))
-        logging.info("Generated vehicle client_id: " + client_id + " process_id: " + str(process.pid)
-                     + ", next vehicle in " + str(sleep_time) + " seconds")
+        logging.info(f"Generated vehicle client_id: {client_id} process_id: {process.pid} "
+                     f"next vehicle in {sleep_time:.3f} seconds")
 
         time.sleep(sleep_time)
 
@@ -118,6 +132,6 @@ if __name__ == "__main__":
 
         killed = grave_digger.kill_too_old()
         if killed is not None:
-            logging.info("Killed too old child process_id: " + str(killed.pid))
+            logging.info(f"Killed too old child process_id: {killed.pid}")
         if grave_digger.archive_logs():
             logging.info("Archived logs")
