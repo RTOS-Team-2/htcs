@@ -7,7 +7,6 @@ import visu_res as vis
 from HTCSPythonUtil import local_cars
 
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 WINDOW_NAME = "Highway Traffic Control System Visualization"
 # view-dependent variables

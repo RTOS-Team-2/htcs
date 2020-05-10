@@ -10,7 +10,8 @@ import subprocess
 from HTCSPythonUtil import config
 from typing import List, Tuple
 
-logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("Vehicle_generator")
+logger.setLevel(level=logging.DEBUG)
 
 repo_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 executable_name_windows = repo_root_dir + "/htcs-vehicle/Debug/htcs-vehicle.exe"
@@ -81,7 +82,7 @@ if __name__ == "__main__":
     now_str = now.strftime('%Y%m%d%H%M%S')
     current_logs_dir = logs_dir + "/generation-" + now_str
     pathlib.Path(current_logs_dir + "/archive").mkdir(exist_ok=True, parents=True)
-    logging.info("Starting generation, output dir: " + current_logs_dir)
+    logger.info("Starting generation, output dir: " + current_logs_dir)
     elapsed = 0
     counter = 0
     while not grave_digger.kill_now:
@@ -109,7 +110,7 @@ if __name__ == "__main__":
                                        shell=True, stdout=log_file, stderr=log_file)
 
         grave_digger.running_children.append((process, elapsed, counter, log_file_name))
-        logging.info("Generated vehicle client_id: " + client_id + " process_id: " + str(process.pid)
+        logger.info("Generated vehicle client_id: " + client_id + " process_id: " + str(process.pid)
                      + ", next vehicle in " + str(sleep_time) + " seconds")
 
         time.sleep(sleep_time)
@@ -118,6 +119,6 @@ if __name__ == "__main__":
 
         killed = grave_digger.kill_too_old()
         if killed is not None:
-            logging.info("Killed too old child process_id: " + str(killed.pid))
+            logger.info("Killed too old child process_id: " + str(killed.pid))
         if grave_digger.archive_logs():
-            logging.info("Archived logs")
+            logger.info("Archived logs")
