@@ -3,8 +3,8 @@
 
 void initializeState(State* state, const Options* opts) {
     state->lane = MERGE_LANE;
-    state->distanceTaken = 0.0;
-    state->speed = STARTING_SPEED;
+    state->distanceTaken = opts->startingDistance;
+    state->speed = opts->startingSpeed / 3.6;
     state->laneChangeElapsed = 0;
     state->accelerationState = ACCELERATING;
 

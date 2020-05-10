@@ -7,6 +7,9 @@ typedef struct Options {
     char* password;
     char* clientId;
     char* topic;
+    int startingLane;               // TODO:ODODODOODODOD
+    double startingDistance;
+    double startingSpeed;
     double preferredSpeed;
     double maxSpeed;
     double acceleration;

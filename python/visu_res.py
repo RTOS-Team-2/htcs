@@ -60,7 +60,7 @@ class CarImage(Car):
     def __init__(self, car_id, specs: CarSpecs):
         # Create Car
         super().__init__(car_id, specs)
-        if specs.size > 5.6:
+        if specs.size > 7:
             self.straight = truck
             self.left = truck
             self.right = truck

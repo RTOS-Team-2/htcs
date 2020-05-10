@@ -3,7 +3,6 @@
 
 #include "options.h"
 
-#define STARTING_SPEED 13.8888889   // [m/s] (=50 km/h)
 #define LANE_CHANGE_MS 2000         // [millisec] time to spend between the two lanes
 
 typedef enum Lanes {
