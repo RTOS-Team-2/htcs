@@ -126,10 +126,10 @@ if __name__ == "__main__":
         cv2.imshow(WINDOW_NAME, canvas)
         key = cv2.waitKey(1)
         if key == ord('w'):
-            region_width_meter -= 10
+            region_width_meter = max(10, region_width_meter - 10)
             update_zoom()
         elif key == ord('s'):
-            region_width_meter += 10
+            region_width_meter = min(vis.map_length_meter, region_width_meter + 10)
             update_zoom()
 
     cv2.destroyAllWindows()
