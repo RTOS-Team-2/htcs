@@ -39,43 +39,38 @@ class GraveDigger:
 
     def __init__(self):
         self.running_children: List[Tuple[subprocess.Popen, int, int, str]] = []
-        self.ready_to_archive: List[Tuple[subprocess.Popen, int, int, str]] = []
+        self.last_archive_time = time.time()
+        self.archive_start_id = 1
         signal.signal(signal.SIGINT, self.exit_gracefully)
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
     def archive_logs(self):
         _now = time.time()
-        externally_terminated_children = [child for child in self.running_children
-                                          if child[0].poll() is not None and
-                                          child not in self.ready_to_archive]
-        if len(externally_terminated_children) > 0:
-            logging.debug(f"Found externally terminated children: {externally_terminated_children}")
-            for child in externally_terminated_children:
-                self.ready_to_archive.append(child)
-                self.running_children.remove(child)
-            self.ready_to_archive.sort(key=lambda child: child[2])
 
-        if len(self.ready_to_archive) < ARCHIVE_LOG_ZIP_SIZE:
-            logging.debug(f"Not enough logs to be archived just yet: {len(self.ready_to_archive)}")
+        if self.last_archive_time > (_now - (ARCHIVE_LOG_ZIP_SIZE + 1) * VEHICLE_MAX_LIFE_EXPECTANCY):
             return False
 
-        logging.debug(f"Archiving logs: {self.ready_to_archive}")
-        _now_str = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-        zip_file_name = current_logs_dir + "/archive/archive-" + _now_str + ".zip"
+        start_idx = self.archive_start_id
+        end_idx = self.archive_start_id + ARCHIVE_LOG_ZIP_SIZE
+        zip_file_name = current_logs_dir + "/archive/" + str(start_idx) + "-" + str(end_idx - 1) + ".zip"
         with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zf:
-            for child in self.ready_to_archive:
-                base_name = os.path.basename(os.path.normpath(child[3]))
-                zf.write(child[3], base_name)
-                os.remove(child[3])
+            for i in range(start_idx, end_idx):
+                base_name = "htcs_vehicle-" + str(i) + "-" + now_str + ".log"
+                full_name = os.path.join(current_logs_dir, base_name)
+                zf.write(full_name, base_name)
+                os.remove(full_name)
 
-        self.ready_to_archive.clear()
+        self.archive_start_id = end_idx
+        self.last_archive_time = _now
         return True
+
+    def bury_zombies(self):
+        self.running_children = [child for child in self.running_children if child[0].poll() is None]
 
     def kill_too_old(self):
         first_child = self.running_children[0]
         if elapsed >= first_child[1] + VEHICLE_MAX_LIFE_EXPECTANCY:
             self.running_children.pop(0)
-            self.ready_to_archive.append(first_child)
             first_child[0].terminate()
             return first_child[0]
         return None
@@ -130,6 +125,7 @@ if __name__ == "__main__":
 
         elapsed += sleep_time
 
+        grave_digger.bury_zombies()
         killed = grave_digger.kill_too_old()
         if killed is not None:
             logging.info(f"Killed too old child process_id: {killed.pid}")
