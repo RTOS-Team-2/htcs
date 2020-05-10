@@ -15,9 +15,8 @@ if os.name == "nt":
 
 
 tk = Tk()
-screen_width = tk.winfo_screenwidth()
-screen_height = tk.winfo_screenheight()
-
+window_width = tk.winfo_screenwidth()
+black_region_height = 100
 # image resources
 WINDOW_NAME_MINIMAP = "Highway Traffic Control System Minimap"
 WINDOW_NAME_VISU = "Highway Traffic Control System Visualization"
@@ -31,21 +30,21 @@ blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/ca
 blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2right.png")
 truck = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/truck.png")
 explosion = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/explosion.png")
+title = cv2.resize(cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/title.png"),
+                   (window_width, black_region_height))
 # to fit screen
-im_minimap = cv2.resize(im_minimap, (screen_width, im_minimap.shape[0]))
+im_minimap = cv2.resize(im_minimap, (window_width, im_minimap.shape[0]))
 # measure
 minimap_length_pixel = im_minimap.shape[1]
 minimap_height_pixel = im_minimap.shape[0]
 bigmap_length_pixel = im_bigmap.shape[1]
 # fix parameters
-region_width_meter_start = 100
+region_width_meter_start = 200
 map_height_meter = 16
 map_length_meter = config["position_bound"]
 center_fast_lane_mini = 32
 center_slow_lane_mini = 80
 center_merge_lane_mini = 130
-window_width = minimap_length_pixel
-black_region_height = 100
 detail_height = int(window_width * map_height_meter / region_width_meter_start)
 y_stretch = detail_height / im_bigmap.shape[0]
 center_fast_lane = 42.5 * y_stretch
