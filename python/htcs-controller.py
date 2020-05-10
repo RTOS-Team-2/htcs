@@ -5,11 +5,10 @@ import copy
 import logging
 import mqtt_connector
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+#logger.setLevel(level=logging.WARNING)
 
 INTERVAL_MS = 1000
-STARTING_DELAY_SEC = 10
 
 
 def control_traffic():
@@ -43,7 +42,7 @@ def control_lane_change(cars_priority_list):
             topic = config["base_topic"] + "/" + str(car.id) + "/command"
             message = 3
             qos = config["quality_of_service"]
-            pprint(topic)
+            logger.debug(topic)
             mqtt_connector.client_1.publish(topic, message, qos)
             
             
@@ -62,10 +61,8 @@ def can_change_lane(changing_car, all_cars):
 
 if __name__ == "__main__":
     mqtt_connector.setup_connector()
-
-    interval_sec = INTERVAL_MS / 1000
     
-    time.sleep(STARTING_DELAY_SEC)
+    interval_sec = INTERVAL_MS / 1000
     while True:
         time_start = time.time()
         control_traffic()
