@@ -88,7 +88,8 @@ def generate_random_specs():
     acceleration = random.random() * ACCELERATION_INTERVAL_WIDTH + ACCELERATION_INTERVAL_MIN
     brake = random.random() * BRAKING_POWER_INTERVAL_WIDTH + BRAKING_POWER_INTERVAL_MIN
     size = random.random() * SIZE_INTERVAL_WIDTH + SIZE_INTERVAL_MIN
-    return CarSpecs(pref_speed, max_speed, acceleration, brake, size)
+    # input has to be a tuple
+    return CarSpecs((pref_speed, max_speed, acceleration, brake, size))
 
 
 def generate_params_string(current_id):

@@ -49,11 +49,10 @@ def on_message(client, user_data, msg):
     # non-empty message - joinTraffic
     if message:
         if car is None:
-            specs_part = message.split('|')[0]
-            state_part = message.split('|')[1]
-            specs = ast.literal_eval("{" + specs_part + "}")
-            state = ast.literal_eval("{" + state_part + "}")
-            local_cars[car_id] = model_class(car_id, CarSpecs(**specs), **state)
+            [specs_part, state_part] = message.split('|')
+            specs = ast.literal_eval(specs_part)
+            state = ast.literal_eval(state_part)
+            local_cars[car_id] = model_class(car_id, CarSpecs(specs), state)
             round_robin_state_subscribe(car_id)
         else:
             logger.warning(f"Car with already existing id ({car_id}) sent a join message")
@@ -69,7 +68,7 @@ def on_state_message(client, user_data, msg):
         logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
     else:
         state = ast.literal_eval(msg.payload.decode("utf-8"))
-        local_cars[car_id].update_state(state[0], state[1], state[2], state[3])
+        local_cars[car_id].update_state(state)
 
 
 def on_connect(client, user_data, flags, rc):

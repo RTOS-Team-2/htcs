@@ -64,10 +64,10 @@ x_scale_bigmap = bigmap_length_pixel / map_length_meter
 
 
 class CarImage(Car):
-    def __init__(self, car_id, specs: CarSpecs, **_):
+    def __init__(self, car_id, specs: CarSpecs, state):
         # Create Car
-        super().__init__(car_id, specs)
-        if specs.size > 7.2:
+        super().__init__(car_id, specs, state)
+        if specs.size > 7.5:
             self.straight = truck
             self.left = truck
             self.right = truck
