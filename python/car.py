@@ -32,5 +32,24 @@ class Car:
         self.speed = speed
         self.acceleration_state = acceleration_state
 
-    def Distance_taken(self):
+    def get_distance_taken(self):
         return self.distance_taken
+    
+    def get_follow_distance(self, safety_treshold=0.1):
+        # follow_distance = az a táv ami alatt meg tud állni 0-ra az autó az aktuális sebességről
+        # time to stop = speed / deceleration
+        # distance traveled = aree under the function of speed(time)
+        # which is a line from current speed at zero time, and zero speed at time to stop
+        follow_distance = (self.speed / 2.0) * (self.speed / self.specs.braking_power)
+        return (1 + safety_treshold) * follow_distance
+
+    def match_speed_now(self,other_car):
+        return (self.distance_taken + self.match_speed_distance(other_car.speed) + 
+                other_car.get_follow_distance(safety_treshold = 0.1) <
+                other_car.distance_taken)
+
+    #HELP:
+    #should return the distance "self" takes until it reaches "speed" during deceleration/acceleration
+    #same as get_follow_distance() just for any speed
+    def match_speed_distance(speed):
+        return 0
