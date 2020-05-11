@@ -8,7 +8,6 @@ from HTCSPythonUtil import local_cars
 
 
 logger = logging.getLogger(__name__)
-WINDOW_NAME = "Highway Traffic Control System Visualization"
 # view-dependent variables
 offset_meter = 0
 region_width_meter = vis.region_width_meter_start
@@ -21,6 +20,9 @@ current_detail_height = vis.detail_height
 is_dragging = False
 drag_start_x = 0
 drag_start_offset = 0
+logger.info(f"Full length of the map is {vis.map_length_meter} m.")
+logger.info(f"Current visible region is {vis.region_width_meter_start} m wide.")
+logger.info(f"Press <w> key to zoom in, press <s> key to zoom out.")
 
 
 def minimap_move(event, x, y, flags, param):
@@ -67,11 +69,11 @@ if __name__ == "__main__":
     mqtt_connector.setup_connector(vis.CarImage, terminator_callback)
     lock = threading.Lock()
 
-    cv2.namedWindow(WINDOW_NAME)
-    cv2.moveWindow(WINDOW_NAME, 0, 0)
-    cv2.setMouseCallback(WINDOW_NAME, minimap_move)
+    cv2.namedWindow(vis.WINDOW_NAME)
+    cv2.moveWindow(vis.WINDOW_NAME, 0, 0)
+    cv2.setMouseCallback(vis.WINDOW_NAME, minimap_move)
 
-    while cv2.getWindowProperty(WINDOW_NAME, 0) >= 0:
+    while cv2.getWindowProperty(vis.WINDOW_NAME, 0) >= 0:
         canvas = np.zeros((vis.minimap_height_pixel + vis.black_region_height + current_detail_height,
                            vis.window_width, 3),
                           np.uint8)
@@ -131,7 +133,7 @@ if __name__ == "__main__":
         canvas[vis.minimap_height_pixel + vis.black_region_height:, :, :] = \
             cv2.resize(cur_im_detail, (vis.window_width, current_detail_height))
 
-        cv2.imshow(WINDOW_NAME, canvas)
+        cv2.imshow(vis.WINDOW_NAME, canvas)
         key = cv2.waitKey(1)
         if key == ord('w'):
             region_width_meter = max(10, region_width_meter - 10)

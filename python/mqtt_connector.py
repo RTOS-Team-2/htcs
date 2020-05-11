@@ -7,7 +7,6 @@ from typing import List, Tuple, Dict, Callable
 from HTCSPythonUtil import config, local_cars
 
 logger = logging.getLogger("MQTT_Connector")
-logger.setLevel(level=logging.WARNING)
 
 model_class = Car
 terminator_callback: Callable[[Tuple[str, str]], None]
@@ -54,7 +53,6 @@ def on_message(client, user_data, msg):
             specs = ast.literal_eval("{" + specs_part + "}")
             state = ast.literal_eval("{" + state_part + "}")
             local_cars[car_id] = model_class(car_id, CarSpecs(**specs), **state)
-
             round_robin_state_subscribe(car_id)
         else:
             logger.warning(f"Car with already existing id ({car_id}) sent a join message")
@@ -76,6 +74,7 @@ def on_state_message(client, user_data, msg):
 def on_connect(client, user_data, flags, rc):
     if rc == 0:
         client.connected_flag = True
+        logger.debug(f"Client {client} connected OK.")
     else:
         logger.error(f"Client {client} could not connect, return code = {rc}")
         exit(rc)

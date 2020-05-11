@@ -6,7 +6,6 @@ import logging
 import mqtt_connector
 
 logger = logging.getLogger(__name__)
-#logger.setLevel(level=logging.WARNING)
 
 INTERVAL_MS = 1000
 
