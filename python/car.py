@@ -48,8 +48,7 @@ class Car:
                 other_car.get_follow_distance(safety_treshold = 0.1) <
                 other_car.distance_taken)
 
-    #HELP:
-    #should return the distance "self" takes until it reaches "speed" during deceleration/acceleration
-    #same as get_follow_distance() just for any speed
-    def match_speed_distance(speed):
+    #HELP
+    def distance_while_accelerating(current_speed, target_speed, acceleration):
         return 0
+        
