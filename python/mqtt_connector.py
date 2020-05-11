@@ -10,7 +10,7 @@ logger = logging.getLogger("MQTT_Connector")
 logger.setLevel(level=logging.WARNING)
 
 model_class = Car
-terminator_callback: Callable[[Tuple[str, str]], None]
+on_terminate: Callable[[str], None]
 
 client_1 = mqtt.Client("main_client_" + str(uuid.uuid4()))
 state_client_pool: List[Tuple[mqtt.Client, Dict[str, int]]] = []
@@ -41,8 +41,8 @@ def unsubscribe_pool(car_id: str):
 
 def on_message(client, user_data, msg):    
     message = msg.payload.decode("utf-8")
-    if msg.topic.endswith("terminator") and terminator_callback:
-        terminator_callback(tuple(message.split(',')))
+    if msg.topic.endswith("obituary") and on_terminate:
+        on_terminate(message)
         return
     car_id = msg.topic.split('/')[-2]
     car = local_cars.get(car_id)
@@ -94,10 +94,10 @@ def remove_unsubscribed_car(client, _car_ids_mids, message_id):
             return
 
 
-def setup_connector(_model_class=Car, _terminator_callback=None):
-    global model_class, terminator_callback
+def setup_connector(_model_class=Car, _on_terminate=None):
+    global model_class, on_terminate
     model_class = _model_class
-    terminator_callback = _terminator_callback
+    on_terminate = _on_terminate
 
     logger.info(f"Setting up {state_client_pool_size} connectors")
     for i in range(state_client_pool_size):
@@ -126,7 +126,7 @@ def setup_connector(_model_class=Car, _terminator_callback=None):
     client_1.connect(config["address"])
     client_1.loop_start()
     client_1.subscribe(topic=config["base_topic"] + "/+/join", qos=config["quality_of_service"])
-    client_1.subscribe(topic=config["base_topic"] + "/terminator", qos=config["quality_of_service"])
+    client_1.subscribe(topic=config["base_topic"] + "/obituary", qos=config["quality_of_service"])
 
 
 def cleanup_connector():

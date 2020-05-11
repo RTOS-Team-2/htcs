@@ -25,6 +25,21 @@ Local car management assumes, that the payload is in a dictionary form, with the
 
 ## Visualizer
 
+# Terminator
+
+The [terminator](terminator.py) module is a separate entity which basically represents the laws of nature.
+In this simulation the vehicles don't know about each other, they cannot sense that they may have collided.
+
+The terminator's most important job is to send the `TERMINATE` command to the vehicles that crashed into each other,
+thus ending their lifecycle.
+
+This component was born because the controller may be biased to make this decision,
+because it's goal is to prevent the collisions.
+
+The terminator's secondary purpose is to publish an obituary about the vehicles it killed. The obituary contains
+the vehicle's id, which should arrive to the subscribers a couple of cycles before the actual death notice
+of the vehicle itself. This can be utilized with the `on_terminate` callback function.
+
 ### Usage
 
 Run the python script. Zoom with W / S keys, move with A / D keys. Exit from the program pressing X key. Do not close the opencv window.

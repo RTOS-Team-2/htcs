@@ -4,10 +4,11 @@ import threading
 import numpy as np
 import mqtt_connector
 import visu_res as vis
-from HTCSPythonUtil import local_cars
+from HTCSPythonUtil import config, local_cars, set_logging_level
 
-
+set_logging_level()
 logger = logging.getLogger(__name__)
+
 WINDOW_NAME = "Highway Traffic Control System Visualization"
 # view-dependent variables
 offset_meter = 0
@@ -53,18 +54,15 @@ def update_zoom():
     region_width_bigmap_pixel = int(region_width_meter * vis.x_scale_bigmap)
 
 
-def terminator_callback(car_ids):
-    logger.info(f"Terminated callback called: {car_ids}")
-    car1 = local_cars.get(car_ids[0])
-    car2 = local_cars.get(car_ids[1])
-    if car1 is not None:
-        car1.exploded = True
-    if car2 is not None:
-        car2.exploded = True
+def on_terminate(car_id: str):
+    logger.debug(f"Obituary received for car: {car_id}")
+    _car = local_cars.get(car_id)
+    if _car is not None:
+        _car.exploded = True
 
 
 if __name__ == "__main__":
-    mqtt_connector.setup_connector(vis.CarImage, terminator_callback)
+    mqtt_connector.setup_connector(vis.CarImage, on_terminate)
     lock = threading.Lock()
 
     cv2.namedWindow(WINDOW_NAME)
