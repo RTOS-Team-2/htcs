@@ -68,11 +68,11 @@ class GraveDigger:
         self.last_archive_time = _now
         return True
 
-    def bury_zombies(self):
-        self.running_children = [child for child in self.running_children if child[0].poll() is None]
-
     def kill_too_old(self):
         first_child = self.running_children[0]
+        if first_child[0].poll() is not None:
+            self.running_children.pop(0)
+            return None
         if elapsed >= first_child[1] + VEHICLE_MAX_LIFE_EXPECTANCY:
             self.running_children.pop(0)
             first_child[0].terminate()
@@ -162,7 +162,6 @@ if __name__ == "__main__":
         time.sleep(sleep_time)
         elapsed += sleep_time
 
-        grave_digger.bury_zombies()
         killed = grave_digger.kill_too_old()
         if killed is not None:
             logger.info(f"Killed too old child process_id: {killed.pid}")
