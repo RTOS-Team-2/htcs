@@ -1,11 +1,10 @@
 import os
 import logging
 from typing import Dict
+from car import CarManager, DetailedCarTracker
 
 
-# TODO: set C level maximum for position
-# TODO: maybe create shared constants (enums) between c and python
-local_cars = {}
+local_cars = DetailedCarTracker()
 
 config: Dict[str, any] = dict("".join(l.split()).split("=")
                               for l in open(os.path.dirname(os.path.abspath(__file__)) + "/connection.properties")

@@ -68,7 +68,7 @@ def on_state_message(client, user_data, msg):
         logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
     else:
         state = ast.literal_eval(msg.payload.decode("utf-8"))
-        local_cars[car_id].update_state(state)
+        local_cars.update_car(car_id, state)
 
 
 def on_connect(client, user_data, flags, rc):
