@@ -7,7 +7,6 @@ from typing import List, Tuple, Dict, Callable
 from HTCSPythonUtil import config, local_cars
 
 logger = logging.getLogger("MQTT_Connector")
-logger.setLevel(level=logging.WARNING)
 
 model_class = Car
 terminator_callback: Callable[[Tuple[str, str]], None]
@@ -39,6 +38,7 @@ def unsubscribe_pool(car_id: str):
             return
 
 
+# JOIN OR TERMINATION NOTIFICATION. COMMANDS ARE NOT LISTENED, AND STATE MSG-S ARE ON DIFFERENT HANDLER
 def on_message(client, user_data, msg):    
     message = msg.payload.decode("utf-8")
     if msg.topic.endswith("terminator") and terminator_callback:
@@ -49,12 +49,10 @@ def on_message(client, user_data, msg):
     # non-empty message - joinTraffic
     if message:
         if car is None:
-            specs_part = message.split('|')[0]
-            state_part = message.split('|')[1]
-            specs = ast.literal_eval("{" + specs_part + "}")
-            state = ast.literal_eval("{" + state_part + "}")
-            local_cars[car_id] = model_class(car_id, CarSpecs(**specs), **state)
-
+            [specs_part, state_part] = message.split('|')
+            specs = ast.literal_eval(specs_part)
+            state = ast.literal_eval(state_part)
+            local_cars[car_id] = model_class(car_id, CarSpecs(specs), state)
             round_robin_state_subscribe(car_id)
         else:
             logger.warning(f"Car with already existing id ({car_id}) sent a join message")
@@ -69,13 +67,14 @@ def on_state_message(client, user_data, msg):
     if car is None:
         logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
     else:
-        state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-        local_cars[car_id].update_state(**state)
+        state = ast.literal_eval(msg.payload.decode("utf-8"))
+        local_cars[car_id].update_state(state)
 
 
 def on_connect(client, user_data, flags, rc):
     if rc == 0:
         client.connected_flag = True
+        logger.debug(f"Client {client} connected OK.")
     else:
         logger.error(f"Client {client} could not connect, return code = {rc}")
         exit(rc)

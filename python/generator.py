@@ -20,14 +20,14 @@ logs_dir = repo_root_dir + "/python/logs"
 
 GENERATE_TIME_INTERVAL_MIN = 4
 GENERATE_TIME_INTERVAL_WIDTH = 1
-PREF_SPEED_INTERVAL_MIN = 100
-PREF_SPEED_INTERVAL_WIDTH = 90
+PREF_SPEED_INTERVAL_MIN = 80
+PREF_SPEED_INTERVAL_WIDTH = 110
 MAX_SPEED_INTERVAL_MIN = 120
 MAX_SPEED_INTERVAL_WIDTH = 180
 ACCELERATION_INTERVAL_MIN = 3
-ACCELERATION_INTERVAL_WIDTH = 11
+ACCELERATION_INTERVAL_WIDTH = 14
 BRAKING_POWER_INTERVAL_MIN = 3
-BRAKING_POWER_INTERVAL_WIDTH = 11
+BRAKING_POWER_INTERVAL_WIDTH = 14
 SIZE_INTERVAL_MIN = 3.5
 SIZE_INTERVAL_WIDTH = 5.5
 
@@ -91,7 +91,8 @@ def generate_random_specs():
     acceleration = random.random() * ACCELERATION_INTERVAL_WIDTH + ACCELERATION_INTERVAL_MIN
     brake = random.random() * BRAKING_POWER_INTERVAL_WIDTH + BRAKING_POWER_INTERVAL_MIN
     size = random.random() * SIZE_INTERVAL_WIDTH + SIZE_INTERVAL_MIN
-    return CarSpecs(pref_speed, max_speed, acceleration, brake, size)
+    # input has to be a tuple
+    return CarSpecs((pref_speed, max_speed, acceleration, brake, size))
 
 
 def generate_params_string(current_id):
