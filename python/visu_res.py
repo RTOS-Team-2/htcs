@@ -1,6 +1,7 @@
 import os
 import cv2
 import random
+import logging
 from tkinter import Tk
 from car import Car, CarSpecs
 from HTCSPythonUtil import config
@@ -14,12 +15,12 @@ if os.name == "nt":
     # for 1-to-1 pixel control I seem to need it to be non-zero (I'm using level 2)
 
 
+logger = logging.getLogger(__name__)
 tk = Tk()
 window_width = tk.winfo_screenwidth()
 black_region_height = 100
 # image resources
-WINDOW_NAME_MINIMAP = "Highway Traffic Control System Minimap"
-WINDOW_NAME_VISU = "Highway Traffic Control System Visualization"
+WINDOW_NAME = "Highway Traffic Control System Visualization"
 im_bigmap = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/map.png")
 im_minimap = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/minimap.png")
 red_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car1.png")
@@ -30,10 +31,17 @@ blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/ca
 blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2right.png")
 truck = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/truck.png")
 explosion = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/explosion.png")
-title = cv2.resize(cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/title.png"),
-                   (window_width, black_region_height))
+title = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/title.png")
+try:
+    _ = [im_bigmap.shape[0], im_minimap.shape[0], red_car_straight.shape[0], red_car_left.shape[0],
+         red_car_right.shape[0], blue_car_straight.shape[0], blue_car_left.shape[0], blue_car_right.shape[0],
+         truck.shape[0], explosion.shape[0], title.shape[0]]
+except AttributeError:
+    logger.critical("Some image resources were not found.")
 # to fit screen
 im_minimap = cv2.resize(im_minimap, (window_width, im_minimap.shape[0]))
+title = cv2.resize(title, (window_width, black_region_height))
+logger.info(f"Window width will be set to {window_width} pixels.")
 # measure
 minimap_length_pixel = im_minimap.shape[1]
 minimap_height_pixel = im_minimap.shape[0]
@@ -56,10 +64,10 @@ x_scale_bigmap = bigmap_length_pixel / map_length_meter
 
 
 class CarImage(Car):
-    def __init__(self, car_id, specs: CarSpecs, **_):
+    def __init__(self, car_id, specs: CarSpecs, state):
         # Create Car
-        super().__init__(car_id, specs)
-        if specs.size > 7.2:
+        super().__init__(car_id, specs, state)
+        if specs.size > 7.5:
             self.straight = truck
             self.left = truck
             self.right = truck
