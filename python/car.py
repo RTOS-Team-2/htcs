@@ -93,11 +93,18 @@ class DetailedCarTracker(dict):
         index_now = self.full_list.index(car)
         if index_now < len(self.full_list) - 1 and self.full_list[index_now + 1].distance_taken < car.distance_taken:
             self.full_list[index_now], self.full_list[index_now + 1] = \
-                self.full_list[index_now + 1], self.full_list[index_now]
+                self.full_list[index_now + 1], car
         # we do not have to check the other swap, since the car could not move backwards
         if lane_old != car.lane:
             self.list_of_lanes[lane_old].remove(car)
             self.put_into_lane_list(car)
+        # but in this case we have to check again
+        else:
+            index_now = self.list_of_lanes[car.lane].index(car)
+            if index_now < len(self.list_of_lanes[car.lane]) - 1 and \
+               self.list_of_lanes[car.lane][index_now + 1].distance_taken < car.distance_taken:
+                self.list_of_lanes[car.lane][index_now], self.list_of_lanes[car.lane][index_now + 1] = \
+                    self.list_of_lanes[car.lane][index_now + 1], car
 
     # https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/
     # TODO: here I left out the default part
