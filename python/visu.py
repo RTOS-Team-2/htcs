@@ -4,11 +4,10 @@ import threading
 import numpy as np
 import mqtt_connector
 import visu_res as vis
-from HTCSPythonUtil import local_cars
+from HTCSPythonUtil import config, local_cars, set_logging_level
 
-
+set_logging_level()
 logger = logging.getLogger(__name__)
-WINDOW_NAME = "Highway Traffic Control System Visualization"
 # view-dependent variables
 offset_meter = 0
 region_width_meter = vis.region_width_meter_start
@@ -21,6 +20,9 @@ current_detail_height = vis.detail_height
 is_dragging = False
 drag_start_x = 0
 drag_start_offset = 0
+logger.info(f"Full length of the map is {vis.map_length_meter} m.")
+logger.info(f"Current visible region is {vis.region_width_meter_start} m wide.")
+logger.info(f"Press <w> key to zoom in, press <s> key to zoom out.")
 
 
 def minimap_move(event, x, y, flags, param):
@@ -53,31 +55,37 @@ def update_zoom():
     region_width_bigmap_pixel = int(region_width_meter * vis.x_scale_bigmap)
 
 
+def on_terminate(car_id: str):
+    logger.debug(f"Obituary received for car: {car_id}")
+    _car = local_cars.get(car_id)
+    if _car is not None:
+        _car.exploded = True
+
+
 if __name__ == "__main__":
-    mqtt_connector.setup_connector(vis.CarImage)
+    mqtt_connector.setup_connector(vis.CarImage, on_terminate)
     lock = threading.Lock()
 
-    cv2.namedWindow(WINDOW_NAME)
-    cv2.moveWindow(WINDOW_NAME, 0, 0)
-    cv2.setMouseCallback(WINDOW_NAME, minimap_move)
-    src_points = np.float32([[0, 0],
-                             [0, int(vis.minimap_height_pixel * 0.05)],
-                             [region_width_minimap_pixel, int(vis.minimap_height_pixel * 0.05)],
-                             [region_width_minimap_pixel, 0]])
+    cv2.namedWindow(vis.WINDOW_NAME)
+    cv2.moveWindow(vis.WINDOW_NAME, 0, 0)
+    cv2.setMouseCallback(vis.WINDOW_NAME, minimap_move)
 
-    while cv2.getWindowProperty(WINDOW_NAME, 0) >= 0:
-        dst_points = np.float32([[offset_minimap_pixel, vis.minimap_height_pixel],
-                                 [0, vis.minimap_height_pixel + vis.black_region_height],
-                                 [vis.window_width, vis.minimap_height_pixel + vis.black_region_height],
-                                 [offset_minimap_pixel + region_width_minimap_pixel, vis.minimap_height_pixel]])
-        canvas = cv2.warpPerspective(vis.im_minimap[:-1 * int(vis.minimap_height_pixel * 0.05),
-                                                    offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel, :],
-                                     cv2.getPerspectiveTransform(src_points, dst_points),
-                                     (vis.window_width, vis.minimap_height_pixel + vis.black_region_height + current_detail_height),
-                                     flags=cv2.INTER_LINEAR)
+    while cv2.getWindowProperty(vis.WINDOW_NAME, 0) >= 0:
+        canvas = np.zeros((vis.minimap_height_pixel + vis.black_region_height + current_detail_height,
+                           vis.window_width, 3),
+                          np.uint8)
+        # put title in cone
+        canvas[vis.minimap_height_pixel: vis.minimap_height_pixel + vis.black_region_height, :, :] = vis.title
+        cv2.fillConvexPoly(canvas, np.int32(((0, vis.minimap_height_pixel),
+                                             (0, vis.minimap_height_pixel + vis.black_region_height),
+                                             (offset_minimap_pixel, vis.minimap_height_pixel))), (0, 0, 0))
+        cv2.fillConvexPoly(canvas, np.int32(((offset_minimap_pixel + region_width_minimap_pixel, vis.minimap_height_pixel),
+                                             (vis.window_width, vis.minimap_height_pixel + vis.black_region_height),
+                                             (vis.window_width, vis.minimap_height_pixel))), (0, 0, 0))
+        # get current part of the map
         cur_im_detail = cv2.resize(vis.im_bigmap[:, offset_bigmap_pixel:offset_bigmap_pixel + region_width_bigmap_pixel, :],
-                         (vis.window_width, vis.detail_height),
-                         interpolation=cv2.INTER_NEAREST)
+                                   (vis.window_width, vis.detail_height),
+                                   interpolation=cv2.INTER_NEAREST)
         # gray out
         canvas[:vis.minimap_height_pixel, : offset_minimap_pixel, :] = \
             (vis.im_minimap[:, : offset_minimap_pixel, :] * 0.6).astype(np.int32)
@@ -85,9 +93,8 @@ if __name__ == "__main__":
             (vis.im_minimap[:, offset_minimap_pixel + region_width_minimap_pixel:, :] * 0.6).astype(np.int32)
         # zoom in
         canvas[:vis.minimap_height_pixel, offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel, :] = \
-            cv2.resize(vis.im_minimap[0: int(vis.minimap_height_pixel * 0.95),
-                                      offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel,
-                                      :],
+            cv2.resize(vis.im_minimap[int(vis.minimap_height_pixel * 0.05): int(vis.minimap_height_pixel * 0.94),
+                                      offset_minimap_pixel: offset_minimap_pixel + region_width_minimap_pixel, :],
                        (region_width_minimap_pixel, vis.minimap_height_pixel))
         # put on cars
         with lock:
@@ -102,34 +109,34 @@ if __name__ == "__main__":
         cv2.line(canvas,
                  (offset_minimap_pixel, 0),
                  (offset_minimap_pixel, vis.minimap_height_pixel),
-                 (0, 140, 255),
+                 (0, 211, 255),
                  3)
         cv2.line(canvas,
                  (offset_minimap_pixel + region_width_minimap_pixel, 0),
                  (offset_minimap_pixel + region_width_minimap_pixel, vis.minimap_height_pixel),
-                 (0, 140, 255),
+                 (0, 211, 255),
                  3)
         cv2.line(canvas,
                  (offset_minimap_pixel, vis.minimap_height_pixel),
                  (0, vis.minimap_height_pixel + vis.black_region_height),
-                 (0, 140, 255),
+                 (0, 211, 255),
                  3)
         cv2.line(canvas,
                  (offset_minimap_pixel + region_width_minimap_pixel, vis.minimap_height_pixel),
                  (vis.window_width, vis.minimap_height_pixel + vis.black_region_height),
-                 (0, 140, 255),
+                 (0, 211, 255),
                  3)
         # set correct height
         canvas[vis.minimap_height_pixel + vis.black_region_height:, :, :] = \
             cv2.resize(cur_im_detail, (vis.window_width, current_detail_height))
 
-        cv2.imshow(WINDOW_NAME, canvas)
+        cv2.imshow(vis.WINDOW_NAME, canvas)
         key = cv2.waitKey(1)
         if key == ord('w'):
-            region_width_meter -= 10
+            region_width_meter = max(10, region_width_meter - 10)
             update_zoom()
         elif key == ord('s'):
-            region_width_meter += 10
+            region_width_meter = min(vis.map_length_meter, region_width_meter + 10)
             update_zoom()
 
     cv2.destroyAllWindows()

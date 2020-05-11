@@ -12,12 +12,15 @@ void usage() {
 		"\t--password <mqtt password>\\\n"
 		"\t--clientId <arbitrary client id>\\\n"
 		"\t--topic <topic base, e.g. krisz.kern@gmail.com/vehicles>\\\n"
-		"\t--preferredSpeed <positive double in km/h, e.g. 120>\\\n"
-		"\t--maxSpeed <positive double in km/h, e.g. 210>\\\n"
-		"\t--acceleration <positive double, 0-100 km/h in seconds, e.g. 7.4>\\\n"
-		"\t--brakingPower <positive double, 100-0 km/h in seconds, e.g. 9.2>\\\n"
-		"\t--size <positive double in meters, e.g. 2.5>\\\n"
-        "\t--update-frequency <unsigned long in ms, default is 100 ms>\\\n");
+        "\t--startingLane <0 for merge, 2 for traffic, 5 for express lane>"
+        "\t--startingDistance <positive double [meter], e.g. 0>"
+        "\t--startingSpeed <positive double [km/h], e.g. 55.6>"
+		"\t--preferredSpeed <positive double [km/h], e.g. 120>\\\n"
+		"\t--maxSpeed <positive double [km/h], e.g. 210>\\\n"
+		"\t--acceleration <positive double [s/100km/h], e.g. 7.4>\\\n"
+		"\t--brakingPower <positive double [s/100km/h], e.g. 9.2>\\\n"
+		"\t--size <positive double [meter], e.g. 4.5>\\\n"
+        "\t--update-frequency <unsigned long [ms], default is 100 ms>\\\n");
     fflush(stdout);
 }
 
@@ -58,41 +61,62 @@ int getOptions(Options* opts, int argc, char** argv) {
             } else {
                 return 6;
             }
+        } else if (strcmp(argv[pos], "--startingLane") == 0) {
+            if (++pos < argc) {
+                opts->startingLane = strtol(argv[pos], NULL, 10);
+            }
+            else {
+                return 7;
+            }
+        } else if (strcmp(argv[pos], "--startingDistance") == 0) {
+            if (++pos < argc) {
+                opts->startingDistance = strtod(argv[pos], NULL);
+            }
+            else {
+                return 8;
+            }
+        } else if (strcmp(argv[pos], "--startingSpeed") == 0) {
+            if (++pos < argc) {
+                opts->startingSpeed = strtod(argv[pos], NULL);
+            }
+            else {
+                return 9;
+            }
         } else if (strcmp(argv[pos], "--preferredSpeed") == 0) {
             if (++pos < argc) {
                 opts->preferredSpeed = strtod(argv[pos], NULL);
             } else {
-                return 7;
+                return 10;
             }
         } else if (strcmp(argv[pos], "--maxSpeed") == 0) {
             if (++pos < argc) {
                 opts->maxSpeed = strtod(argv[pos], NULL);
             } else {
-                return 8;
+                return 11;
             }
         } else if (strcmp(argv[pos], "--acceleration") == 0) {
             if (++pos < argc) {
                 opts->acceleration = strtod(argv[pos], NULL);
             } else {
-                return 9;
+                return 12;
             }
         } else if (strcmp(argv[pos], "--brakingPower") == 0) {
             if (++pos < argc) {
                 opts->brakingPower = strtod(argv[pos], NULL);
             } else {
-                return 10;
+                return 13;
             }
         } else if (strcmp(argv[pos], "--size") == 0) {
             if (++pos < argc) {
                 opts->size = strtod(argv[pos], NULL);
             } else {
-                return 11;
+                return 14;
             }
         } else if (strcmp(argv[pos], "--update-frequency") == 0) {
             if (++pos < argc) {
                 opts->updateFrequency = strtol(argv[pos], NULL, 10);
             } else {
-                return 11;
+                return 15;
             }
         }
         pos++;

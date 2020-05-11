@@ -1,12 +1,14 @@
 #include "state.h"
 #include <stdio.h>
 
-void initializeState(State* state, const Options* opts) {
-    state->lane = MERGE_LANE;
-    state->distanceTaken = 0.0;
-    state->speed = STARTING_SPEED;
+#define DEFAULT_STARTING_SPEED 13.8888889
+
+void initializeState(State *state, const Options *opts) {
+    state->lane = opts->startingLane;
+    state->distanceTaken = opts->startingDistance;
+    state->speed = opts->startingSpeed == 0.0 ? DEFAULT_STARTING_SPEED : opts->startingSpeed / 3.6;
     state->laneChangeElapsed = 0;
-    state->accelerationState = ACCELERATING;
+    state->accelerationState = state->lane == TRAFFIC_LANE ? MAINTAINING_SPEED : ACCELERATING;
 
     state->attributes.preferredSpeed = opts->preferredSpeed / 3.6;
     state->attributes.maxSpeed = opts->maxSpeed / 3.6;
@@ -15,7 +17,7 @@ void initializeState(State* state, const Options* opts) {
     state->attributes.size = opts->size;
 }
 
-void progressLaneChange(State* state, Lane lane, unsigned elapsedMs) {
+void progressLaneChange(State *state, Lane lane, unsigned elapsedMs) {
     if (state->laneChangeElapsed >= LANE_CHANGE_MS) {
         state->laneChangeElapsed = 0;
         state->lane = lane;
@@ -24,7 +26,7 @@ void progressLaneChange(State* state, Lane lane, unsigned elapsedMs) {
     }
 }
 
-void adjustState(State* state, unsigned elapsedMs) {
+void adjustState(State *state, unsigned elapsedMs) {
     state->distanceTaken = state->distanceTaken + state->speed * (elapsedMs / 1000.0);
 
     if (state->accelerationState == ACCELERATING) {
@@ -55,13 +57,14 @@ void adjustState(State* state, unsigned elapsedMs) {
     }
 }
 
-int attributesToString(Attributes* attributes, char* attributesStr) {
-    return sprintf(attributesStr, "'preferred_speed':%f,'max_speed':%f,'acceleration':%f,'braking_power':%f,'size':%f",
-            attributes->preferredSpeed, attributes->maxSpeed,
-            attributes->acceleration, attributes->brakingPower, attributes->size);
+int attributesAndStateToString(State *state, char *attributesStr) {
+    return sprintf(attributesStr, "%.6f,%.6f,%.6f,%.6f,%.6f|%d,%.6f,%.6f,%d",
+                   state->attributes.preferredSpeed, state->attributes.maxSpeed,
+                   state->attributes.acceleration, state->attributes.brakingPower, state->attributes.size,
+                   state->lane, state->distanceTaken, state->speed, state->accelerationState);
 }
 
-int stateToString(State* state, char* stateStr) {
-    return sprintf(stateStr, "'lane':%d,'distance_taken':%f,'speed':%f,'acceleration_state':%d",
-            state->lane, state->distanceTaken, state->speed, state->accelerationState);
+int stateToString(State *state, char *stateStr) {
+    return sprintf(stateStr, "%d,%.6f,%.6f,%d",
+                   state->lane, state->distanceTaken, state->speed, state->accelerationState);
 }

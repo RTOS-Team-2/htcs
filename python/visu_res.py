@@ -1,6 +1,7 @@
 import os
 import cv2
 import random
+import logging
 from tkinter import Tk
 from car import Car, CarSpecs
 from HTCSPythonUtil import config
@@ -8,50 +9,50 @@ from HTCSPythonUtil import config
 if os.name == "nt":
     # https://github.com/opencv/opencv/issues/11360
     import ctypes
-    # Query DPI Awareness (Windows 10 and 8)
-    awareness = ctypes.c_int()
-    _ = ctypes.windll.shcore.GetProcessDpiAwareness(0, ctypes.byref(awareness))
     # Set DPI Awareness  (Windows 10 and 8)
     _ = ctypes.windll.shcore.SetProcessDpiAwareness(2)
     # the argument is the awareness level, which can be 0, 1 or 2:
     # for 1-to-1 pixel control I seem to need it to be non-zero (I'm using level 2)
 
 
+logger = logging.getLogger(__name__)
 tk = Tk()
-screen_width = tk.winfo_screenwidth()
-screen_height = tk.winfo_screenheight()
-
+window_width = tk.winfo_screenwidth()
+black_region_height = 100
 # image resources
-WINDOW_NAME_MINIMAP = "Highway Traffic Control System Minimap"
-WINDOW_NAME_VISU = "Highway Traffic Control System Visualization"
-im_bigmap = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/mapp_big.png")
-im_minimap = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/mapp.png")
+WINDOW_NAME = "Highway Traffic Control System Visualization"
+im_bigmap = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/map.png")
+im_minimap = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/minimap.png")
 red_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car1.png")
 red_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car1left.png")
 red_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car1right.png")
 blue_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2.png")
 blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2left.png")
 blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2right.png")
-
-# resize images to fit screen
-new_width = int(im_minimap.shape[1]*(float(screen_width) / float(im_minimap.shape[1])))
-im_minimap = cv2.resize(im_minimap, (new_width, im_minimap.shape[0]))
-
-new_width = int(im_bigmap.shape[1]*(float(screen_width) / float(im_bigmap.shape[1])))
-im_bigmap = cv2.resize(im_bigmap, (new_width, im_bigmap.shape[0]))
-
+truck = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/truck.png")
+explosion = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/explosion.png")
+title = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/title.png")
+try:
+    _ = [im_bigmap.shape[0], im_minimap.shape[0], red_car_straight.shape[0], red_car_left.shape[0],
+         red_car_right.shape[0], blue_car_straight.shape[0], blue_car_left.shape[0], blue_car_right.shape[0],
+         truck.shape[0], explosion.shape[0], title.shape[0]]
+except AttributeError:
+    logger.critical("Some image resources were not found.")
+# to fit screen
+im_minimap = cv2.resize(im_minimap, (window_width, im_minimap.shape[0]))
+title = cv2.resize(title, (window_width, black_region_height))
+logger.info(f"Window width will be set to {window_width} pixels.")
+# measure
 minimap_length_pixel = im_minimap.shape[1]
 minimap_height_pixel = im_minimap.shape[0]
 bigmap_length_pixel = im_bigmap.shape[1]
 # fix parameters
-region_width_meter_start = 100
-map_height_meter = 20
+region_width_meter_start = 200
+map_height_meter = 16
 map_length_meter = config["position_bound"]
 center_fast_lane_mini = 32
 center_slow_lane_mini = 80
 center_merge_lane_mini = 130
-window_width = minimap_length_pixel
-black_region_height = 100
 detail_height = int(window_width * map_height_meter / region_width_meter_start)
 y_stretch = detail_height / im_bigmap.shape[0]
 center_fast_lane = 42.5 * y_stretch
@@ -63,11 +64,16 @@ x_scale_bigmap = bigmap_length_pixel / map_length_meter
 
 
 class CarImage(Car):
-    def __init__(self, car_id, specs: CarSpecs):
+    def __init__(self, car_id, specs: CarSpecs, state):
         # Create Car
-        super().__init__(car_id, specs)
+        super().__init__(car_id, specs, state)
+        if specs.size > 7.5:
+            self.straight = truck
+            self.left = truck
+            self.right = truck
+            self.color = (11, 195, 255)
         # Red or Blue
-        if bool(random.getrandbits(1)):
+        elif bool(random.getrandbits(1)):
             self.straight = red_car_straight
             self.left = red_car_left
             self.right = red_car_right
@@ -81,6 +87,7 @@ class CarImage(Car):
         self.straight = cv2.resize(self.straight, (self.straight.shape[0], car_height))
         self.left = cv2.resize(self.left, (self.left.shape[0], car_height))
         self.right = cv2.resize(self.right, (self.right.shape[0], car_height))
+        self.exploded = False
 
     def get_point_on_minimap(self):
         cy = 0
@@ -134,7 +141,9 @@ class CarImage(Car):
         return slice(on_vis_slice_x_start, on_vis_slice_x_end), self.get_image(w_px_car, car_x_slice)
 
     def get_image(self, car_width_pixel, x_slice):
-        if self.lane in [1, 3]:
+        if self.distance_taken > map_length_meter - 30 or self.exploded:
+            im = explosion
+        elif self.lane in [1, 3]:
             im = self.left
         elif self.lane == 4:
             im = self.right
