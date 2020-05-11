@@ -38,6 +38,7 @@ def unsubscribe_pool(car_id: str):
             return
 
 
+# JOIN OR TERMINATION NOTIFICATION. COMMANDS ARE NOT LISTENED, AND STATE MSG-S ARE ON DIFFERENT HANDLER
 def on_message(client, user_data, msg):    
     message = msg.payload.decode("utf-8")
     if msg.topic.endswith("terminator") and terminator_callback:
@@ -67,8 +68,8 @@ def on_state_message(client, user_data, msg):
     if car is None:
         logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
     else:
-        state = ast.literal_eval("{" + msg.payload.decode("utf-8") + "}")
-        local_cars[car_id].update_state(**state)
+        state = ast.literal_eval(msg.payload.decode("utf-8"))
+        local_cars[car_id].update_state(state[0], state[1], state[2], state[3])
 
 
 def on_connect(client, user_data, flags, rc):

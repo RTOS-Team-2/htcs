@@ -67,6 +67,6 @@ int attributesAndStateToString(State *state, char *attributesStr) {
 }
 
 int stateToString(State *state, char *stateStr) {
-    return sprintf(stateStr, "'lane':%d,'distance_taken':%f,'speed':%f,'acceleration_state':%d",
+    return sprintf(stateStr, "%d,%.6f,%.6f,%d",
                    state->lane, state->distanceTaken, state->speed, state->accelerationState);
 }
