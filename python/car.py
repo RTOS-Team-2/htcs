@@ -83,6 +83,22 @@ class DetailedCarTracker(dict):
                 return
         self.list_of_lanes[value.lane].append(value)
 
+    def update_car(self, car_id, state):
+        car = self[car_id]
+        # we will need this
+        lane_old = car.lane
+        # perform update on the object itself
+        car.update_state(state)
+        # find its index in the full list
+        index_now = self.full_list.index(car)
+        if index_now < len(self.full_list) - 1 and self.full_list[index_now + 1].distance_taken < car.distance_taken:
+            self.full_list[index_now], self.full_list[index_now + 1] = \
+                self.full_list[index_now + 1], self.full_list[index_now]
+        # we do not have to check the other swap, since the car could not move backwards
+        if lane_old != car.lane:
+            self.list_of_lanes[lane_old].remove(car)
+            self.put_into_lane_list(car)
+
     # https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/
     # TODO: here I left out the default part
     def pop(self, key):
@@ -95,8 +111,12 @@ class DetailedCarTracker(dict):
         else:
             return None
 
-    def update_car(self, car_id, state):
-        self[car_id].update_state(state)
+    def get_car_in_front_of(self, car: Car):
+        index_in_lane = self.list_of_lanes[car.lane].index(car)
+        if index_in_lane < len(self.list_of_lanes[car.lane]) - 1:
+            return self.list_of_lanes[car.lane][index_in_lane + 1]
+        else:
+            return None
 
 
 
