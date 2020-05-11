@@ -34,6 +34,9 @@ SIZE_INTERVAL_WIDTH = 5.5
 VEHICLE_MAX_LIFE_EXPECTANCY = 300  # seconds
 ARCHIVE_LOG_ZIP_SIZE = 50
 
+ARCHIVE_INTERVAL = VEHICLE_MAX_LIFE_EXPECTANCY +\
+                   (ARCHIVE_LOG_ZIP_SIZE + 1) * (GENERATE_TIME_INTERVAL_MIN + GENERATE_TIME_INTERVAL_WIDTH)
+
 
 class GraveDigger:
     kill_now = False
@@ -48,7 +51,7 @@ class GraveDigger:
     def archive_logs(self):
         _now = time.time()
 
-        if self.last_archive_time > (_now - (ARCHIVE_LOG_ZIP_SIZE + 1) * VEHICLE_MAX_LIFE_EXPECTANCY):
+        if self.last_archive_time > (_now - ARCHIVE_INTERVAL):
             return False
 
         start_idx = self.archive_start_id
