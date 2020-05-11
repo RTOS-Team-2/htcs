@@ -55,7 +55,8 @@ def update_zoom():
     region_width_bigmap_pixel = int(region_width_meter * vis.x_scale_bigmap)
 
 
-def on_terminate(car_id: str):
+def on_terminate(client, userdata, message):
+    car_id = message.payload.decode("utf-8")
     logger.debug(f"Obituary received for car: {car_id}")
     _car = local_cars.get(car_id)
     if _car is not None:

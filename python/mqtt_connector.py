@@ -3,13 +3,12 @@ import uuid
 import logging
 import paho.mqtt.client as mqtt
 from car import Car, CarSpecs
-from typing import List, Tuple, Dict, Callable
+from typing import List, Tuple, Dict
 from HTCSPythonUtil import config, local_cars
 
 logger = logging.getLogger("MQTT_Connector")
 
 model_class = Car
-on_terminate: Callable[[str], None]
 
 client_1 = mqtt.Client("main_client_" + str(uuid.uuid4()))
 state_client_pool: List[Tuple[mqtt.Client, Dict[str, int]]] = []
@@ -38,12 +37,8 @@ def unsubscribe_pool(car_id: str):
             return
 
 
-# JOIN OR TERMINATION NOTIFICATION. COMMANDS ARE NOT LISTENED, AND STATE MSG-S ARE ON DIFFERENT HANDLER
-def on_message(client, user_data, msg):    
+def on_join_message(client, user_data, msg):
     message = msg.payload.decode("utf-8")
-    if msg.topic.endswith("obituary") and on_terminate:
-        on_terminate(message)
-        return
     car_id = msg.topic.split('/')[-2]
     car = local_cars.get(car_id)
     # non-empty message - joinTraffic
@@ -93,12 +88,13 @@ def remove_unsubscribed_car(client, _car_ids_mids, message_id):
             return
 
 
-def setup_connector(_model_class=Car, _on_terminate=None):
-    global model_class, on_terminate
+# if you want to only subscribe to obituary messages, set the state_client_pool_size to 0
+def setup_connector(_model_class=Car, on_terminate=None, _state_client_pool_size=8):
+    global model_class, state_client_pool_size
     model_class = _model_class
-    on_terminate = _on_terminate
+    state_client_pool_size = _state_client_pool_size
 
-    logger.info(f"Setting up {state_client_pool_size} connectors")
+    logger.info(f"Setting up main client and {state_client_pool_size} state clients")
     for i in range(state_client_pool_size):
         client_id = "state_client_" + str(i) + "-" + str(uuid.uuid4())
         state_client = mqtt.Client(client_id)
@@ -119,13 +115,16 @@ def setup_connector(_model_class=Car, _on_terminate=None):
 
     client_1.username_pw_set(username=config["username"], password=config["password"])
     client_1.on_connect = on_connect
-    client_1.on_message = on_message
     client_1.on_disconnect = on_disconnect
 
     client_1.connect(config["address"])
     client_1.loop_start()
-    client_1.subscribe(topic=config["base_topic"] + "/+/join", qos=config["quality_of_service"])
-    client_1.subscribe(topic=config["base_topic"] + "/obituary", qos=config["quality_of_service"])
+    if state_client_pool_size > 0:
+        client_1.subscribe(topic=config["base_topic"] + "/+/join", qos=config["quality_of_service"])
+        client_1.message_callback_add(config["base_topic"] + "/+/join", on_join_message)
+    if on_terminate:
+        client_1.message_callback_add(config["base_topic"] + "/obituary", on_terminate)
+        client_1.subscribe(topic=config["base_topic"] + "/obituary", qos=config["quality_of_service"])
 
 
 def cleanup_connector():

@@ -7,8 +7,9 @@ import pathlib
 import zipfile
 import datetime
 import subprocess
+import mqtt_connector
 from car import CarSpecs
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from HTCSPythonUtil import config
 
 logger = logging.getLogger("Vehicle_generator")
@@ -31,58 +32,50 @@ BRAKING_POWER_INTERVAL_WIDTH = 14
 SIZE_INTERVAL_MIN = 3.5
 SIZE_INTERVAL_WIDTH = 5.5
 
-VEHICLE_MAX_LIFE_EXPECTANCY = 300  # seconds
 ARCHIVE_LOG_ZIP_SIZE = 50
-
-ARCHIVE_INTERVAL = VEHICLE_MAX_LIFE_EXPECTANCY +\
-                   (ARCHIVE_LOG_ZIP_SIZE + 1) * (GENERATE_TIME_INTERVAL_MIN + GENERATE_TIME_INTERVAL_WIDTH)
 
 
 class GraveDigger:
     kill_now = False
 
     def __init__(self):
-        self.running_children: List[Tuple[subprocess.Popen, int, int, str]] = []
+        self.running_children: Dict[str, subprocess.Popen] = {}
         self.last_archive_time = time.time()
-        self.archive_start_id = 1
+        # list of tuples of client_id and client number
+        self.ready_to_archive: List[Tuple[str, int]] = []
         signal.signal(signal.SIGINT, self.exit_gracefully)
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
-    def archive_logs(self):
-        _now = time.time()
-
-        if self.last_archive_time > (_now - ARCHIVE_INTERVAL):
-            return False
-
-        start_idx = self.archive_start_id
-        end_idx = self.archive_start_id + ARCHIVE_LOG_ZIP_SIZE
-        zip_file_name = current_logs_dir + "/archive/" + str(start_idx) + "-" + str(end_idx - 1) + ".zip"
-        with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zf:
-            for i in range(start_idx, end_idx):
-                base_name = "htcs_vehicle-" + str(i) + "-" + now_str + ".log"
-                full_name = os.path.join(current_logs_dir, base_name)
-                zf.write(full_name, base_name)
-                os.remove(full_name)
-
-        self.archive_start_id = end_idx
-        self.last_archive_time = _now
-        return True
-
-    def kill_too_old(self):
-        first_child = self.running_children[0]
-        if first_child[0].poll() is not None:
-            self.running_children.pop(0)
-            return None
-        if elapsed >= first_child[1] + VEHICLE_MAX_LIFE_EXPECTANCY:
-            self.running_children.pop(0)
-            first_child[0].terminate()
-            return first_child[0]
-        return None
+    def add_to_ready_to_archive(self, _client_id: str):
+        self.running_children.pop(_client_id)
+        self.ready_to_archive.append((_client_id, int(_client_id.split('-')[0])))
+        if len(self.ready_to_archive) >= ARCHIVE_LOG_ZIP_SIZE:
+            # sort by client number
+            self.ready_to_archive.sort(key=lambda x: x[1])
+            _, client_numbers = zip(*self.ready_to_archive)
+            # first x client numbers where x is ARCHIVE_LOG_ZIP_SIZE
+            lst = client_numbers[:ARCHIVE_LOG_ZIP_SIZE + 1]
+            # check if this list of client numbers contains sequential elements
+            if lst == list(range(min(lst), max(lst) + 1)):
+                # we want to archive together logs of sequential clients
+                archive_logs(lst[0])
 
     def exit_gracefully(self, signum, frame):
         self.kill_now = True
-        for _process, _, _, _ in self.running_children:
+        for _process in self.running_children.values():
             _process.terminate()
+
+
+def archive_logs(start_idx):
+    end_idx = start_idx + ARCHIVE_LOG_ZIP_SIZE
+    zip_file_name = os.path.join(current_logs_dir, "archive", str(start_idx), "-", str(end_idx - 1), ".zip")
+    with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zf:
+        for i in range(start_idx, end_idx):
+            base_name = os.path.join("htcs_vehicle-", str(i), "-", now_str, ".log")
+            full_name = os.path.join(current_logs_dir, base_name)
+            zf.write(full_name, base_name)
+            os.remove(full_name)
+    logger.info("Archived logs")
 
 
 def generate_random_specs():
@@ -130,7 +123,15 @@ def generate_params_string(current_id):
     return long_string
 
 
+def on_terminate(client, userdata, message):
+    _client_id = message.payload.decode("utf-8")
+    logger.debug(f"Obituary received for car: {_client_id}")
+    grave_digger.add_to_ready_to_archive(_client_id)
+
+
 if __name__ == "__main__":
+    # the generator is only interested in obituary messages
+    mqtt_connector.setup_connector(on_terminate=on_terminate, _state_client_pool_size=0)
     if os.name is not 'nt':
         os.putenv("LD_LIBRARY_PATH", os.getenv("HOME") + "/Eclipse-Paho-MQTT-C-1.3.1-Linux/lib")
 
@@ -155,16 +156,10 @@ if __name__ == "__main__":
         else:
             process = subprocess.Popen(executable=executable_name_linux, args=params_string.split(' '),
                                        shell=True, stdout=log_file, stderr=log_file)
-        grave_digger.running_children.append((process, elapsed, counter, log_file_name))
+        grave_digger.running_children[client_id] = process
 
         sleep_time = random.random() * GENERATE_TIME_INTERVAL_WIDTH + GENERATE_TIME_INTERVAL_MIN
         logger.info(f"Generated vehicle client_id: {client_id} process_id: {process.pid}"
                     f", next vehicle in {sleep_time:.3f} seconds")
         time.sleep(sleep_time)
         elapsed += sleep_time
-
-        killed = grave_digger.kill_too_old()
-        if killed is not None:
-            logger.info(f"Killed too old child process_id: {killed.pid}")
-        if grave_digger.archive_logs():
-            logger.info("Archived logs")
