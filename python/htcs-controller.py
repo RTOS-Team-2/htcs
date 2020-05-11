@@ -22,6 +22,14 @@ class Command(Enum):
     TERMINATE = 4
 
 
+def give_command(car, command):
+    qos = config["quality_of_service"]
+    topic = config["base_topic"] + "/" + str(car.id) + "/command"
+    logger.debug(topic)
+    message = command.value
+    mqtt_connector.client_1.publish(topic, message, qos)
+
+
 def print_all_distances(all_cars):
     for car in all_cars:
         print(f"{car.id}: {car.distance_taken}m")
@@ -29,10 +37,12 @@ def print_all_distances(all_cars):
 
 def control_traffic():
     cars_list = list(local_cars.values())
-    cars_list.sort(key=Car.Distance_taken)
-    
+    cars_list.sort(key=Car.get_distance_taken)
+#    cars_list.sort(key=lambda c: c.distance_taken)
+#    print_all_distances(car_list)
     cars_priority_list = get_cars_needing_control(cars_list, False)
     control_lane_change(cars_priority_list)
+    control_follow_distance(cars_list)
 
 
 def get_cars_needing_control(all_cars, order_by_priority=True):
@@ -54,20 +64,30 @@ def control_lane_change(cars_priority_list):
             give_command(car, Command.CHANGE_LANE)
 
 
-def give_command(car, command):
-    qos = config["quality_of_service"]
-    topic = config["base_topic"] + "/" + str(car.id) + "/command"
-    logger.debug(topic)
-    message = command.value
-    mqtt_connector.client_1.publish(topic, message, qos)
+def control_follow_distance(cars_list):
+    return
+    prev_car = None
+    for car in cars_list:
+        if not prev_car:
+            return
+        if should_slow_down(perv_car, car):
+            match_speed(prev_car, car)
+            pass
+        prev_car = car
 
 
-def get_follow_distance(car):
-    # follow_distance = az a táv ami alatt meg tud állni 0-ra az autó az aktuális sebességről
-    # time to stop = speed / deceleration
-    # distance traveled = aree under the function of speed(time)
-    # which is a line from current speed at zero time, and zero speed at time to stop
-    return (car.speed / 2.0) * (car.speed / car.specs.braking_power)
+def match_speed(prev_car, car):
+    pass
+
+
+def should_slow_down(perv_car, car):
+    pass
+    
+    
+#HELP include car.size in calculations
+def is_too_close(prev_car, car):
+    # greedy = 
+    return perv_car.distance_taken + car.get_follow_distance() > car.distance_taken
 
 
 def is_in_merge_lane(car):
@@ -79,6 +99,7 @@ def is_in_preferred_speed(car):
 
 
 def can_change_lane(changing_car, all_cars):
+#    if changing_car.lane = 
     # TODO implement condition for changing lane
     return True
 
