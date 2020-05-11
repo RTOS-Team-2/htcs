@@ -31,31 +31,31 @@ class Car:
         self.distance_taken = distance_taken
         self.speed = speed
         self.acceleration_state = acceleration_state
-
-    def get_distance_taken(self):
-        return self.distance_taken
     
-    def get_follow_distance(self, safety_treshold=0.0):
-        # follow_distance = az a táv ami alatt meg tud állni 0-ra az autó az aktuális sebességről
+    def get_follow_distance(self, safety_factor=1.0):
+        """
+        Distance traveled while getting to a full stop from current speed
+        :param safety_factor: returned value will be multiplied by this factor
+        """
         # time to stop = speed / deceleration
         # distance traveled = aree under the function of speed(time)
         # which is a line from current speed at zero time, and zero speed at time to stop
         follow_distance = (self.speed / 2.0) * (self.speed / self.specs.braking_power)
-        return (1 + safety_treshold) * follow_distance
+        return safety_factor * follow_distance
 
-    #HELP
-    # distance taken while reaching target_speed from current_speed
-    def distance_while_accelerating(current_speed, target_speed, acceleration, deceleration):
-        _acceleration = 0
-        if current_speed < target_speed:
-            _acceleration = acceleration
+    def distance_while_accelerating(self, target_speed):
+        """
+        Distance traveled while reaching target_speed from current_speed
+        """
+        # we calculate the area under the function of speed(time) which is a trapeziod
+        if self.speed < target_speed:
+            return (target_speed + self.speed) / 2 * (target_speed - self.speed) / self.specs.acceleration
         else:
-            _acceleration = deceleration
-        return 0
-    
+            return (target_speed + self.speed) / 2 * (self.speed - target_speed) / self.specs.braking_power
+
     def match_speed_now(self,other_car):
         #TODO not perfect, need a bit more calculations
         return (self.distance_taken + self.match_speed_distance(other_car.speed) + 
-                other_car.get_follow_distance(safety_treshold = 0.0) <
+                other_car.get_follow_distance(safety_treshold=1.0) <
                 other_car.distance_taken)
         
