@@ -157,8 +157,8 @@ if __name__ == "__main__":
         grave_digger.running_children.append((process, elapsed, counter, log_file_name))
 
         sleep_time = random.random() * GENERATE_TIME_INTERVAL_WIDTH + GENERATE_TIME_INTERVAL_MIN
-        logger.info("Generated vehicle client_id: " + client_id + " process_id: " + str(process.pid)
-                    + ", next vehicle in " + str(sleep_time) + " seconds")
+        logger.info(f"Generated vehicle client_id: {client_id} process_id: {process.pid}"
+                    f", next vehicle in {sleep_time:.3f} seconds")
         time.sleep(sleep_time)
         elapsed += sleep_time
 
