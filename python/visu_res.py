@@ -30,7 +30,7 @@ blue_car_straight = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/re
 blue_car_left = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2left.png")
 blue_car_right = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/car2right.png")
 truck = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/truck.png")
-explosion = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/aexplosion.png")
+explosion = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/explosion.png")
 title = cv2.imread(os.path.dirname(os.path.abspath(__file__)) + "/res/title.png")
 try:
     _ = [im_bigmap.shape[0], im_minimap.shape[0], red_car_straight.shape[0], red_car_left.shape[0],
