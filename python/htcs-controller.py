@@ -45,7 +45,8 @@ def control_traffic():
             if car.speed < car.specs.preferred_speed and car.acceleration_state != 1:
                 # try to accelerate / overtake
                 if car_directly_ahead_if_keep_lane is None \
-                   or car_directly_ahead_if_keep_lane.distance_taken - car.distance_taken > car.follow_distance():
+                   or car_directly_ahead_if_keep_lane.distance_taken - car.distance_taken > car.follow_distance() \
+                   or car_directly_ahead_if_keep_lane.speed < car.specs.preferred_speed:
                     give_command(car, Command.ACCELERATE)
                 elif local_cars.can_overtake(car):
                     give_command(car, Command.CHANGE_LANE)
