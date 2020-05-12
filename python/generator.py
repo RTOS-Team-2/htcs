@@ -18,7 +18,7 @@ executable_name_windows = repo_root_dir + "/htcs-vehicle/Debug/htcs-vehicle.exe"
 executable_name_linux = repo_root_dir + "/htcs-vehicle/build/htcs_vehicle"
 logs_dir = repo_root_dir + "/python/logs"
 
-GENERATE_TIME_INTERVAL_MIN = 4
+GENERATE_TIME_INTERVAL_MIN = 2
 GENERATE_TIME_INTERVAL_WIDTH = 1
 PREF_SPEED_INTERVAL_MIN = 80
 PREF_SPEED_INTERVAL_WIDTH = 110
@@ -100,16 +100,16 @@ def generate_random_specs():
 def generate_params_string(current_id):
     specs = generate_random_specs()
     entry_dist = 0
-    if random.random() > 0.70:
+    if random.random() > 0.50:
         entry_dist = config["entry_2_meter"]
         entry_lane = 0
         start_speed = 50
     else:
         lane_random = random.random()
-        if lane_random > 0.75:
+        if lane_random > 1.75:
             entry_lane = 5
             start_speed = specs.preferred_speed
-        elif lane_random > 0.5:
+        elif lane_random > 1.5:
             entry_lane = 2
             start_speed = specs.preferred_speed
         else:

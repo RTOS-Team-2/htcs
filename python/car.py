@@ -1,7 +1,11 @@
 import threading
 from typing import List
 
-
+"""
+lane = 0 -> effective = 0
+lane = 1, 2, 4 -> effective = 1
+lane = 3, 5 -> effective = 2
+"""
 effective_lanes = [0, 1, 1, 2, 1, 2]
 
 
@@ -118,19 +122,19 @@ class DetailedCarTracker(CarManager):
         for index_with_bigger_dist in range(0, len(self.full_list)):
             if self.full_list[index_with_bigger_dist].distance_taken > value.distance_taken:
                 self.full_list.insert(index_with_bigger_dist, value)
-                print("inserted to index", index_with_bigger_dist)
                 return
         self.full_list.append(value)
 
     def update_car(self, car_id, state):
         car = self[car_id]
+        if car.speed < 1.0:
+            print(f"state message received on id {car.id}, {state}")
         car.update_state(state)
         index_now = self.full_list.index(car)
         if index_now < len(self.full_list) - 1 and self.full_list[index_now + 1].distance_taken < car.distance_taken:
             with self.lock:
                 self.full_list[index_now], self.full_list[index_now + 1] = \
                     self.full_list[index_now + 1], self.full_list[index_now]
-            print("SWAPPP !")
         # we do not have to check the other swap, since the car could not have moved backwards
 
     def pop(self, key):
@@ -145,7 +149,10 @@ class DetailedCarTracker(CarManager):
             return [car for car in self.full_list]
 
     def car_directly_behind_in_lane(self, car_in_focus: Car, lane):
-        index = self.full_list.index(car_in_focus) - 1
+        try:
+            index = self.full_list.index(car_in_focus) - 1
+        except ValueError:
+            return None
         while index >= 0:
             if self.full_list[index].effective_lane() == lane:
                 return self.full_list[index]
@@ -153,7 +160,10 @@ class DetailedCarTracker(CarManager):
         return None
 
     def car_directly_ahead_in_effective_lane(self, car_in_focus: Car, lane):
-        index = self.full_list.index(car_in_focus) + 1
+        try:
+            index = self.full_list.index(car_in_focus) + 1
+        except ValueError:
+            return None
         while index < len(self.full_list):
             if self.full_list[index].effective_lane() == lane:
                 return self.full_list[index]
@@ -209,9 +219,13 @@ class DetailedCarTracker(CarManager):
     def can_return_to_traffic_lane(self, car_in_focus: Car):
         if car_in_focus.lane != 5:
             return False
+        car_behind_if_return = self.car_directly_behind_in_lane(car_in_focus, 1)
+        if car_behind_if_return is not None \
+                and car_behind_if_return.distance_taken + 50 < car_in_focus.distance_taken:
+            return False
         car_ahead_if_return = self.car_directly_ahead_in_effective_lane(car_in_focus, 1)
         if car_ahead_if_return is not None \
-           and car_ahead_if_return.speed < car_in_focus.specs.preferred_speed \
-           and car_ahead_if_return.distance_taken - car_in_focus.distance_taken < 300:
+                and car_ahead_if_return.speed < car_in_focus.specs.preferred_speed \
+                and car_ahead_if_return.distance_taken - car_in_focus.distance_taken < 400:
             return False
         return True
