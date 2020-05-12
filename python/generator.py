@@ -46,6 +46,7 @@ class GraveDigger:
         self.running_children: List[Tuple[subprocess.Popen, int]] = []
         self.last_archive_time = time.time()
         self.archive_start_id = 1
+        signal.signal(signal.SIGCHLD, signal.SIG_IGN)
         signal.signal(signal.SIGINT, self.exit_gracefully)
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
