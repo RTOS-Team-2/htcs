@@ -5,9 +5,7 @@ import numpy as np
 import mqtt_connector
 import visu_res as vis
 from car import CarManager
-from HTCSPythonUtil import set_logging_level
 
-set_logging_level()
 logger = logging.getLogger(__name__)
 # view-dependent variables
 offset_meter = 0
@@ -56,7 +54,8 @@ def update_zoom():
     region_width_bigmap_pixel = int(region_width_meter * vis.x_scale_bigmap)
 
 
-def on_terminate(car_id: str):
+def on_terminate(client, userdata, message):
+    car_id = message.payload.decode("utf-8")
     logger.debug(f"Obituary received for car: {car_id}")
     _car = local_cars.get(car_id)
     if _car is not None:

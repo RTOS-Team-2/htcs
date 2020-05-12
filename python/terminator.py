@@ -38,18 +38,25 @@ if __name__ == "__main__":
     local_cars = CarManager()
     mqtt_connector.setup_connector(local_cars)
 
+    # TODO find a better solution, maybe received state flag ?
+    # sleeping for 3 seconds to receive all the join messages and their first state messages
+    logger.info("The terminator is getting ready... 'I'll be back'")
+    time.sleep(3)
+    logger.info("'I'm back'")
     interval_sec = INTERVAL_MS / 1000
     while True:
         time.sleep(interval_sec)
 
         cars: List[Car] = list(local_cars.values())
-        cars_to_be_terminated = set()
+        cars_to_be_terminated = set([c.id for c in cars if c.distance_taken >= config["position_bound"]])
+        if len(cars_to_be_terminated) > 0:
+            logger.info(f"Cars reached the end of the road and will be terminated: {cars_to_be_terminated}")
         for c1, c2 in itertools.combinations(cars, 2):
             if check_collision(c1, c2):
                 logger.info(f"Collision detected: {c1.id} - {c2.id}")
-                cars_to_be_terminated.add(c1)
-                cars_to_be_terminated.add(c2)
+                cars_to_be_terminated.add(c1.id)
+                cars_to_be_terminated.add(c2.id)
 
-        for car in cars_to_be_terminated:
-            publish_obituary(car.id)
-            send_terminate(car.id)
+        for car_id in cars_to_be_terminated:
+            publish_obituary(car_id)
+            send_terminate(car_id)

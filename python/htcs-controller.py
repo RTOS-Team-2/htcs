@@ -1,10 +1,8 @@
 import time
-import copy
 import logging
 import mqtt_connector
 from car import Car, DetailedCarTracker
 from enum import Enum
-from pprint import pprint
 from HTCSPythonUtil import config
 
 
@@ -87,7 +85,7 @@ def should_slow_down(perv_car, car):
 #HELP include car.size in calculations
 def is_too_close(prev_car, car):
     # greedy = 
-    return perv_car.distance_taken + car.get_follow_distance() > car.distance_taken
+    return prev_car.distance_taken + car.get_follow_distance() > car.distance_taken
 
 
 def is_in_merge_lane(car):

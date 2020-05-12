@@ -1,9 +1,11 @@
 import os
 import ast
+import enum
 import logging
+from typing import Dict
 
 
-config ={}
+config: Dict[str, any] = {}
 with open(os.path.dirname(os.path.abspath(__file__)) + "/connection.properties") as config_file:
     for line in config_file:
         if not line.strip().startswith('#'):
@@ -28,12 +30,12 @@ class Lane(enum.Enum):
 def set_logging_level():
     try:
         config_level = config["logging_level"].upper()
-        logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
+        logging.basicConfig(format='%(asctime)s %(name)s %(levelname)-8s %(message)s',
                             level=config_level, datefmt='%Y-%m-%d %H:%M:%S')
     except ValueError:
-        default_level = logging.WARNING
+        default_level = logging.INFO
         logging.basicConfig(level=default_level)
-        print(f"Default logging level set to: {logging.getLevelName(default_level)}")
+        print(f"Default logging level set to: {default_level}")
 
 
 set_logging_level()

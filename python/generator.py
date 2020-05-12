@@ -11,7 +11,7 @@ from car import CarSpecs
 from typing import List, Tuple
 from HTCSPythonUtil import config
 
-logger = logging.getLogger("Vehicle_generator")
+logger = logging.getLogger(__name__)
 
 repo_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 executable_name_windows = repo_root_dir + "/htcs-vehicle/Debug/htcs-vehicle.exe"
@@ -31,7 +31,7 @@ BRAKING_POWER_INTERVAL_WIDTH = 14
 SIZE_INTERVAL_MIN = 3.5
 SIZE_INTERVAL_WIDTH = 5.5
 
-VEHICLE_MAX_LIFE_EXPECTANCY = 300  # seconds
+VEHICLE_MAX_LIFE_EXPECTANCY = 600  # seconds
 ARCHIVE_LOG_ZIP_SIZE = 50
 
 ARCHIVE_INTERVAL = VEHICLE_MAX_LIFE_EXPECTANCY +\
@@ -42,7 +42,8 @@ class GraveDigger:
     kill_now = False
 
     def __init__(self):
-        self.running_children: List[Tuple[subprocess.Popen, int, int, str]] = []
+        # a list of tuples of processes and their creation time since the start of the program
+        self.running_children: List[Tuple[subprocess.Popen, int]] = []
         self.last_archive_time = time.time()
         self.archive_start_id = 1
         signal.signal(signal.SIGINT, self.exit_gracefully)
@@ -72,6 +73,7 @@ class GraveDigger:
         first_child = self.running_children[0]
         if first_child[0].poll() is not None:
             self.running_children.pop(0)
+            logger.debug(f"First child was terminated by an outer source: {first_child[0].pid}")
             return None
         if elapsed >= first_child[1] + VEHICLE_MAX_LIFE_EXPECTANCY:
             self.running_children.pop(0)
@@ -131,6 +133,9 @@ def generate_params_string(current_id):
 
 
 if __name__ == "__main__":
+    if os.name is not 'nt' and os.getenv("HOME"):
+        os.putenv("LD_LIBRARY_PATH", os.getenv("HOME") + "/Eclipse-Paho-MQTT-C-1.3.1-Linux/lib")
+
     grave_digger = GraveDigger()
     now = datetime.datetime.now()
     now_str = now.strftime('%Y%m%d%H%M%S')
@@ -152,7 +157,7 @@ if __name__ == "__main__":
         else:
             process = subprocess.Popen(executable=executable_name_linux, args=params_string.split(' '),
                                        shell=True, stdout=log_file, stderr=log_file)
-        grave_digger.running_children.append((process, elapsed, counter, log_file_name))
+        grave_digger.running_children.append((process, elapsed))
 
         sleep_time = random.random() * GENERATE_TIME_INTERVAL_WIDTH + GENERATE_TIME_INTERVAL_MIN
         logger.info(f"Generated vehicle client_id: {client_id} process_id: {process.pid}"
@@ -162,6 +167,6 @@ if __name__ == "__main__":
 
         killed = grave_digger.kill_too_old()
         if killed is not None:
-            logger.info(f"Killed too old child process_id: {killed.pid}")
+            logger.info(f"Terminated the oldest child, process_id: {killed.pid}")
         if grave_digger.archive_logs():
             logger.info("Archived logs")
