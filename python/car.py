@@ -1,12 +1,23 @@
 import threading
+from enum import IntEnum
 from typing import List
 
-"""
-lane = 0 -> effective = 0
-lane = 1, 2, 4 -> effective = 1
-lane = 3, 5 -> effective = 2
-"""
-effective_lanes = [0, 1, 1, 2, 1, 2]
+
+class Lane(IntEnum):
+    MERGE_LANE = 0
+    MERGE_TO_TRAFFIC = 1
+    TRAFFIC_LANE = 2
+    TRAFFIC_TO_EXPRESS = 3
+    EXPRESS_TO_TRAFFIC = 4
+    EXPRESS_LANE = 5
+
+
+effective_lanes = [Lane.MERGE_LANE,
+                   Lane.TRAFFIC_LANE,
+                   Lane.TRAFFIC_LANE,
+                   Lane.EXPRESS_LANE,
+                   Lane.TRAFFIC_LANE,
+                   Lane.EXPRESS_LANE]
 
 
 class CarSpecs:
@@ -29,7 +40,7 @@ class Car:
     def __init__(self, car_id, specs: CarSpecs, state):
         """
         see: htcs-vehicle/src/state.h
-        :param state[0]: enum
+        :param state[0]: 0 or 1 or 2 or 3 or 4 or 5
         :param state[1]: distance taken along the single axis
         :param state[2]: speed [m/s]
         :param state[3]: enum
@@ -37,13 +48,13 @@ class Car:
         """
         self.id = car_id
         self.specs = specs
-        self.lane = state[0]
+        self.lane: Lane = Lane(state[0])
         self.distance_taken = state[1]
         self.speed = state[2]
         self.acceleration_state = state[3]
 
     def update_state(self, state):
-        self.lane = state[0]
+        self.lane = Lane(state[0])
         self.distance_taken = state[1]
         self.speed = state[2]
         self.acceleration_state = state[3]
@@ -54,7 +65,7 @@ class Car:
         :param safety_factor: returned value will be multiplied by this factor
         """
         # time to stop = speed / deceleration
-        # distance traveled = aree under the function of speed(time)
+        # distance traveled = area under the function of speed(time)
         # which is a line from current speed at zero time, and zero speed at time to stop
         follow_distance = (self.speed / 2.0) * (self.speed / self.specs.braking_power)
         return safety_factor * follow_distance
@@ -63,14 +74,14 @@ class Car:
         """
         Distance traveled while reaching target_speed from current_speed
         """
-        # we calculate the area under the function of speed(time) which is a trapeziod
+        # we calculate the area under the function of speed(time) which is a trapezoid
         if self.speed < target_speed:
             return (target_speed + self.speed) / 2 * (target_speed - self.speed) / self.specs.acceleration
         else:
             return (target_speed + self.speed) / 2 * (self.speed - target_speed) / self.specs.braking_power
 
     def effective_lane(self):
-        return effective_lanes[self.lane]
+        return effective_lanes[self.lane.value]
 
 
 # These classes simulate a dictionary
@@ -148,7 +159,7 @@ class DetailedCarTracker(CarManager):
         with self.lock:
             return [car for car in self.full_list]
 
-    def car_directly_behind_in_lane(self, car_in_focus: Car, lane):
+    def car_directly_behind_in_effective_lane(self, car_in_focus: Car, lane: Lane):
         try:
             index = self.full_list.index(car_in_focus) - 1
         except ValueError:
@@ -159,7 +170,7 @@ class DetailedCarTracker(CarManager):
             index -= 1
         return None
 
-    def car_directly_ahead_in_effective_lane(self, car_in_focus: Car, lane):
+    def car_directly_ahead_in_effective_lane(self, car_in_focus: Car, lane: Lane):
         try:
             index = self.full_list.index(car_in_focus) + 1
         except ValueError:
@@ -171,9 +182,9 @@ class DetailedCarTracker(CarManager):
         return None
 
     def can_overtake(self, car_in_focus: Car):
-        if car_in_focus.lane != 2:
+        if car_in_focus.lane != Lane.TRAFFIC_LANE:
             return False
-        car_ahead_if_overtake = self.car_directly_ahead_in_effective_lane(car_in_focus, 2)
+        car_ahead_if_overtake = self.car_directly_ahead_in_effective_lane(car_in_focus, Lane.EXPRESS_LANE)
         # if road ahead in express lane is not clear
         if car_ahead_if_overtake is not None:
             # if there is a faster vehicle there, we only check not to hit it immediately
@@ -182,21 +193,25 @@ class DetailedCarTracker(CarManager):
                     return False
             # else we check if we can brake while overtaking and not hit that
             else:
+                # TODO: INCORRECT
                 if car_in_focus.distance_while_reaching_speed(car_ahead_if_overtake.speed) > \
                    car_ahead_if_overtake.distance_taken - car_in_focus.distance_taken:
                     return False
-        car_behind_if_overtake = self.car_directly_behind_in_lane(car_in_focus, 2)
+        car_behind_if_overtake = self.car_directly_behind_in_effective_lane(car_in_focus, Lane.EXPRESS_LANE)
         # if we cut someone's path
         if car_behind_if_overtake is not None \
+                and car_behind_if_overtake.speed > car_in_focus.speed \
                 and car_behind_if_overtake.distance_while_reaching_speed(car_in_focus.speed) > \
                 car_in_focus.distance_taken - car_behind_if_overtake.distance_taken:
             return False
         return True
 
     def can_merge_in(self, car_in_focus: Car):
-        if car_in_focus.lane != 0:
+        if car_in_focus.lane != Lane.MERGE_LANE:
             return False
-        car_ahead_if_merge_in = self.car_directly_ahead_in_effective_lane(car_in_focus, 1)
+        if car_in_focus.speed < car_in_focus.specs.preferred_speed * 0.9:
+            return False
+        car_ahead_if_merge_in = self.car_directly_ahead_in_effective_lane(car_in_focus, Lane.TRAFFIC_LANE)
         # if road ahead in express lane is not clear
         if car_ahead_if_merge_in is not None:
             # if there is a faster vehicle there, we only check not to hit it immediately
@@ -208,7 +223,7 @@ class DetailedCarTracker(CarManager):
                 if car_in_focus.distance_while_reaching_speed(car_ahead_if_merge_in.speed) > \
                    car_ahead_if_merge_in.distance_taken - car_in_focus.distance_taken:
                     return False
-        car_behind_if_merge_in = self.car_directly_behind_in_lane(car_in_focus, 1)
+        car_behind_if_merge_in = self.car_directly_behind_in_effective_lane(car_in_focus, Lane.TRAFFIC_LANE)
         # if we cut someone's path
         if car_behind_if_merge_in is not None \
                 and car_behind_if_merge_in.distance_while_reaching_speed(car_in_focus.speed) * 2 > \
@@ -217,13 +232,13 @@ class DetailedCarTracker(CarManager):
         return True
 
     def can_return_to_traffic_lane(self, car_in_focus: Car):
-        if car_in_focus.lane != 5:
+        if car_in_focus.lane != Lane.EXPRESS_LANE:
             return False
-        car_behind_if_return = self.car_directly_behind_in_lane(car_in_focus, 1)
+        car_behind_if_return = self.car_directly_behind_in_effective_lane(car_in_focus, Lane.TRAFFIC_LANE)
         if car_behind_if_return is not None \
                 and car_behind_if_return.distance_taken + 50 < car_in_focus.distance_taken:
             return False
-        car_ahead_if_return = self.car_directly_ahead_in_effective_lane(car_in_focus, 1)
+        car_ahead_if_return = self.car_directly_ahead_in_effective_lane(car_in_focus, Lane.TRAFFIC_LANE)
         if car_ahead_if_return is not None \
                 and car_ahead_if_return.speed < car_in_focus.specs.preferred_speed \
                 and car_ahead_if_return.distance_taken - car_in_focus.distance_taken < 400:
