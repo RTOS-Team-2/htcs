@@ -33,11 +33,11 @@ class Car:
         self.speed = state[2]
         self.acceleration_state = state[3]
 
-    def update_state(self, lane, distance_taken, speed, acceleration_state):
-        self.lane = lane
-        self.distance_taken = distance_taken
-        self.speed = speed
-        self.acceleration_state = acceleration_state
+    def update_state(self, state):
+        self.lane = state[0]
+        self.distance_taken = state[1]
+        self.speed = state[2]
+        self.acceleration_state = state[3]
     
     def get_follow_distance(self, safety_factor=1.0):
         """
