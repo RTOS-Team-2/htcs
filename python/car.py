@@ -61,8 +61,12 @@ class DetailedCarTracker(dict):
         from_traffic_to_express_lane = [car for car in self.full_list if car.lane == 3]
         from_express_to_traffic_lane = [car for car in self.full_list if car.lane == 4]
         in_express_lane = [car for car in self.full_list if car.lane == 5]
-        self.list_of_lanes = [in_merge_lane, from_merge_to_traffic_lane, in_traffic_lane,
-                              from_traffic_to_express_lane, from_express_to_traffic_lane, in_express_lane]
+        self.lists_in_lanes = [in_merge_lane, from_merge_to_traffic_lane, in_traffic_lane,
+                               from_traffic_to_express_lane, from_express_to_traffic_lane, in_express_lane]
+        are_maintaining = [car for car in self.full_list if car.acceleration_state == 0]
+        are_accelerating = [car for car in self.full_list if car.acceleration_state == 1]
+        are_braking = [car for car in self.full_list if car.acceleration_state == 2]
+        self.list_of_acceleration_states = [are_maintaining, are_accelerating, are_braking]
 
     def __setitem__(self, key, value: Car):
         dict.__setitem__(self, key, value)
@@ -70,41 +74,45 @@ class DetailedCarTracker(dict):
         self.put_into_lane_list(value)
 
     def put_into_full_list(self, value: Car):
-        for index_with_bigger_value in range(0, len(self.full_list)):
-            if self.full_list[index_with_bigger_value].distance_taken > value.distance_taken:
-                self.full_list.insert(index_with_bigger_value - 1, value)
+        for index_with_bigger_dist in range(0, len(self.full_list)):
+            if self.full_list[index_with_bigger_dist].distance_taken > value.distance_taken:
+                self.full_list.insert(index_with_bigger_dist - 1, value)
                 return
         self.full_list.append(value)
 
     def put_into_lane_list(self, value: Car):
-        for index_with_bigger_value in range(0, len(self.list_of_lanes[value.lane])):
-            if self.list_of_lanes[value.lane][index_with_bigger_value].distance_taken > value.distance_taken:
-                self.list_of_lanes[value.lane].insert(index_with_bigger_value - 1, value)
+        for index_with_bigger_dist in range(0, len(self.lists_in_lanes[value.lane])):
+            if self.lists_in_lanes[value.lane][index_with_bigger_dist].distance_taken > value.distance_taken:
+                self.lists_in_lanes[value.lane].insert(index_with_bigger_dist - 1, value)
                 return
-        self.list_of_lanes[value.lane].append(value)
+        self.lists_in_lanes[value.lane].append(value)
 
     def update_car(self, car_id, state):
         car = self[car_id]
-        # we will need this
         lane_old = car.lane
-        # perform update on the object itself
+        acceleration_state_old = car.acceleration_state
+
         car.update_state(state)
-        # find its index in the full list
+
         index_now = self.full_list.index(car)
         if index_now < len(self.full_list) - 1 and self.full_list[index_now + 1].distance_taken < car.distance_taken:
             self.full_list[index_now], self.full_list[index_now + 1] = \
                 self.full_list[index_now + 1], car
         # we do not have to check the other swap, since the car could not move backwards
         if lane_old != car.lane:
-            self.list_of_lanes[lane_old].remove(car)
+            self.lists_in_lanes[lane_old].remove(car)
             self.put_into_lane_list(car)
-        # but in this case we have to check again
+        # but in this case we have to check in the other list separately
         else:
-            index_now = self.list_of_lanes[car.lane].index(car)
-            if index_now < len(self.list_of_lanes[car.lane]) - 1 and \
-               self.list_of_lanes[car.lane][index_now + 1].distance_taken < car.distance_taken:
-                self.list_of_lanes[car.lane][index_now], self.list_of_lanes[car.lane][index_now + 1] = \
-                    self.list_of_lanes[car.lane][index_now + 1], car
+            index_now = self.lists_in_lanes[car.lane].index(car)
+            if index_now < len(self.lists_in_lanes[car.lane]) - 1 and \
+               self.lists_in_lanes[car.lane][index_now + 1].distance_taken < car.distance_taken:
+                self.lists_in_lanes[car.lane][index_now], self.lists_in_lanes[car.lane][index_now + 1] = \
+                    self.lists_in_lanes[car.lane][index_now + 1], car
+
+        if acceleration_state_old != car.acceleration_state:
+            self.list_of_acceleration_states[acceleration_state_old].remove(car)
+            self.list_of_acceleration_states[car.acceleration_state].append(car)
 
     # https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/
     # TODO: here I left out the default part
@@ -113,18 +121,47 @@ class DetailedCarTracker(dict):
             value = self[key]
             del self[key]
             self.full_list.remove(value)
-            self.list_of_lanes[value.lane].remove(value)
+            self.lists_in_lanes[value.lane].remove(value)
             return value
         else:
             return None
 
     def get_car_in_front_of(self, car: Car):
-        index_in_lane = self.list_of_lanes[car.lane].index(car)
-        if index_in_lane < len(self.list_of_lanes[car.lane]) - 1:
-            return self.list_of_lanes[car.lane][index_in_lane + 1]
+        index_in_lane = self.lists_in_lanes[car.lane].index(car)
+        if index_in_lane < len(self.lists_in_lanes[car.lane]) - 1:
+            return self.lists_in_lanes[car.lane][index_in_lane + 1]
         else:
             return None
 
+    def get_car_to_cut(self, car_about_to_switch: Car, destination_lane):
+        for index_with_smaller_dist in range(len(self.lists_in_lanes[destination_lane]) - 1, -1, -1):
+            if self.lists_in_lanes[destination_lane][index_with_smaller_dist]. \
+                    distance_taken < car_about_to_switch.distance_taken:
+                return self.lists_in_lanes[destination_lane][index_with_smaller_dist]
+        return None
 
-
+    def there_is_a_car_next_to(self, car: Car, destination_lane):
+        # Distance taken is the distance at the very front of the vehicle
+        index = self.full_list.index(car)
+        go_on = True
+        index_examined = index - 1
+        while index_examined >= 0 and go_on:
+            if car.distance_taken - car.specs.size <= self.full_list[index_examined].distance_taken:
+                if self.full_list[index_examined].lane == destination_lane:
+                    return True
+                else:
+                    index_examined -= 1
+            else:
+                go_on = False
+        go_on = True
+        index_examined = index + 1
+        while index_examined < len(self.full_list) and go_on:
+            if car.distance_taken >= \
+                    self.full_list[index_examined].distance_taken - self.full_list[index_examined].specs.size:
+                if self.full_list[index_examined].lane == destination_lane:
+                    return True
+                else:
+                    index_examined += 1
+            else:
+                go_on = False
 
