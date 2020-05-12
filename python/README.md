@@ -57,13 +57,8 @@ of the vehicle itself. This can be utilized with the `on_terminate` callback fun
 
 ### HTCSPythonUtil
 
-_**TODO update this section**_
-
-This file contains the mqtt connector. To use it, you have to call the get_connection_config() method, which returns a dictionary.
-It reads the configuration from the connection.properties file, which should be created based on the template in the folder. Once the ocnfiguration is set, You can set up the mqtt client object, which is a global variable, and it handles the management of the local_cars dictionary, which is also a global variable. Import these two into your code, to use them. The client's loop have to be started / stopped inside your code. The connector's loop will run in a separate process, so the local_cars dictionary will be constantly updated in an asynchronous way.
-
-Local car management assumes, that the payload is in a dictionary form, with the excpected keys!
-
+It reads the configuration from the connection.properties file, which should be created based on the
+[template](template_connection.properties) in the folder. The logging level is also by default with this util file.
 
 ## TODO
 
