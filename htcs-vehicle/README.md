@@ -134,7 +134,7 @@ If the vehicle is in the express or merge lane at the start, it's accelerating b
 
 The vehicle periodically publishes its state information to the topic:
 `<topic base>/<client id>/state`  
-The following variales are sent with this message:
+The following variables are sent with this message:
 * lane
 * distanceTaken
 * speed
