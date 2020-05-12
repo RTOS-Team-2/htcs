@@ -9,10 +9,11 @@ in order to safely navigate through the traffic.
 
 ## Linux install
 
-1. [Download Eclipse Paho MQTT C](https://www.eclipse.org/downloads/download.php?file=/paho/1.4/Eclipse-Paho-MQTT-C-1.3.1-Linux.tar.gz&mirror_id=1099)
-2. Extract it in your ${HOME} folder
-3. `cd path/to/repo/htcs-vehicle`
-4. Run build.sh
+1. Have `gcc` installed
+2. [Download Eclipse Paho MQTT C](https://www.eclipse.org/downloads/download.php?file=/paho/1.4/Eclipse-Paho-MQTT-C-1.3.1-Linux.tar.gz&mirror_id=1099)
+3. Extract it in your ${HOME} folder
+4. `cd path/to/repo/htcs-vehicle`
+5. Run build.sh
 
 ## Windows install
 
@@ -44,43 +45,71 @@ htcs-vehicle \
 --size 3.4
 ```
 
+**The parameters above are all obligatory.**
+
 With Visual Studio on Windows you can set the
 command line arguments in the Debugger section of the Project properties.
 
 The program requires the following command line arguments to function properly:
-
-* address
+* **address**
     * the address of the MQTT broker
     * format: `[protocol://]hostname[:port]`
-* username
+* **username**
     * the username for the MQTT broker
-* password
+* **password**
     * the password for the MQTT broker
-* clientId
+* **clientId**
     * arbitrary string
     * identifies the vehicle
-* topic
+* **topic**
     * the topic base of vehicles
-* preferredSpeed
+* **preferredSpeed**
     * positive double
     * the preferred travel speed
     * unit: kilometres per hour
-* maxSpeed
+* **maxSpeed**
     * positive double
     * the maximum speed of the vehicle
     * unit: kilometres per hour
-* acceleration
+* **acceleration**
     * positive double
     * the constant acceleration of the vehicle
     * unit: the time it takes in seconds for the vehicle to reach 100 km/h from 0 km/h
-* brakingPower
+* **brakingPower**
     * positive double
-    * the constant braking power of the vehicle,
+    * the constant braking power or deceleration of the vehicle
     * unit: the time it takes in seconds for the vehicle to reach 0 km/h from 100 km/h
-* size
+* **size**
     * positive double
     * the length of the vehicle
     * unit: meter
+
+The following parameters are optional:
+* **updateFrequency**
+    * positive integer
+    * the rate of the state messages published
+    * unit: milliseconds
+    * default value: 100
+* **startingLane**
+    * positive integer
+    * must be one of the Lane enumerator's values
+        * 0 - MERGE_LANE
+        * 1 - MERGE_TO_TRAFFIC
+        * 2 - TRAFFIC_LANE
+        * 3 - TRAFFIC_TO_EXPRESS
+        * 4 - EXPRESS_TO_TRAFFIC
+        * 5 - EXPRESS_LANE
+    * default value: 0
+* **startingDistance**
+    * positive double
+    * the distance where the vehicle will start its journey
+    * unit: meter
+    * default value: 0
+* **startingSpeed**
+    * positive double
+    * the speed which the vehicle will start its journey
+    * unit: kilometres per hour
+    * default value: 50 km/h
 
 At the start of the program, the vehicle will automatically subscribe to the topic:
 `<topic base>/<client id>/command`  
@@ -89,50 +118,24 @@ It will receive commands from the controller on this topic.
 After the subscription, the vehicle joins the highway traffic,
 i.e. the vehicle publishes once to the topic:
 `<topic base>/<client id>/join`  
-It will send its constant parameters with this message:
+It will send its parameters with this message:
 * preferred speed
 * maximum speed
 * acceleration
 * braking power
 * size
-
-After joining, the vehicle starts to move forward with the following default values:
-* speed: 50 km/h
-* distance taken: 0 meter
-* in the merge lane
-* maintaining speed
-
-The vehicle periodically - each second - publishes its state information to the topic:
-`<topic base>/<client id>/state`  
-The following variables are sent with this message:
 * lane
 * distanceTaken
 * speed
 * accelerationState
 
-# Vehicle Generator
+After joining, the vehicle starts to move forward with its starting parameters.
+If the vehicle is in the express or merge lane at the start, it's accelerating by default.
 
-The `vehicle-generator.sh` bash script generates randomized vehicles in
-random intervals in an endless loop.
-
-You can adjust the parameter intervals in the beginning of the script.
-
-Note that interrupting the script (Ctrl+C) will also make sure that all vehicles generated
-by it will be interrupted too.
-
-## Prerequisites
-1. Set MQTT_PASSWORD environment variable
-2. `cd /path/to/repo/htcs-vehicle`
-3. `./build.sh`
-    1. requires `gcc`
-
-## Requirements
-
-The following GNU tools should be available in the bash for the generator script:
-- `echo`
-- `printf`
-- `sleep`
-- `bc`
-- `seq`
-- `date`
-- `shuf`
+The vehicle periodically publishes its state information to the topic:
+`<topic base>/<client id>/state`  
+The following variales are sent with this message:
+* lane
+* distanceTaken
+* speed
+* accelerationState
