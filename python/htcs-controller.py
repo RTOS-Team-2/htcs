@@ -27,7 +27,6 @@ def give_command(car: Car, command: Command):
 
 def control_traffic():
     for car in local_cars.get_all():
-        print(car.follow_distance())
         # in the traffic lane we slow down if we are over our preferred speed. in this case, we also do nothing else
         if car.speed > car.specs.preferred_speed and car.effective_lane() == 1:
             give_command(car, Command.BRAKE)
@@ -48,17 +47,22 @@ def control_traffic():
             if car.speed < car.specs.preferred_speed and car.acceleration_state == 2:
                 # try to accelerate / overtake
                 if car_directly_ahead_if_keep_lane is None \
-                   or car_directly_ahead_if_keep_lane.distance_taken - car.distance_taken > car.follow_distance() * 2 \
+                   or car_directly_ahead_if_keep_lane.distance_taken - car.distance_taken > car.follow_distance() * 10 \
                    or car_directly_ahead_if_keep_lane.speed > car.specs.preferred_speed:
                     give_command(car, Command.ACCELERATE)
+                elif car_directly_ahead_if_keep_lane is not None \
+                     and car_directly_ahead_if_keep_lane.distance_taken - car.distance_taken > car.follow_distance() * 2:
+                    give_command(car, Command.MAINTAIN_SPEED)
                 # elif local_cars.can_overtake(car):
                 #     give_command(car, Command.CHANGE_LANE)
 
         # try to get back to traffic lane
         if car.lane == 5 and local_cars.can_return_to_traffic_lane(car):
+            print(car.id)
             give_command(car, Command.CHANGE_LANE)
         # try to get into traffic lane
         elif car.lane == 0 and local_cars.can_merge_in(car):
+            print(car.id)
             give_command(car, Command.CHANGE_LANE)
 
 
