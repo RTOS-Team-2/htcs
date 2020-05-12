@@ -2,13 +2,13 @@ import ast
 import uuid
 import logging
 import paho.mqtt.client as mqtt
-from car import Car, CarSpecs
+from car import Car, CarSpecs, CarManager
 from typing import List, Tuple, Dict, Callable
-from HTCSPythonUtil import config, local_cars
+from HTCSPythonUtil import config
 
 logger = logging.getLogger("MQTT_Connector")
-
-model_class = Car
+local_cars: CarManager
+model_class: Callable[[str, CarSpecs, Tuple[int, float, float, int]], Car]
 on_terminate: Callable[[str], None]
 
 client_1 = mqtt.Client("main_client_" + str(uuid.uuid4()))
@@ -39,7 +39,7 @@ def unsubscribe_pool(car_id: str):
 
 
 # JOIN OR TERMINATION NOTIFICATION. COMMANDS ARE NOT LISTENED, AND STATE MSG-S ARE ON DIFFERENT HANDLER
-def on_message(client, user_data, msg):    
+def on_message(client, user_data, msg):
     message = msg.payload.decode("utf-8")
     if msg.topic.endswith("obituary") and on_terminate:
         on_terminate(message)
@@ -68,7 +68,7 @@ def on_state_message(client, user_data, msg):
         logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
     else:
         state = ast.literal_eval(msg.payload.decode("utf-8"))
-        local_cars[car_id].update_state(state)
+        local_cars.update_car(car_id, state)
 
 
 def on_connect(client, user_data, flags, rc):
@@ -93,10 +93,11 @@ def remove_unsubscribed_car(client, _car_ids_mids, message_id):
             return
 
 
-def setup_connector(_model_class=Car, _on_terminate=None):
-    global model_class, on_terminate
+def setup_connector(_local_cars: CarManager, _model_class=Car, _on_terminate=None):
+    global model_class, on_terminate, local_cars
     model_class = _model_class
     on_terminate = _on_terminate
+    local_cars = _local_cars
 
     logger.info(f"Setting up {state_client_pool_size} connectors")
     for i in range(state_client_pool_size):

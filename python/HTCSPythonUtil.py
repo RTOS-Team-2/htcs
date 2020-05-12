@@ -1,17 +1,19 @@
 import os
+import ast
 import logging
-from typing import Dict
 
 
-# TODO: set C level maximum for position
-# TODO: maybe create shared constants (enums) between c and python
-local_cars = {}
-
-config: Dict[str, any] = dict("".join(l.split()).split("=")
-                              for l in open(os.path.dirname(os.path.abspath(__file__)) + "/connection.properties")
-                              if not l.strip().startswith("#"))
-config["position_bound"] = int(config["position_bound"])
-config["quality_of_service"] = int(config["quality_of_service"])
+config ={}
+with open(os.path.dirname(os.path.abspath(__file__)) + "/connection.properties") as config_file:
+    for line in config_file:
+        if not line.strip().startswith('#'):
+            [key, value_part] = "".join(line.split()).split("=")
+            value_part = value_part.split("#")[0].strip()
+            try:
+                value = ast.literal_eval(value_part)
+            except (ValueError, SyntaxError, NameError):
+                value = value_part
+            config[key] = value
 
 
 class Lane(enum.Enum):
