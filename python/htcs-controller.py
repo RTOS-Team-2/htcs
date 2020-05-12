@@ -1,11 +1,11 @@
-from HTCSPythonUtil import config, local_cars
-from pprint import pprint
-from enum import Enum
 import time
 import copy
 import logging
-from car import Car
 import mqtt_connector
+from car import Car, DetailedCarTracker
+from enum import Enum
+from pprint import pprint
+from HTCSPythonUtil import config
 
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,8 @@ def can_change_lane(changing_car, all_cars):
 
 
 if __name__ == "__main__":
-    mqtt_connector.setup_connector()
+    local_cars = DetailedCarTracker()
+    mqtt_connector.setup_connector(local_cars)
     time.sleep(1)
     interval_sec = INTERVAL_MS / 1000
     while True:

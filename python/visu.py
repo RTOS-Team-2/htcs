@@ -4,7 +4,8 @@ import threading
 import numpy as np
 import mqtt_connector
 import visu_res as vis
-from HTCSPythonUtil import config, local_cars, set_logging_level
+from car import CarManager
+from HTCSPythonUtil import set_logging_level
 
 set_logging_level()
 logger = logging.getLogger(__name__)
@@ -63,7 +64,8 @@ def on_terminate(car_id: str):
 
 
 if __name__ == "__main__":
-    mqtt_connector.setup_connector(vis.CarImage, on_terminate)
+    local_cars = CarManager()
+    mqtt_connector.setup_connector(local_cars, vis.CarImage, on_terminate)
     lock = threading.Lock()
 
     cv2.namedWindow(vis.WINDOW_NAME)

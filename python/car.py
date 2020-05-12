@@ -68,126 +68,127 @@ class Car:
                 other_car.distance_taken)
 
 
-class CarManager(dict):
-    def __init__(self, *args):
-        dict.__init__(self, args)
-
-    def update_car(self, car_id, state):
-        self[car_id].update_state(state)
-
-
-# TODO: These should not be simple lists, but maybe something form bisect module
-class DetailedCarTracker(dict):
-    def __init__(self, *args):
-        dict.__init__(self, args)
-        # These will be all empty in all cases for now
-        self.full_list = sorted(self.values(), key=lambda x: x.distance_taken)
-        in_merge_lane = [car for car in self.full_list if car.lane == 0]
-        from_merge_to_traffic_lane = [car for car in self.full_list if car.lane == 1]
-        in_traffic_lane = [car for car in self.full_list if car.lane == 2]
-        from_traffic_to_express_lane = [car for car in self.full_list if car.lane == 3]
-        from_express_to_traffic_lane = [car for car in self.full_list if car.lane == 4]
-        in_express_lane = [car for car in self.full_list if car.lane == 5]
-        self.lists_in_lanes = [in_merge_lane, from_merge_to_traffic_lane, in_traffic_lane,
-                               from_traffic_to_express_lane, from_express_to_traffic_lane, in_express_lane]
-        are_maintaining = [car for car in self.full_list if car.acceleration_state == 0]
-        are_accelerating = [car for car in self.full_list if car.acceleration_state == 1]
-        are_braking = [car for car in self.full_list if car.acceleration_state == 2]
-        self.list_of_acceleration_states = [are_maintaining, are_accelerating, are_braking]
+# These classes simulate a dictionary
+class CarManager:
+    def __init__(self):
+        self.as_dict = {}
 
     def __setitem__(self, key, value: Car):
-        dict.__setitem__(self, key, value)
+        self.as_dict[key] = value
+
+    def __getitem__(self, key):
+        return self.as_dict[key]
+
+    def pop(self, key):
+        return self.as_dict.pop(key)
+
+    def get(self, key):
+        return self.as_dict.get(key)
+
+    def values(self):
+        return self.as_dict.values()
+
+    def update_car(self, car_id, state):
+        self.as_dict[car_id].update_state(state)
+
+# kik vannak tul kozel, és fékezniuk kell (vagy előzni)
+# kik vannak a merge-ben és be kéne sávolniuk
+# kik fékeznek, és kell-e még fékezniuk
+# kik vannak az express lane ben, és vissza tudnak e menni a trafficba
+class DetailedCarTracker(CarManager):
+    def __init__(self):
+        super().__init__()
+        self.full_list = [] # TODO: typehint
+
+    def __getitem__(self, key):
+        for car in self.full_list:
+            if car.id == key:
+                return car
+        raise KeyError
+
+    def get(self, key):
+        for car in self.full_list:
+            if car.id == key:
+                return car
+        return None
+
+    def __setitem__(self, key, value: Car):
         self.put_into_full_list(value)
-        self.put_into_lane_list(value)
 
     def put_into_full_list(self, value: Car):
         for index_with_bigger_dist in range(0, len(self.full_list)):
             if self.full_list[index_with_bigger_dist].distance_taken > value.distance_taken:
-                self.full_list.insert(index_with_bigger_dist - 1, value)
+                self.full_list.insert(index_with_bigger_dist, value)
                 return
         self.full_list.append(value)
 
-    def put_into_lane_list(self, value: Car):
-        for index_with_bigger_dist in range(0, len(self.lists_in_lanes[value.lane])):
-            if self.lists_in_lanes[value.lane][index_with_bigger_dist].distance_taken > value.distance_taken:
-                self.lists_in_lanes[value.lane].insert(index_with_bigger_dist - 1, value)
-                return
-        self.lists_in_lanes[value.lane].append(value)
-
     def update_car(self, car_id, state):
         car = self[car_id]
-        lane_old = car.lane
-        acceleration_state_old = car.acceleration_state
-
         car.update_state(state)
-
         index_now = self.full_list.index(car)
         if index_now < len(self.full_list) - 1 and self.full_list[index_now + 1].distance_taken < car.distance_taken:
             self.full_list[index_now], self.full_list[index_now + 1] = \
                 self.full_list[index_now + 1], car
         # we do not have to check the other swap, since the car could not move backwards
-        if lane_old != car.lane:
-            self.lists_in_lanes[lane_old].remove(car)
-            self.put_into_lane_list(car)
-        # but in this case we have to check in the other list separately
-        else:
-            index_now = self.lists_in_lanes[car.lane].index(car)
-            if index_now < len(self.lists_in_lanes[car.lane]) - 1 and \
-               self.lists_in_lanes[car.lane][index_now + 1].distance_taken < car.distance_taken:
-                self.lists_in_lanes[car.lane][index_now], self.lists_in_lanes[car.lane][index_now + 1] = \
-                    self.lists_in_lanes[car.lane][index_now + 1], car
 
-        if acceleration_state_old != car.acceleration_state:
-            self.list_of_acceleration_states[acceleration_state_old].remove(car)
-            self.list_of_acceleration_states[car.acceleration_state].append(car)
-
-    # https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/
-    # TODO: here I left out the default part
     def pop(self, key):
-        if key in self:
-            value = self[key]
-            del self[key]
-            self.full_list.remove(value)
-            self.lists_in_lanes[value.lane].remove(value)
-            return value
-        else:
-            return None
-
-    def get_car_in_front_of(self, car: Car):
-        index_in_lane = self.lists_in_lanes[car.lane].index(car)
-        if index_in_lane < len(self.lists_in_lanes[car.lane]) - 1:
-            return self.lists_in_lanes[car.lane][index_in_lane + 1]
-        else:
-            return None
-
-    def get_car_to_cut(self, car_about_to_switch: Car, destination_lane):
-        for index_with_smaller_dist in range(len(self.lists_in_lanes[destination_lane]) - 1, -1, -1):
-            if self.lists_in_lanes[destination_lane][index_with_smaller_dist]. \
-                    distance_taken < car_about_to_switch.distance_taken:
-                return self.lists_in_lanes[destination_lane][index_with_smaller_dist]
+        for i in range(0, len(self.full_list)):
+            if self.full_list[i].id == key:
+                return self.full_list.pop(i)
         return None
 
-    def there_is_a_car_next_to(self, car: Car, destination_lane):
-        # Distance taken is the distance at the very front of the vehicle
-        index = self.full_list.index(car)
-        go_on = True
-        index_examined = index - 1
-        while index_examined >= 0 and go_on:
-            if car.distance_taken - car.specs.size <= self.full_list[index_examined].distance_taken:
-                if self.full_list[index_examined].lane == destination_lane:
-                    return True
-                else:
-                    index_examined -= 1
-            else:
-                go_on = False
-        go_on = True
-        index_examined = index + 1
-        while index_examined < len(self.full_list) and go_on:
-            if car.distance_taken >= \
-                    self.full_list[index_examined].distance_taken - self.full_list[index_examined].specs.size:
-                if self.full_list[index_examined].lane == destination_lane:
-                    return True
-                else:
-                    index_examined += 1
-            else:
-                go_on = False
+    def generator_cars_in_merge_lane(self):
+        for car in self.full_list:
+            if car.lane == 0:
+                yield car
+
+    def generator_cars_in_traffic_lane(self):
+        for car in self.full_list:
+            if car.lane in [1, 2, 4]:
+                yield car
+
+    def generator_cars_in_express_lane(self):
+        for car in self.full_list:
+            if car.lane in [3, 5]:
+                yield car
+
+    def generator_cars_maintaining(self):
+        for car in self.full_list:
+            if car.acceleration_state == 0:
+                yield car
+
+    def generator_cars_accelerating(self):
+        for car in self.full_list:
+            if car.acceleration_state == 1:
+                yield car
+
+    def generator_cars_braking(self):
+        for car in self.full_list:
+            if car.acceleration_state == 2:
+                yield car
+
+    def generator_cars_in_front_of(self, car_in_focus: Car):
+        for car in self.full_list:
+            if car.distance_taken > car_in_focus.distance_taken:
+                yield car
+
+    def generator_cars_behind(self, car_in_focus: Car):
+        for car in self.full_list:
+            if car.distance_taken > car_in_focus.distance_taken:
+                yield car
+
+    def car_in_traffic_lane_directly_behind(self, car_in_focus: Car):
+        index = self.full_list.index(car_in_focus) - 1
+        while index >= 0:
+            if self.full_list[index].lane in [1, 2, 4]:
+                return self.full_list[index]
+            index -= 1
+        return None
+
+    def car_in_express_lane_directly_behind(self, car_in_focus: Car):
+        index = self.full_list.index(car_in_focus) - 1
+        while index >= 0:
+            if self.full_list[index].lane in [3, 5]:
+                return self.full_list[index]
+            index -= 1
+        return None
