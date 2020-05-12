@@ -83,7 +83,7 @@ class GraveDigger:
 
     def exit_gracefully(self, signum, frame):
         self.kill_now = True
-        for _process, _, _, _ in self.running_children:
+        for _process, _, in self.running_children:
             _process.terminate()
 
 
