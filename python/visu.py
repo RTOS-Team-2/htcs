@@ -4,9 +4,8 @@ import threading
 import numpy as np
 import mqtt_connector
 import visu_res as vis
-from HTCSPythonUtil import config, local_cars, set_logging_level
+from HTCSPythonUtil import local_cars
 
-set_logging_level()
 logger = logging.getLogger(__name__)
 # view-dependent variables
 offset_meter = 0

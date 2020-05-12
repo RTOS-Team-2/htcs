@@ -6,7 +6,7 @@ from car import Car, CarSpecs
 from typing import List, Tuple, Dict
 from HTCSPythonUtil import config, local_cars
 
-logger = logging.getLogger("MQTT_Connector")
+logger = logging.getLogger(__name__)
 
 model_class = Car
 
@@ -120,8 +120,8 @@ def setup_connector(_model_class=Car, on_terminate=None, _state_client_pool_size
     client_1.connect(config["address"])
     client_1.loop_start()
     if state_client_pool_size > 0:
-        client_1.subscribe(topic=config["base_topic"] + "/+/join", qos=config["quality_of_service"])
         client_1.message_callback_add(config["base_topic"] + "/+/join", on_join_message)
+        client_1.subscribe(topic=config["base_topic"] + "/+/join", qos=config["quality_of_service"])
     if on_terminate:
         client_1.message_callback_add(config["base_topic"] + "/obituary", on_terminate)
         client_1.subscribe(topic=config["base_topic"] + "/obituary", qos=config["quality_of_service"])

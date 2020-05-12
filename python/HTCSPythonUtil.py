@@ -17,12 +17,12 @@ config["quality_of_service"] = int(config["quality_of_service"])
 def set_logging_level():
     try:
         config_level = config["logging_level"].upper()
-        logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
+        logging.basicConfig(format='%(asctime)s %(name)s %(levelname)-8s %(message)s',
                             level=config_level, datefmt='%Y-%m-%d %H:%M:%S')
     except ValueError:
-        default_level = logging.WARNING
+        default_level = logging.INFO
         logging.basicConfig(level=default_level)
-        print(f"Default logging level set to: {logging.getLevelName(default_level)}")
+        print(f"Default logging level set to: {default_level}")
 
 
 set_logging_level()
