@@ -2,7 +2,7 @@ import threading
 from typing import List
 
 
-effective_lanes = [[0], [1], [1], [2], [1], [2]]
+effective_lanes = [0, 1, 1, 2, 1, 2]
 
 
 class CarSpecs:
@@ -118,6 +118,7 @@ class DetailedCarTracker(CarManager):
         for index_with_bigger_dist in range(0, len(self.full_list)):
             if self.full_list[index_with_bigger_dist].distance_taken > value.distance_taken:
                 self.full_list.insert(index_with_bigger_dist, value)
+                print("inserted to index", index_with_bigger_dist)
                 return
         self.full_list.append(value)
 
@@ -126,9 +127,11 @@ class DetailedCarTracker(CarManager):
         car.update_state(state)
         index_now = self.full_list.index(car)
         if index_now < len(self.full_list) - 1 and self.full_list[index_now + 1].distance_taken < car.distance_taken:
-            self.full_list[index_now], self.full_list[index_now + 1] = \
-                self.full_list[index_now + 1], car
-        # we do not have to check the other swap, since the car could not move backwards
+            with self.lock:
+                self.full_list[index_now], self.full_list[index_now + 1] = \
+                    self.full_list[index_now + 1], self.full_list[index_now]
+            print("SWAPPP !")
+        # we do not have to check the other swap, since the car could not have moved backwards
 
     def pop(self, key):
         for i in range(0, len(self.full_list)):

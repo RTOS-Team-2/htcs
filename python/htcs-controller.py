@@ -27,6 +27,7 @@ def give_command(car: Car, command: Command):
 
 def control_traffic():
     for car in local_cars.get_all():
+        print(car.follow_distance())
         # in the traffic lane we slow down if we are over our preferred speed. in this case, we also do nothing else
         if car.speed > car.specs.preferred_speed and car.effective_lane() == 1:
             give_command(car, Command.BRAKE)
@@ -35,21 +36,23 @@ def control_traffic():
         # if we are too close to the one ahead us
         car_directly_ahead_if_keep_lane = local_cars.car_directly_ahead_in_effective_lane(car, car.effective_lane())
         if car_directly_ahead_if_keep_lane is not None \
+           and car.acceleration_state != 2 \
            and car_directly_ahead_if_keep_lane.distance_taken - car.distance_taken < car.follow_distance() \
            and car.speed > car_directly_ahead_if_keep_lane.speed:
-            decide_brake_or_change_lane(car)
+            give_command(car, Command.BRAKE)
+            #decide_brake_or_change_lane(car)
         # if we aren't too close we accelerate if we are far enough, otherwise try to overtake
         # this is needed, so cars do not get stuck behind each other, and also, who has already switched lanes,
         # into express, should accelerate
         else:
-            if car.speed < car.specs.preferred_speed and car.acceleration_state != 1:
+            if car.speed < car.specs.preferred_speed and car.acceleration_state == 2:
                 # try to accelerate / overtake
                 if car_directly_ahead_if_keep_lane is None \
-                   or car_directly_ahead_if_keep_lane.distance_taken - car.distance_taken > car.follow_distance() \
-                   or car_directly_ahead_if_keep_lane.speed < car.specs.preferred_speed:
+                   or car_directly_ahead_if_keep_lane.distance_taken - car.distance_taken > car.follow_distance() * 2 \
+                   or car_directly_ahead_if_keep_lane.speed > car.specs.preferred_speed:
                     give_command(car, Command.ACCELERATE)
-                elif local_cars.can_overtake(car):
-                    give_command(car, Command.CHANGE_LANE)
+                # elif local_cars.can_overtake(car):
+                #     give_command(car, Command.CHANGE_LANE)
 
         # try to get back to traffic lane
         if car.lane == 5 and local_cars.can_return_to_traffic_lane(car):
