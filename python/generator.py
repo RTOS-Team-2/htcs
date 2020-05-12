@@ -133,7 +133,7 @@ def generate_params_string(current_id):
 
 
 if __name__ == "__main__":
-    if os.name is not 'nt':
+    if os.name is not 'nt' and os.getenv("HOME"):
         os.putenv("LD_LIBRARY_PATH", os.getenv("HOME") + "/Eclipse-Paho-MQTT-C-1.3.1-Linux/lib")
 
     grave_digger = GraveDigger()

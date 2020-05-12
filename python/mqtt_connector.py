@@ -2,13 +2,13 @@ import ast
 import uuid
 import logging
 import paho.mqtt.client as mqtt
-from car import Car, CarSpecs
-from typing import List, Tuple, Dict
-from HTCSPythonUtil import config, local_cars
+from car import Car, CarSpecs, CarManager
+from typing import List, Tuple, Dict, Callable
+from HTCSPythonUtil import config
 
-logger = logging.getLogger(__name__)
-
-model_class = Car
+logger = logging.getLogger("MQTT_Connector")
+local_cars: CarManager
+model_class: Callable[[str, CarSpecs, Tuple[int, float, float, int]], Car]
 
 client_1 = mqtt.Client("main_client_" + str(uuid.uuid4()))
 state_client_pool: List[Tuple[mqtt.Client, Dict[str, int]]] = []
@@ -63,7 +63,7 @@ def on_state_message(client, user_data, msg):
         logger.warning(f"Car with unrecognized id ({car_id}) sent a state message")
     else:
         state = ast.literal_eval(msg.payload.decode("utf-8"))
-        local_cars[car_id].update_state(state)
+        local_cars.update_car(car_id, state)
 
 
 def on_connect(client, user_data, flags, rc):
@@ -88,11 +88,10 @@ def remove_unsubscribed_car(client, _car_ids_mids, message_id):
             return
 
 
-# if you want to only subscribe to obituary messages, set the state_client_pool_size to 0
-def setup_connector(_model_class=Car, on_terminate=None, _state_client_pool_size=8):
-    global model_class, state_client_pool_size
+def setup_connector(_local_cars: CarManager, _model_class=Car, on_terminate=None, _state_client_pool_size=8):
+    global model_class, local_cars, state_client_pool_size
     model_class = _model_class
-    state_client_pool_size = _state_client_pool_size
+    local_cars = _local_cars
 
     logger.info(f"Setting up main client and {state_client_pool_size} state clients")
     for i in range(state_client_pool_size):

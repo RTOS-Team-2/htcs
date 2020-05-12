@@ -2,9 +2,9 @@ import time
 import logging
 import itertools
 import mqtt_connector
-from car import Car
+from car import Car, CarManager
 from typing import List
-from HTCSPythonUtil import local_cars, config
+from HTCSPythonUtil import config
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,8 @@ def publish_obituary(_car_id: str):
 
 
 if __name__ == "__main__":
-    mqtt_connector.setup_connector()
+    local_cars = CarManager()
+    mqtt_connector.setup_connector(local_cars)
 
     # TODO find a better solution, maybe received state flag ?
     # sleeping for 3 seconds to receive all the join messages and their first state messages
