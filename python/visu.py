@@ -16,6 +16,7 @@ region_width_minimap_pixel = int(region_width_meter * vis.x_scale_minimap)
 offset_bigmap_pixel = int(offset_meter * vis.x_scale_bigmap)
 region_width_bigmap_pixel = int(region_width_meter * vis.x_scale_bigmap)
 current_detail_height = vis.detail_height
+minimap_point_size = int(4 * vis.window_width / 2000)
 # navigation variables
 focused_car: vis.CarImage or None
 x_slice_focused: slice
@@ -215,7 +216,7 @@ if __name__ == "__main__":
         # put on cars
         for car in local_cars.get_all():
             x, y = car.get_point_on_minimap()
-            cv2.circle(canvas, (x, y), 4, car.color, cv2.FILLED)
+            cv2.circle(canvas, (x, y), minimap_point_size, car.color, cv2.FILLED)
             if car.is_in_region(offset_meter, region_width_meter) and car != focused_car:
                 x_slice_vis, car_im = car.get_x_slice_and_image(offset_meter, region_width_meter)
                 cur_im_detail[car.get_y_slice(), x_slice_vis, :] = car_im

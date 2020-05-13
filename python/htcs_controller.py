@@ -54,8 +54,7 @@ def control_traffic():
         # if we are too close to the one ahead us
         car_directly_ahead = local_cars.car_directly_ahead_in_effective_lane(car, car.effective_lane())
         if car_directly_ahead is not None \
-                and car_directly_ahead.distance_taken - car.distance_taken < 1 * car.follow_distance(safety_factor = 1.2):
-#                and car.speed > car_directly_ahead.speed:
+                and car_directly_ahead.distance_taken - car.distance_taken < 1 * car.follow_distance(safety_factor=1.2):
             decide_brake_or_overtake(car, car_directly_ahead)
         # if we aren't too close we accelerate if we are far enough, otherwise try to overtake
         # this is needed, so cars do not get stuck behind each other, and also, who has already switched lanes,
@@ -63,7 +62,7 @@ def control_traffic():
         elif car.speed < car.specs.preferred_speed:
             if car.acceleration_state != AccelerationState.ACCELERATING \
                     and (car_directly_ahead is None
-                         or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance(safety_factor = 2)
+                         or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance(safety_factor=2)
                          or car_directly_ahead.speed > car.specs.preferred_speed):
                 give_command(car, Command.ACCELERATE)
         elif car.lane == Lane.EXPRESS_LANE and car.speed < car.specs.max_speed:
