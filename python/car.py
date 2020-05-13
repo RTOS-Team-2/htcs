@@ -138,8 +138,6 @@ class DetailedCarTracker(CarManager):
 
     def update_car(self, car_id, state):
         car = self[car_id]
-        if car.speed < 1.0:
-            print(f"state message received on id {car.id}, {state}")
         car.update_state(state)
         index_now = self.full_list.index(car)
         if index_now < len(self.full_list) - 1 and self.full_list[index_now + 1].distance_taken < car.distance_taken:

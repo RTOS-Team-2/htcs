@@ -63,8 +63,8 @@ def set_clicked_car(x, y):
         if focused_car is not None:
             focused_car = None
         return
+    x_meter = x / vis.window_width * region_width_meter + offset_meter
     for c in local_cars.get_all():
-        x_meter = x / vis.window_width * region_width_meter + offset_meter
         if c.is_in_region(offset_meter, region_width_meter):
             y_slice: slice = c.get_y_slice()
             if y_slice.start - 5 < y - vis.minimap_height_pixel - vis.black_region_height < y_slice.stop + 5:
