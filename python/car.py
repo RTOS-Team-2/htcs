@@ -257,6 +257,6 @@ class DetailedCarTracker(CarManager):
         car_ahead_if_return = self.car_directly_ahead_in_effective_lane(car_in_focus, Lane.TRAFFIC_LANE)
         if car_ahead_if_return is not None \
                 and car_ahead_if_return.speed < car_in_focus.specs.preferred_speed \
-                and car_ahead_if_return.distance_taken - car_in_focus.distance_taken < car_in_focus.follow_distance() * 1.1:
+                and car_ahead_if_return.distance_taken - car_in_focus.distance_taken < car_in_focus.follow_distance(safety_factor = 1.3):
             return False
         return True
