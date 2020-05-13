@@ -47,7 +47,7 @@ minimap_length_pixel = im_minimap.shape[1]
 minimap_height_pixel = im_minimap.shape[0]
 bigmap_length_pixel = im_bigmap.shape[1]
 # fix parameters
-region_width_meter_start = 100
+region_width_meter_start = 200
 map_height_meter = 16
 map_length_meter = config["position_bound"]
 center_fast_lane_mini = 32
