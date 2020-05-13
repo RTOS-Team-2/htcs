@@ -7,6 +7,8 @@ from car import Car, DetailedCarTracker, Lane, AccelerationState, Command
 
 
 logger = logging.getLogger(__name__)
+#logger.setLevel(logging.INFO)
+
 lock = threading.Lock()
 INTERVAL_MS = 100
 
@@ -40,7 +42,7 @@ def control_traffic():
         # if we are too close to the one ahead us
         car_directly_ahead = local_cars.car_directly_ahead_in_effective_lane(car, car.effective_lane())
         if car_directly_ahead is not None \
-                and car_directly_ahead.distance_taken - car.distance_taken < 1 * car.follow_distance() \
+                and car_directly_ahead.distance_taken - car.distance_taken < 1 * car.follow_distance(safety_factor = 1.2) \
                 and car.speed > car_directly_ahead.speed:
             decide_brake_or_overtake(car)
         # if we aren't too close we accelerate if we are far enough, otherwise try to overtake
@@ -49,7 +51,7 @@ def control_traffic():
         elif car.speed < car.specs.preferred_speed:
             if car.acceleration_state != AccelerationState.ACCELERATING \
                     and (car_directly_ahead is None
-                         or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 1.2
+                         or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance(safety_factor = 2)
                          or car_directly_ahead.speed > car.specs.preferred_speed):
                 give_command(car, Command.ACCELERATE)
         elif car.lane == Lane.EXPRESS_LANE and car.speed < car.specs.max_speed:
