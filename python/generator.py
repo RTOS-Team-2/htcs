@@ -24,15 +24,15 @@ PREF_SPEED_INTERVAL_MIN = 80
 PREF_SPEED_INTERVAL_WIDTH = 110
 MAX_SPEED_INTERVAL_MIN = 120
 MAX_SPEED_INTERVAL_WIDTH = 180
-ACCELERATION_INTERVAL_MIN = 5
-ACCELERATION_INTERVAL_WIDTH = 11
-BRAKING_POWER_INTERVAL_MIN = 1.5
-BRAKING_POWER_INTERVAL_WIDTH = 5
+ACCELERATION_INTERVAL_MIN = 3
+ACCELERATION_INTERVAL_WIDTH = 10
+BRAKING_POWER_INTERVAL_MIN = 2
+BRAKING_POWER_INTERVAL_WIDTH = 1
 SIZE_INTERVAL_MIN = 3.5
 SIZE_INTERVAL_WIDTH = 5.5
 
 VEHICLE_MAX_LIFE_EXPECTANCY = 600  # seconds
-ARCHIVE_LOG_ZIP_SIZE = 50
+ARCHIVE_LOG_ZIP_SIZE = 100
 
 ARCHIVE_INTERVAL = VEHICLE_MAX_LIFE_EXPECTANCY +\
                    (ARCHIVE_LOG_ZIP_SIZE + 1) * (GENERATE_TIME_INTERVAL_MIN + GENERATE_TIME_INTERVAL_WIDTH)
@@ -74,7 +74,7 @@ class GraveDigger:
         first_child = self.running_children[0]
         if first_child[0].poll() is not None:
             self.running_children.pop(0)
-            logger.debug(f"First child was terminated by an outer source: {first_child[0].pid}")
+            logger.info(f"First child was terminated by an outer source: {first_child[0].pid}")
             return None
         if elapsed >= first_child[1] + VEHICLE_MAX_LIFE_EXPECTANCY:
             self.running_children.pop(0)
