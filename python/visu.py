@@ -172,7 +172,7 @@ if __name__ == "__main__":
             y += 33
             cv2.putText(canvas, f"prefSpeed={focused_car.specs.preferred_speed}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
             y += 33
-            cv2.putText(canvas, f"accState={AccelerationState(focused_car.acceleration_state)}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+            cv2.putText(canvas, f"accState={AccelerationState(focused_car.acceleration_state).name}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
             y += 33
             cv2.putText(canvas, f"brakePower={focused_car.specs.braking_power} [m/s^2]", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
             y += 33
