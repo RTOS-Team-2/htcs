@@ -74,7 +74,12 @@ class Car:
         self.distance_taken = state[1]
         self.speed = state[2]
         self.acceleration_state = state[3]
-    
+
+    def signed_distance_between(self, other_car):
+        if other_car is None:
+            return float('nan')
+        return other_car.distance_taken - self.distance_taken
+
     def distance_between(self, other_car):
         return abs(self.distance_taken - other_car.distance_taken)
 
@@ -171,8 +176,6 @@ class DetailedCarTracker(CarManager):
 
     def update_car(self, car_id, state):
         car = self[car_id]
-        if car.speed < 1.0:
-            print(f"state message received on id {car.id}, {state}")
         car.update_state(state)
         index_now = self.full_list.index(car)
         if index_now < len(self.full_list) - 1 and self.full_list[index_now + 1].distance_taken < car.distance_taken:
