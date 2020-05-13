@@ -12,13 +12,11 @@ INTERVAL_MS = 100
 
 
 def give_command(car: Car, command: Command):
-    if time.time() > car.last_command_time + 0.5 \
-            and (command != car.last_command or command == Command.CHANGE_LANE):
+    if command != car.last_command or command == Command.CHANGE_LANE:
         topic = config["base_topic"] + "/" + str(car.id) + "/command"
         logger.debug(f"{command.name} sent to car with id {car.id}")
         mqtt_connector.client_1.publish(topic, command.value, config["quality_of_service"])
         car.last_command = command
-        car.last_command_time = time.time()
 
 
 def control_traffic():

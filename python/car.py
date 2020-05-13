@@ -67,7 +67,6 @@ class Car:
         self.speed = state[2]
         self.acceleration_state = state[3]
         self.last_command: Command = None
-        self.last_command_time = 0
 
     def update_state(self, state):
         self.lane = Lane(state[0])
