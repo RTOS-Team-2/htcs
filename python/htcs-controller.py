@@ -1,105 +1,103 @@
 import time
 import logging
+import threading
 import mqtt_connector
-from car import Car, DetailedCarTracker
 from enum import Enum
+from car import Car, DetailedCarTracker, Lane
 from HTCSPythonUtil import config
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
-
-INTERVAL_MS = 1000
+#logger.setLevel(logging.INFO)
+lock = threading.Lock()
+INTERVAL_MS = 100
 
 
 class Command(Enum):
-    MAINTAIN_SPEED = 0
-    ACCELERATE = 1
-    BRAKE = 2
-    CHANGE_LANE = 3
-    TERMINATE = 4
+    MAINTAIN_SPEED = '0'
+    ACCELERATE = '1'
+    BRAKE = '2'
+    CHANGE_LANE = '3'
+    TERMINATE = '4'
 
 
-def give_command(car, command):
-    qos = config["quality_of_service"]
+class AccelerationState(Enum):
+    MAINTAINING_SPEED = 0
+    ACCELERATING = 1
+    BRAKING = 2
+
+
+def give_command(car: Car, command: Command):
     topic = config["base_topic"] + "/" + str(car.id) + "/command"
-    logger.debug(topic)
-    message = command.value
-    mqtt_connector.client_1.publish(topic, message, qos)
-
-
-def print_all_distances(all_cars):
-    for car in all_cars:
-        print(f"{car.id}: {car.distance_taken}m")
+    #logger.error(f"{command.name} sent to car with id {car.id}")
+    mqtt_connector.client_1.publish(topic, command.value, config["quality_of_service"])
 
 
 def control_traffic():
-    cars_list = list(local_cars.values())
-    cars_list.sort(key=Car.get_distance_taken)
-#    cars_list.sort(key=lambda c: c.distance_taken)
-#    print_all_distances(car_list)
-    cars_priority_list = get_cars_needing_control(cars_list, False)
-    control_lane_change(cars_priority_list)
-    control_follow_distance(cars_list)
+    #logger.error("iteration start")
+    # for car in local_cars.get_all():
+    #     logger.warning(f"car id = {car.id} distance = {car.distance_taken}, lane = {car.lane}")
+    for car in local_cars.get_all():
+        # in the traffic lane we slow down if we are over our preferred speed. in this case, we also do nothing else
+        if car.speed > car.specs.preferred_speed and car.effective_lane() == Lane.TRAFFIC_LANE:
+            give_command(car, Command.BRAKE)
+            continue
 
 
-def get_cars_needing_control(all_cars, order_by_priority=True):
-    cars_needing_control = []
-    for car in all_cars:
-        if is_in_merge_lane(car) or not is_in_preferred_speed(car):
-            cars_needing_control.append(car)
-    if not order_by_priority:
-        return cars_needing_control
-    else:
-        #TODO - order by priority
-        cars_by_priority = []
-        return cars_by_priority
-
-
-def control_lane_change(cars_priority_list):
-    for car in cars_priority_list:
-        if is_in_merge_lane(car) and can_change_lane(car, cars_priority_list):
+        # try to get back to traffic lane
+        if car.lane == Lane.EXPRESS_LANE and local_cars.can_return_to_traffic_lane(car):
+            give_command(car, Command.CHANGE_LANE)
+        # try to get into traffic lane
+        elif car.lane == Lane.MERGE_LANE and local_cars.can_merge_in(car):
             give_command(car, Command.CHANGE_LANE)
 
+        # if we are too close to the one ahead us
+        car_directly_ahead = local_cars.car_directly_ahead_in_effective_lane(car, car.effective_lane())
+        if car_directly_ahead is not None \
+                and car_directly_ahead.distance_taken - car.distance_taken < 1 * car.follow_distance() \
+                and car.speed > car_directly_ahead.speed:
+            decide_brake_or_overtake(car)
+        # if we aren't too close we accelerate if we are far enough, otherwise try to overtake
+        # this is needed, so cars do not get stuck behind each other, and also, who has already switched lanes,
+        # into express, should accelerate
+        elif car.speed < car.specs.preferred_speed:
+            if car.acceleration_state != AccelerationState.ACCELERATING \
+                    and (car_directly_ahead is None
+                         or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 1.2
+                         or car_directly_ahead.speed > car.specs.preferred_speed):
+                give_command(car, Command.ACCELERATE)
+#            if car.acceleration_state == AccelerationState.BRAKING \
+#                    and car_directly_ahead is not None \
+#                    and car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 3:
+#                give_command(car, Command.MAINTAIN_SPEED)
+#            if car.acceleration_state != AccelerationState.ACCELERATING \
+#                    and (car_directly_ahead is None
+#                         or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 5
+#                         or car_directly_ahead.speed > car.specs.preferred_speed):
+#                give_command(car, Command.ACCELERATE)
 
-def control_follow_distance(cars_list):
-    return
-    prev_car = None
-    for car in cars_list:
-        if not prev_car:
-            return
-        if should_slow_down(perv_car, car):
-            match_speed(prev_car, car)
-            pass
-        prev_car = car
-
-
-def match_speed(prev_car, car):
-    pass
-
-
-def should_slow_down(perv_car, car):
-    pass
-    
-    
-#HELP include car.size in calculations
-def is_too_close(prev_car, car):
-    # greedy = 
-    return prev_car.distance_taken + car.get_follow_distance() > car.distance_taken
-
-
-def is_in_merge_lane(car):
-    return car.lane == 0
-
-
-def is_in_preferred_speed(car):
-    return car.speed == car.specs.preferred_speed
+        # if car is in the express lane, and did not reach max speed, it shoudl accelerate
+        if car.lane == Lane.EXPRESS_LANE and car.speed < car.specs.max_speed:
+            give_command(car, Command.ACCELERATE)
 
 
-def can_change_lane(changing_car, all_cars):
-#    if changing_car.lane = 
-    # TODO implement condition for changing lane
-    return True
+def decide_brake_or_overtake(car: Car):
+    # in the express lane we brake by all means
+    if car.effective_lane() == Lane.EXPRESS_LANE:
+        give_command(car, Command.BRAKE)
+    # in the merge lane we merge in if possible, otherwise brake
+    elif car.effective_lane() == Lane.MERGE_LANE:
+        if local_cars.can_merge_in(car):
+            give_command(car, Command.CHANGE_LANE)
+        else:
+            give_command(car, Command.BRAKE)
+    # in the traffic lane we overtake. This function checks, that we have to be IN the traffic lane (not in 1 or 4)
+    else:
+        # case of effective Traffic lane
+        if local_cars.can_overtake(car):
+            give_command(car, Command.CHANGE_LANE)
+        else:
+            give_command(car, Command.BRAKE)
 
 
 if __name__ == "__main__":
@@ -110,6 +108,7 @@ if __name__ == "__main__":
     while True:
         time_start = time.time()
         control_traffic()
+        logger.info(f"controlling took {time.time() - time_start} seconds")
         remaining_sec = time_start + interval_sec - time.time()
         if remaining_sec <= 0:
             logger.warning("Controller is feeling overloaded, it has no time to sleep! :(")

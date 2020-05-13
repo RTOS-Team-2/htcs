@@ -18,15 +18,6 @@ with open(os.path.dirname(os.path.abspath(__file__)) + "/connection.properties")
             config[key] = value
 
 
-class Lane(enum.Enum):
-    MERGE_LANE = 0
-    MERGE_TO_TRAFFIC = 1
-    TRAFFIC_LANE = 2
-    TRAFFIC_TO_EXPRESS = 3
-    EXPRESS_TO_TRAFFIC = 4
-    EXPRESS_LANE = 5
-
-
 def set_logging_level():
     try:
         config_level = config["logging_level"].upper()
