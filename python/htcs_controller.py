@@ -2,35 +2,21 @@ import time
 import logging
 import threading
 import mqtt_connector
-from enum import Enum
-from car import Car, DetailedCarTracker, Lane
 from HTCSPythonUtil import config
+from car import Car, DetailedCarTracker, Lane, AccelerationState, Command
 
 
 logger = logging.getLogger(__name__)
-#logger.setLevel(logging.INFO)
 lock = threading.Lock()
 INTERVAL_MS = 100
 
 
-class Command(Enum):
-    MAINTAIN_SPEED = '0'
-    ACCELERATE = '1'
-    BRAKE = '2'
-    CHANGE_LANE = '3'
-    TERMINATE = '4'
-
-
-class AccelerationState(Enum):
-    MAINTAINING_SPEED = 0
-    ACCELERATING = 1
-    BRAKING = 2
-
-
 def give_command(car: Car, command: Command):
-    topic = config["base_topic"] + "/" + str(car.id) + "/command"
-    #logger.error(f"{command.name} sent to car with id {car.id}")
-    mqtt_connector.client_1.publish(topic, command.value, config["quality_of_service"])
+    if command != car.last_command or command == Command.CHANGE_LANE:
+        topic = config["base_topic"] + "/" + str(car.id) + "/command"
+        logger.debug(f"{command.name} sent to car with id {car.id}")
+        mqtt_connector.client_1.publish(topic, command.value, config["quality_of_service"])
+        car.last_command = command
 
 
 def control_traffic():
@@ -66,18 +52,7 @@ def control_traffic():
                          or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 1.2
                          or car_directly_ahead.speed > car.specs.preferred_speed):
                 give_command(car, Command.ACCELERATE)
-#            if car.acceleration_state == AccelerationState.BRAKING \
-#                    and car_directly_ahead is not None \
-#                    and car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 3:
-#                give_command(car, Command.MAINTAIN_SPEED)
-#            if car.acceleration_state != AccelerationState.ACCELERATING \
-#                    and (car_directly_ahead is None
-#                         or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 5
-#                         or car_directly_ahead.speed > car.specs.preferred_speed):
-#                give_command(car, Command.ACCELERATE)
-
-        # if car is in the express lane, and did not reach max speed, it shoudl accelerate
-        if car.lane == Lane.EXPRESS_LANE and car.speed < car.specs.max_speed:
+        elif car.lane == Lane.EXPRESS_LANE and car.speed < car.specs.max_speed:
             give_command(car, Command.ACCELERATE)
 
 
