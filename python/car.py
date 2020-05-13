@@ -250,8 +250,9 @@ class DetailedCarTracker(CarManager):
         if car_in_focus.lane != Lane.EXPRESS_LANE:
             return False
         car_behind_if_return = self.car_directly_behind_in_effective_lane(car_in_focus, Lane.TRAFFIC_LANE)
+        #Have at least 10 meters between us and the car behind us when we change back
         if car_behind_if_return is not None \
-                and car_behind_if_return.distance_taken + 50 < car_in_focus.distance_taken:
+                and car_behind_if_return.distance_taken + 10 > car_in_focus.distance_taken:
             return False
         car_ahead_if_return = self.car_directly_ahead_in_effective_lane(car_in_focus, Lane.TRAFFIC_LANE)
         if car_ahead_if_return is not None \
