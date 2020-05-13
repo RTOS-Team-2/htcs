@@ -4,7 +4,8 @@ import logging
 import numpy as np
 import mqtt_connector
 import visu_res as vis
-from car import DetailedCarTracker, AccelerationState
+from htcs_controller import give_command
+from car import DetailedCarTracker, AccelerationState, Command
 
 logger = logging.getLogger(__name__)
 # view-dependent variables
@@ -25,6 +26,8 @@ drag_start_offset = 0
 # text management
 text_region_height = 30
 text_color = (0, 0, 255)
+text_size = 1 / (3000 / vis.window_width)
+text_pixel_height = int(33 * text_size)
 # some info
 logger.info(f"Full length of the map is {vis.map_length_meter} m.")
 logger.info(f"Current visible region is {vis.region_width_meter_start} m wide.")
@@ -148,20 +151,21 @@ def draw_orange_lines():
 
 
 def put_on_focused_car_stats():
-    y = vis.minimap_height_pixel + vis.black_region_height + 50
-    cv2.putText(canvas, f"id={focused_car.id}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-    y += 33
-    cv2.putText(canvas, f"speed={focused_car.speed} [m/s]", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-    y += 33
-    cv2.putText(canvas, f"prefSpeed={focused_car.specs.preferred_speed}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-    y += 33
-    cv2.putText(canvas, f"maxSpeed={focused_car.specs.max_speed}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-    y += 33
-    cv2.putText(canvas, f"accState={AccelerationState(focused_car.acceleration_state).name}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-    y += 33
-    cv2.putText(canvas, f"brakePower={focused_car.specs.braking_power} [m/s^2]", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-    y += 33
-    cv2.putText(canvas, f"followDist={focused_car.follow_distance()}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+    y = vis.minimap_height_pixel + vis.black_region_height + 10 + text_pixel_height
+    cv2.putText(canvas, f"id={focused_car.id}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
+    y += text_pixel_height
+    cv2.putText(canvas, f"speed={focused_car.speed} [m/s]", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
+    y += text_pixel_height
+    cv2.putText(canvas, f"prefSpeed={focused_car.specs.preferred_speed}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
+    y += text_pixel_height
+    cv2.putText(canvas, f"maxSpeed={focused_car.specs.max_speed}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
+    y += text_pixel_height
+    cv2.putText(canvas, f"accState={AccelerationState(focused_car.acceleration_state).name}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
+    y += text_pixel_height
+    cv2.putText(canvas, f"brakePower={focused_car.specs.braking_power} [m/s^2]", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
+    y += text_pixel_height
+    cv2.putText(canvas, f"followDist={focused_car.follow_distance()}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
+    y += text_pixel_height
 
 
 if __name__ == "__main__":
@@ -175,7 +179,7 @@ if __name__ == "__main__":
 
     while cv2.getWindowProperty(vis.WINDOW_NAME, 0) >= 0:
         frame_start = time.time()
-        canvas = np.zeros((vis.minimap_height_pixel + vis.black_region_height + current_detail_height + 30,
+        canvas = np.zeros((vis.minimap_height_pixel + vis.black_region_height + current_detail_height + text_region_height,
                            vis.window_width, 3),
                           np.uint8)
         follow_with_camera()
@@ -207,13 +211,22 @@ if __name__ == "__main__":
                     (5, canvas.shape[0] - 5), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
         cv2.imshow(vis.WINDOW_NAME, canvas)
-        key = cv2.waitKey(1)
-        if key == ord('w'):
+        key = cv2.waitKey(2)
+        if key == -1:
+            continue
+        elif key == ord('w'):
             region_width_meter = max(10, region_width_meter - 10)
+            logger.info(f"New width of visible region is {region_width_meter} meters")
             update_zoom()
         elif key == ord('s'):
             region_width_meter = min(vis.map_length_meter, region_width_meter + 10)
+            logger.info(f"New width of visible region is {region_width_meter} meters")
             update_zoom()
+        elif key == ord('x') and focused_car is not None:
+            focused_car.exploded = True
+            give_command(focused_car, Command.TERMINATE)
+        elif key == ord('c') and focused_car is not None:
+            give_command(focused_car, Command.CHANGE_LANE)
 
     cv2.destroyAllWindows()
     mqtt_connector.cleanup_connector()
