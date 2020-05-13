@@ -142,6 +142,12 @@ class CarManager:
     def __getitem__(self, key):
         return self.as_dict[key]
 
+    def __sizeof__(self) -> int:
+        return self.as_dict.__sizeof__()
+
+    def __len__(self):
+        return len(self.as_dict)
+
     def pop(self, key):
         return self.as_dict.pop(key)
 
@@ -175,6 +181,9 @@ class DetailedCarTracker(CarManager):
 
     def __setitem__(self, key, value: Car):
         self.put_into_full_list(value)
+
+    def __sizeof__(self) -> int:
+        return self.full_list.__sizeof__()
 
     def put_into_full_list(self, value: Car):
         for index_with_bigger_dist in range(0, len(self.full_list)):
