@@ -74,6 +74,7 @@ class Car:
         self.speed: float = state[2]
         self.acceleration_state: AccelerationState = AccelerationState(state[3])
         self.last_command: Command
+        self.lane_when_last_command: Lane = self.lane
 
     def __str__(self):
         return f"<Car - id: {self.id}, specs: {self.specs}, lane: {self.lane}, " \
@@ -88,7 +89,12 @@ class Car:
         self.distance_taken = state[1]
         self.speed = state[2]
         self.acceleration_state = state[3]
-    
+
+    def signed_distance_between(self, other_car):
+        if other_car is None:
+            return float('nan')
+        return other_car.distance_taken - self.distance_taken
+
     def distance_between(self, other_car):
         return abs(self.distance_taken - other_car.distance_taken)
 
@@ -194,8 +200,6 @@ class DetailedCarTracker(CarManager):
 
     def update_car(self, car_id, state):
         car = self[car_id]
-        if car.speed < 1.0:
-            print(f"state message received on id {car.id}, {state}")
         car.update_state(state)
         index_now = self.full_list.index(car)
         if index_now < len(self.full_list) - 1 and self.full_list[index_now + 1].distance_taken < car.distance_taken:
@@ -296,6 +300,6 @@ class DetailedCarTracker(CarManager):
         car_ahead_if_return = self.car_directly_ahead_in_effective_lane(car_in_focus, Lane.TRAFFIC_LANE)
         if car_ahead_if_return is not None \
                 and car_ahead_if_return.speed < car_in_focus.specs.preferred_speed \
-                and car_ahead_if_return.distance_taken - car_in_focus.distance_taken < car_in_focus.follow_distance() * 1.1:
+                and car_ahead_if_return.distance_taken - car_in_focus.distance_taken < car_in_focus.follow_distance(safety_factor = 1.3):
             return False
         return True
