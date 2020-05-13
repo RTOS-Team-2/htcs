@@ -72,17 +72,20 @@ class CarImage(Car):
             self.left = truck
             self.right = truck
             self.color = (11, 195, 255)
+            self.text_color = self.color
         # Red or Blue
         elif bool(random.getrandbits(1)):
             self.straight = red_car_straight
             self.left = red_car_left
             self.right = red_car_right
             self.color = (0, 0, 255) # BGR
+            self.text_color = self.color
         else:
             self.straight = blue_car_straight
             self.left = blue_car_left
             self.right = blue_car_right
             self.color = (255, 0, 0) # BGR
+            self.text_color = (253, 177, 0) # BGR
         # At least we set the height, but width will be dependent on the region's width in meter
         self.straight = cv2.resize(self.straight, (self.straight.shape[0], car_height))
         self.left = cv2.resize(self.left, (self.left.shape[0], car_height))
