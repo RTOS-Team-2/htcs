@@ -73,7 +73,12 @@ class Car:
         self.distance_taken = state[1]
         self.speed = state[2]
         self.acceleration_state = state[3]
-    
+
+    def signed_distance_between(self, other_car):
+        if other_car is None:
+            return float('nan')
+        return other_car.distance_taken - self.distance_taken
+
     def distance_between(self, other_car):
         return abs(self.distance_taken - other_car.distance_taken)
 

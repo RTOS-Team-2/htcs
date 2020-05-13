@@ -5,7 +5,7 @@ import numpy as np
 import mqtt_connector
 import visu_res as vis
 from htcs_controller import give_command
-from car import DetailedCarTracker, AccelerationState, Command
+from car import DetailedCarTracker, AccelerationState, Command, Lane
 
 logger = logging.getLogger(__name__)
 # view-dependent variables
@@ -24,8 +24,6 @@ is_dragging = False
 drag_start_x = 0
 drag_start_offset = 0
 # text management
-text_region_height = 30
-text_color = (0, 0, 255)
 text_size = 1 / (3000 / vis.window_width)
 text_pixel_height = int(33 * text_size)
 # some info
@@ -153,21 +151,43 @@ def draw_orange_lines():
 
 
 def put_on_focused_car_stats():
-    y = vis.minimap_height_pixel + vis.black_region_height + 10 + text_pixel_height
-    cv2.putText(canvas, f"id={focused_car.id}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
-    y += text_pixel_height
-    cv2.putText(canvas, f"speed={focused_car.speed} [m/s]", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
-    y += text_pixel_height
-    cv2.putText(canvas, f"prefSpeed={focused_car.specs.preferred_speed}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
-    y += text_pixel_height
-    cv2.putText(canvas, f"maxSpeed={focused_car.specs.max_speed}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
-    y += text_pixel_height
-    cv2.putText(canvas, f"accState={AccelerationState(focused_car.acceleration_state).name}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
-    y += text_pixel_height
-    cv2.putText(canvas, f"brakePower={focused_car.specs.braking_power} [m/s^2]", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
-    y += text_pixel_height
-    cv2.putText(canvas, f"followDist={focused_car.follow_distance()}", (5, y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 0), 2)
-    y += text_pixel_height
+    text_c = focused_car.color
+    row_1_y = canvas.shape[0] - 5 - 3 * text_pixel_height
+    row_2_y = canvas.shape[0] - 5 - 2 * text_pixel_height
+    row_3_y = canvas.shape[0] - 5 - 1 * text_pixel_height
+    row_4_y = canvas.shape[0] - 5
+    cv2.putText(canvas, f"id={focused_car.id}", (5, row_1_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    speed_col_x = 5 + int(canvas.shape[1] * 0.07)
+    cv2.putText(canvas, f"speed={focused_car.speed} [m/s]", (speed_col_x, row_2_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"prefSpeed={focused_car.specs.preferred_speed}", (speed_col_x, row_3_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"maxSpeed={focused_car.specs.max_speed}", (speed_col_x, row_4_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    acc_col_x = 5 + int(canvas.shape[1] * 0.21)
+    cv2.putText(canvas, f"accState={AccelerationState(focused_car.acceleration_state).name}", (acc_col_x, row_1_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"followDist={focused_car.follow_distance()}", (acc_col_x, row_2_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"brakePower={focused_car.specs.braking_power} [m/s^2]", (acc_col_x, row_3_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"acceleration={focused_car.specs.acceleration} [m/s^2]", (acc_col_x, row_4_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    lane_desc_x = 5 + int(canvas.shape[1] * 0.40)
+    cv2.putText(canvas, f"eff.express", (lane_desc_x, row_2_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (255, 255, 255), 2)
+    cv2.putText(canvas, f"eff.traffic", (lane_desc_x, row_3_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (255, 255, 255), 2)
+    cv2.putText(canvas, f"eff.merge", (lane_desc_x, row_4_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, (255, 255, 255), 2)
+    lane_behind_x = 5 + int(canvas.shape[1] * 0.47)
+    d_e = focused_car.signed_distance_between(local_cars.car_directly_behind_in_effective_lane(focused_car, Lane.EXPRESS_LANE))
+    d_t = focused_car.signed_distance_between(local_cars.car_directly_behind_in_effective_lane(focused_car, Lane.TRAFFIC_LANE))
+    d_m = focused_car.signed_distance_between(local_cars.car_directly_behind_in_effective_lane(focused_car, Lane.MERGE_LANE))
+    cv2.putText(canvas, f"dist. behind={np.floor(d_e)}", (lane_behind_x, row_2_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"dist. behind={np.floor(d_t)}", (lane_behind_x, row_3_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"dist. behind={np.floor(d_m)}", (lane_behind_x, row_4_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    lane_ahead_x = 5 + int(canvas.shape[1] * 0.60)
+    d_e = focused_car.signed_distance_between(local_cars.car_directly_ahead_in_effective_lane(focused_car, Lane.EXPRESS_LANE))
+    d_t = focused_car.signed_distance_between(local_cars.car_directly_ahead_in_effective_lane(focused_car, Lane.TRAFFIC_LANE))
+    d_m = focused_car.signed_distance_between(local_cars.car_directly_ahead_in_effective_lane(focused_car, Lane.MERGE_LANE))
+    cv2.putText(canvas, f"dist. ahead={np.floor(d_e)}", (lane_ahead_x, row_2_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"dist. ahead={np.floor(d_t)}", (lane_ahead_x, row_3_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"dist. ahead={np.floor(d_m)}", (lane_ahead_x, row_4_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    can_x = 5 + int(canvas.shape[1] * 0.75)
+    cv2.putText(canvas, f"can overtake={local_cars.can_overtake(focused_car)}", (can_x, row_2_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"can return={local_cars.can_return_to_traffic_lane(focused_car)}", (can_x, row_3_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
+    cv2.putText(canvas, f"can merge in={local_cars.can_merge_in(focused_car)}", (can_x, row_4_y), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_c, 2)
 
 
 if __name__ == "__main__":
@@ -181,7 +201,7 @@ if __name__ == "__main__":
 
     while cv2.getWindowProperty(vis.WINDOW_NAME, 0) >= 0:
         frame_start = time.time()
-        canvas = np.zeros((vis.minimap_height_pixel + vis.black_region_height + current_detail_height + 5 + int(3 * text_region_height),
+        canvas = np.zeros((vis.minimap_height_pixel + vis.black_region_height + current_detail_height + 5 + 4 * text_pixel_height,
                            vis.window_width, 3),
                           np.uint8)
         follow_with_camera()
@@ -211,7 +231,7 @@ if __name__ == "__main__":
             put_on_focused_car_stats()
         # put frame time
         cv2.putText(canvas, f"FPS: {np.floor(1 / (time.time() - frame_start + 0.0001))}",
-                    (5, canvas.shape[0] - 5), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_color, 2)
+                    (5, canvas.shape[0] - 5), cv2.FONT_HERSHEY_SIMPLEX, text_size, (255, 255, 255), 2)
 
         cv2.imshow(vis.WINDOW_NAME, canvas)
         key = cv2.waitKey(2)
