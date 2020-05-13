@@ -1,5 +1,5 @@
 import threading
-from typing import List
+from typing import List, Tuple
 from enum import Enum, IntEnum
 
 
@@ -35,7 +35,7 @@ effective_lanes = [Lane.MERGE_LANE,
 
 
 class CarSpecs:
-    def __init__(self, specs):
+    def __init__(self, specs: Tuple[float, float, float, float]):
         """
         :param specs[0]: preferred speed [m/sg
         :param specs[1]: max speed [m/s]
@@ -43,15 +43,22 @@ class CarSpecs:
         :param specs[3]: braking power [m/s^2]
         :param specs[4]: size of car [m] above 7.5 meter we are talking about a truck
         """
-        self.preferred_speed = specs[0]
-        self.max_speed = specs[1]
-        self.acceleration = specs[2]
-        self.braking_power = specs[3]
-        self.size = specs[4]
+        self.preferred_speed: float = specs[0]
+        self.max_speed: float = specs[1]
+        self.acceleration: float = specs[2]
+        self.braking_power: float = specs[3]
+        self.size: float = specs[4]
+
+    def __str__(self):
+        return f"<CarSpecs - preferred_speed: {self.preferred_speed}, max_speed: {self.max_speed}, " \
+               f"acceleration: {self.acceleration}, braking_power: {self.braking_power}, size: {self.size}>"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Car:
-    def __init__(self, car_id, specs: CarSpecs, state):
+    def __init__(self, car_id: str, specs: CarSpecs, state: Tuple[int, float, float, int]):
         """
         see: htcs-vehicle/src/state.h
         :param state[0]: 0 or 1 or 2 or 3 or 4 or 5
@@ -60,14 +67,22 @@ class Car:
         :param state[3]: enum
         :param specs: constant parameters of the car
         """
-        self.id = car_id
-        self.specs = specs
+        self.id: str = car_id
+        self.specs: CarSpecs = specs
         self.lane: Lane = Lane(state[0])
-        self.distance_taken = state[1]
-        self.speed = state[2]
-        self.acceleration_state = state[3]
-        self.last_command: Command = None
+        self.distance_taken: float = state[1]
+        self.speed: float = state[2]
+        self.acceleration_state: AccelerationState = AccelerationState(state[3])
+        self.last_command: Command
         self.lane_when_last_command: Lane = self.lane
+
+    def __str__(self):
+        return f"<Car - id: {self.id}, specs: {self.specs}, lane: {self.lane}, " \
+               f"distance_taken: {self.distance_taken}, speed: {self.speed}, " \
+               f"acceleration_state: {self.acceleration_state}>"
+
+    def __repr__(self):
+        return self.__str__()
 
     def update_state(self, state):
         self.lane = Lane(state[0])

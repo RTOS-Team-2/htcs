@@ -89,6 +89,12 @@ class CarImage(Car):
         self.right = cv2.resize(self.right, (self.right.shape[0], car_height))
         self.exploded = False
 
+    def __str__(self):
+        return super().__str__()
+
+    def __repr__(self):
+        return super().__repr__()
+
     def get_point_on_minimap(self):
         cy = 0
         if self.lane == 0:
