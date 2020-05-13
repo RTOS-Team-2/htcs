@@ -8,6 +8,7 @@ from HTCSPythonUtil import config
 
 
 logger = logging.getLogger(__name__)
+#logger.setLevel(logging.INFO)
 lock = threading.Lock()
 INTERVAL_MS = 100
 
@@ -28,12 +29,12 @@ class AccelerationState(Enum):
 
 def give_command(car: Car, command: Command):
     topic = config["base_topic"] + "/" + str(car.id) + "/command"
-    logger.error(f"{command.name} sent to car with id {car.id}")
+    #logger.error(f"{command.name} sent to car with id {car.id}")
     mqtt_connector.client_1.publish(topic, command.value, config["quality_of_service"])
 
 
 def control_traffic():
-    logger.error("iteration start")
+    #logger.error("iteration start")
     # for car in local_cars.get_all():
     #     logger.warning(f"car id = {car.id} distance = {car.distance_taken}, lane = {car.lane}")
     for car in local_cars.get_all():
@@ -52,27 +53,28 @@ def control_traffic():
 
         # if we are too close to the one ahead us
         car_directly_ahead = local_cars.car_directly_ahead_in_effective_lane(car, car.effective_lane())
-        # logger.warning(f"car id = {car.id}")
-        # if car_directly_ahead_if_keep_lane is not None:
-        #     logger.warning(f"car ahead id = {car_directly_ahead_if_keep_lane.id}")
         if car_directly_ahead is not None \
-                and car.acceleration_state != AccelerationState.BRAKING \
-                and car_directly_ahead.distance_taken - car.distance_taken < min(50, 2 * car.follow_distance()) \
+                and car_directly_ahead.distance_taken - car.distance_taken < 1 * car.follow_distance() \
                 and car.speed > car_directly_ahead.speed:
             decide_brake_or_overtake(car)
         # if we aren't too close we accelerate if we are far enough, otherwise try to overtake
         # this is needed, so cars do not get stuck behind each other, and also, who has already switched lanes,
         # into express, should accelerate
         elif car.speed < car.specs.preferred_speed:
-            if car.acceleration_state == AccelerationState.BRAKING \
-                    and car_directly_ahead is not None \
-                    and car_directly_ahead.distance_taken - car.distance_taken > min(100, car.follow_distance() * 3):
-                give_command(car, Command.MAINTAIN_SPEED)
             if car.acceleration_state != AccelerationState.ACCELERATING \
                     and (car_directly_ahead is None
-                         or car_directly_ahead.distance_taken - car.distance_taken > min(100, car.follow_distance() * 5)
+                         or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 1.2
                          or car_directly_ahead.speed > car.specs.preferred_speed):
                 give_command(car, Command.ACCELERATE)
+#            if car.acceleration_state == AccelerationState.BRAKING \
+#                    and car_directly_ahead is not None \
+#                    and car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 3:
+#                give_command(car, Command.MAINTAIN_SPEED)
+#            if car.acceleration_state != AccelerationState.ACCELERATING \
+#                    and (car_directly_ahead is None
+#                         or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 5
+#                         or car_directly_ahead.speed > car.specs.preferred_speed):
+#                give_command(car, Command.ACCELERATE)
 
         # if car is in the express lane, and did not reach max speed, it shoudl accelerate
         if car.lane == Lane.EXPRESS_LANE and car.speed < car.specs.max_speed:
