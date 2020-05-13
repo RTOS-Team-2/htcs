@@ -1,3 +1,4 @@
+import time
 import threading
 from typing import List, Tuple
 from enum import Enum, IntEnum
@@ -35,7 +36,7 @@ effective_lanes = [Lane.MERGE_LANE,
 
 
 class CarSpecs:
-    def __init__(self, specs: Tuple[float, float, float, float]):
+    def __init__(self, specs: Tuple[float, float, float, float, float]):
         """
         :param specs[0]: preferred speed [m/sg
         :param specs[1]: max speed [m/s]
@@ -73,13 +74,14 @@ class Car:
         self.distance_taken: float = state[1]
         self.speed: float = state[2]
         self.acceleration_state: AccelerationState = AccelerationState(state[3])
-        self.last_command: Command
+        self.last_command: Command or None = None
         self.lane_when_last_command: Lane = self.lane
+        self.last_state_update: float = time.time()
 
     def __str__(self):
-        return f"<Car - id: {self.id}, specs: {self.specs}, lane: {self.lane}, " \
+        return f"<Car - id: {self.id}, lane: {self.lane}, " \
                f"distance_taken: {self.distance_taken}, speed: {self.speed}, " \
-               f"acceleration_state: {self.acceleration_state}>"
+               f"acceleration_state: {self.acceleration_state}, specs: {self.specs}>"
 
     def __repr__(self):
         return self.__str__()
@@ -89,6 +91,7 @@ class Car:
         self.distance_taken = state[1]
         self.speed = state[2]
         self.acceleration_state = state[3]
+        self.last_state_update: float = time.time()
 
     def signed_distance_between(self, other_car):
         if other_car is None:
@@ -141,6 +144,7 @@ class Car:
 class CarManager:
     def __init__(self):
         self.as_dict = {}
+        self.lock = threading.Lock()
 
     def __setitem__(self, key, value: Car):
         self.as_dict[key] = value
@@ -154,8 +158,8 @@ class CarManager:
     def __len__(self):
         return len(self.as_dict)
 
-    def pop(self, key):
-        return self.as_dict.pop(key)
+    def pop(self, key, default_value=None):
+        return self.as_dict.pop(key, default_value)
 
     def get(self, key):
         return self.as_dict.get(key)
@@ -166,12 +170,16 @@ class CarManager:
     def update_car(self, car_id, state):
         self.as_dict[car_id].update_state(state)
 
+    def get_all(self) -> List[Car]:
+        # this is a new list of object pointers
+        with self.lock:
+            return [car for car in self.as_dict.values()]
+
 
 class DetailedCarTracker(CarManager):
     def __init__(self):
         super().__init__()
         self.full_list: List[Car] = []
-        self.lock = threading.Lock()
 
     def __getitem__(self, key):
         for car in self.full_list:
@@ -208,13 +216,13 @@ class DetailedCarTracker(CarManager):
                     self.full_list[index_now + 1], self.full_list[index_now]
         # we do not have to check the other swap, since the car could not have moved backwards
 
-    def pop(self, key):
+    def pop(self, key, default_value=None):
         for i in range(0, len(self.full_list)):
             if self.full_list[i].id == key:
                 return self.full_list.pop(i)
-        return None
+        return default_value
 
-    def get_all(self):
+    def get_all(self) -> List[Car]:
         # this is a new list of object pointers
         with self.lock:
             return [car for car in self.full_list]

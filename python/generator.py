@@ -46,7 +46,8 @@ class GraveDigger:
         self.running_children: List[Tuple[subprocess.Popen, int]] = []
         self.last_archive_time = time.time()
         self.archive_start_id = 1
-        signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+        if os.name != 'nt':
+            signal.signal(signal.SIGCHLD, signal.SIG_IGN)
         signal.signal(signal.SIGINT, self.exit_gracefully)
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
@@ -89,11 +90,11 @@ class GraveDigger:
 
 
 def generate_random_specs():
-    pref_speed = random.random() * PREF_SPEED_INTERVAL_WIDTH + PREF_SPEED_INTERVAL_MIN
-    max_speed = max(pref_speed, random.random() * MAX_SPEED_INTERVAL_WIDTH + MAX_SPEED_INTERVAL_MIN)
-    acceleration = random.random() * ACCELERATION_INTERVAL_WIDTH + ACCELERATION_INTERVAL_MIN
-    brake = random.random() * BRAKING_POWER_INTERVAL_WIDTH + BRAKING_POWER_INTERVAL_MIN
-    size = random.random() * SIZE_INTERVAL_WIDTH + SIZE_INTERVAL_MIN
+    pref_speed: float = random.random() * PREF_SPEED_INTERVAL_WIDTH + PREF_SPEED_INTERVAL_MIN
+    max_speed: float = max(pref_speed, random.random() * MAX_SPEED_INTERVAL_WIDTH + MAX_SPEED_INTERVAL_MIN)
+    acceleration: float = random.random() * ACCELERATION_INTERVAL_WIDTH + ACCELERATION_INTERVAL_MIN
+    brake: float = random.random() * BRAKING_POWER_INTERVAL_WIDTH + BRAKING_POWER_INTERVAL_MIN
+    size: float = random.random() * SIZE_INTERVAL_WIDTH + SIZE_INTERVAL_MIN
     # input has to be a tuple
     return CarSpecs((pref_speed, max_speed, acceleration, brake, size))
 

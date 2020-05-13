@@ -17,7 +17,7 @@ offset_bigmap_pixel = int(offset_meter * vis.x_scale_bigmap)
 region_width_bigmap_pixel = int(region_width_meter * vis.x_scale_bigmap)
 current_detail_height = vis.detail_height
 # navigation variables
-focused_car: vis.CarImage
+focused_car: vis.CarImage or None
 x_slice_focused: slice
 image_focused: np.ndarray
 is_dragging = False
@@ -151,7 +151,7 @@ def draw_orange_lines():
 
 
 def put_on_focused_car_stats():
-    text_c = focused_car.color
+    text_c = focused_car.text_color
     row_1_y = canvas.shape[0] - 5 - 3 * text_pixel_height
     row_2_y = canvas.shape[0] - 5 - 2 * text_pixel_height
     row_3_y = canvas.shape[0] - 5 - 1 * text_pixel_height

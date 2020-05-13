@@ -1,4 +1,4 @@
-# Highway Traffic Control System (HTCS) Vehicle
+# Highway Traffic Control System Vehicle
 
 This C project represents a simulated vehicle on a highway.
 
@@ -50,7 +50,7 @@ htcs-vehicle \
 With Visual Studio on Windows you can set the
 command line arguments in the Debugger section of the Project properties.
 
-The program requires the following command line arguments to function properly:
+The program requires the following command line arguments to function properly, defined in [options.h](src/options.h):
 * **address**
     * the address of the MQTT broker
     * format: `[protocol://]hostname[:port]`
@@ -111,9 +111,11 @@ The following parameters are optional:
     * unit: kilometres per hour
     * default value: 50 km/h
 
+## Description
+
 At the start of the program, the vehicle will automatically subscribe to the topic:
 `<topic base>/<client id>/command`  
-It will receive commands from the controller on this topic.
+It will receive commands from the controller on this topic, specified in [command.h](src/command.h).
 
 After the subscription, the vehicle joins the highway traffic,
 i.e. the vehicle publishes once to the topic:
