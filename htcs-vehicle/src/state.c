@@ -55,7 +55,7 @@ void adjustState(State *state, unsigned elapsedMs) {
             progressLaneChange(state, TRAFFIC_LANE, elapsedMs);
             break;
     }
-    printf("Adjusted state: lane: %d, distanceTaken: %.4f, speed: %.4f, accelerationState: %d",
+    printf("Adjusted state: lane: %d, distanceTaken: %.4f, speed: %.4f, accelerationState: %d\n",
            state->lane, state->distanceTaken, state->speed, state->accelerationState);
     fflush(stdout);
 }
