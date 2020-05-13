@@ -1,6 +1,20 @@
 import threading
-from enum import IntEnum
 from typing import List
+from enum import Enum, IntEnum
+
+
+class Command(Enum):
+    MAINTAIN_SPEED = '0'
+    ACCELERATE = '1'
+    BRAKE = '2'
+    CHANGE_LANE = '3'
+    TERMINATE = '4'
+
+
+class AccelerationState(Enum):
+    MAINTAINING_SPEED = 0
+    ACCELERATING = 1
+    BRAKING = 2
 
 
 class Lane(IntEnum):
@@ -52,6 +66,7 @@ class Car:
         self.distance_taken = state[1]
         self.speed = state[2]
         self.acceleration_state = state[3]
+        self.last_command: Command = None
 
     def update_state(self, state):
         self.lane = Lane(state[0])

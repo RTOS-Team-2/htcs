@@ -4,8 +4,7 @@ import logging
 import numpy as np
 import mqtt_connector
 import visu_res as vis
-from car import DetailedCarTracker
-from htcs_controller import AccelerationState
+from car import DetailedCarTracker, AccelerationState
 
 logger = logging.getLogger(__name__)
 # view-dependent variables
