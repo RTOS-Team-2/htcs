@@ -1,6 +1,8 @@
 import ast
 import uuid
+import time
 import logging
+from threading import Thread
 import paho.mqtt.client as mqtt
 from car import Car, CarSpecs, CarManager
 from typing import List, Tuple, Dict, Callable
@@ -32,7 +34,6 @@ def unsubscribe_pool(car_id: str):
     for client, _car_ids_mids in state_client_pool:
         if car_id in _car_ids_mids.keys():
             _, _mid = client.unsubscribe(config["base_topic"] + "/" + car_id + "/state")
-            logger.debug(f"Unsubscribing Car {car_id}, MID {_mid}")
             _car_ids_mids[car_id] = _mid
             return
 
@@ -87,6 +88,23 @@ def remove_unsubscribed_car(client, _car_ids_mids, message_id):
             logger.debug(f"Unsubscribed car {car_id}")
             return
 
+        
+class ZombieKiller(Thread):
+    def __init__(self):
+        super().__init__()
+        self.interval = 5
+        self.threshold = 5
+
+    def run(self) -> None:
+        while True:
+            time.sleep(self.interval)
+            now = time.time()
+            for c in local_cars.get_all():
+                if c.last_state_update < now - self.threshold:
+                    logger.info(f"Zombie killed killed {c}")
+                    unsubscribe_pool(c.id)
+                    local_cars.pop(c.id)
+
 
 def setup_connector(_local_cars: CarManager, _model_class=Car, on_terminate=None, _state_client_pool_size=8):
     global model_class, local_cars, state_client_pool_size
@@ -124,6 +142,8 @@ def setup_connector(_local_cars: CarManager, _model_class=Car, on_terminate=None
     if on_terminate:
         client_1.message_callback_add(config["base_topic"] + "/obituary", on_terminate)
         client_1.subscribe(topic=config["base_topic"] + "/obituary", qos=config["quality_of_service"])
+
+    ZombieKiller().start()
 
 
 def cleanup_connector():

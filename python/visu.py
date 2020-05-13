@@ -17,7 +17,7 @@ offset_bigmap_pixel = int(offset_meter * vis.x_scale_bigmap)
 region_width_bigmap_pixel = int(region_width_meter * vis.x_scale_bigmap)
 current_detail_height = vis.detail_height
 # navigation variables
-focused_car: vis.CarImage
+focused_car: vis.CarImage or None
 x_slice_focused: slice
 image_focused: np.ndarray
 is_dragging = False
