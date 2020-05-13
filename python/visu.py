@@ -151,7 +151,7 @@ def draw_orange_lines():
 
 
 def put_on_focused_car_stats():
-    text_c = focused_car.color
+    text_c = focused_car.text_color
     row_1_y = canvas.shape[0] - 5 - 3 * text_pixel_height
     row_2_y = canvas.shape[0] - 5 - 2 * text_pixel_height
     row_3_y = canvas.shape[0] - 5 - 1 * text_pixel_height
