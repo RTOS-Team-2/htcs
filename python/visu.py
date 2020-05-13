@@ -65,18 +65,20 @@ def update_zoom():
     region_width_bigmap_pixel = int(region_width_meter * vis.x_scale_bigmap)
 
 
-def set_clicked_car(x, y):
+def set_clicked_car(x_click, y_click):
     global focused_car
-    if y < vis.minimap_height_pixel + vis.black_region_height:
+    if y_click < vis.minimap_height_pixel + vis.black_region_height:
         if focused_car is not None:
             focused_car = None
         return
-    x_meter = x / vis.window_width * region_width_meter + offset_meter
+    y_real = (y_click - vis.minimap_height_pixel - vis.black_region_height) / \
+        current_detail_height * vis.detail_height
+    x_meter = x_click / vis.window_width * region_width_meter + offset_meter
     for c in local_cars.get_all():
         if c.is_in_region(offset_meter, region_width_meter):
             y_slice: slice = c.get_y_slice()
-            if y_slice.start - 5 < y - vis.minimap_height_pixel - vis.black_region_height < y_slice.stop + 5:
-                if c.distance_taken - c.specs.size - 2 < x_meter < c.distance_taken:
+            if y_slice.start - 15 < y_real < y_slice.stop + 15:
+                if c.distance_taken - c.specs.size - 10 < x_meter < c.distance_taken + 10:
                     focused_car = c
                     return
     focused_car = None
@@ -179,7 +181,7 @@ if __name__ == "__main__":
 
     while cv2.getWindowProperty(vis.WINDOW_NAME, 0) >= 0:
         frame_start = time.time()
-        canvas = np.zeros((vis.minimap_height_pixel + vis.black_region_height + current_detail_height + text_region_height,
+        canvas = np.zeros((vis.minimap_height_pixel + vis.black_region_height + current_detail_height + 5 + int(3 * text_region_height),
                            vis.window_width, 3),
                           np.uint8)
         follow_with_camera()
@@ -201,14 +203,15 @@ if __name__ == "__main__":
             cur_im_detail[focused_car.get_y_slice(), x_slice_focused, :] = image_focused
 
         # set correct height
-        canvas[vis.minimap_height_pixel + vis.black_region_height: -30, :, :] = \
+        canvas[vis.minimap_height_pixel + vis.black_region_height:
+               vis.minimap_height_pixel + vis.black_region_height + current_detail_height, :, :] = \
             cv2.resize(cur_im_detail, (vis.window_width, current_detail_height))
 
         if focused_car is not None:
             put_on_focused_car_stats()
         # put frame time
         cv2.putText(canvas, f"FPS: {np.floor(1 / (time.time() - frame_start + 0.0001))}",
-                    (5, canvas.shape[0] - 5), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    (5, canvas.shape[0] - 5), cv2.FONT_HERSHEY_SIMPLEX, text_size, text_color, 2)
 
         cv2.imshow(vis.WINDOW_NAME, canvas)
         key = cv2.waitKey(2)
