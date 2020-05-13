@@ -2,37 +2,23 @@ import time
 import logging
 import threading
 import mqtt_connector
-from enum import Enum
-from car import Car, DetailedCarTracker, Lane
 from HTCSPythonUtil import config
+from car import Car, DetailedCarTracker, Lane, AccelerationState, Command
 
 
 logger = logging.getLogger(__name__)
-
-#logger.setLevel(logging.INFO)
-
 lock = threading.Lock()
 INTERVAL_MS = 100
 
 
-class Command(Enum):
-    MAINTAIN_SPEED = '0'
-    ACCELERATE = '1'
-    BRAKE = '2'
-    CHANGE_LANE = '3'
-    TERMINATE = '4'
-
-
-class AccelerationState(Enum):
-    MAINTAINING_SPEED = 0
-    ACCELERATING = 1
-    BRAKING = 2
-
-
 def give_command(car: Car, command: Command):
-    topic = config["base_topic"] + "/" + str(car.id) + "/command"
-    #logger.error(f"{command.name} sent to car with id {car.id}")
-    mqtt_connector.client_1.publish(topic, command.value, config["quality_of_service"])
+    if time.time() > car.last_command_time + 0.5 \
+            and (command != car.last_command or command == Command.CHANGE_LANE):
+        topic = config["base_topic"] + "/" + str(car.id) + "/command"
+        logger.debug(f"{command.name} sent to car with id {car.id}")
+        mqtt_connector.client_1.publish(topic, command.value, config["quality_of_service"])
+        car.last_command = command
+        car.last_command_time = time.time()
 
 
 def control_traffic():
