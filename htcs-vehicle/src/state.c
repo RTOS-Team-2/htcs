@@ -55,16 +55,19 @@ void adjustState(State *state, unsigned elapsedMs) {
             progressLaneChange(state, TRAFFIC_LANE, elapsedMs);
             break;
     }
+    printf("Adjusted state: lane: %d, distanceTaken: %.4f, speed: %.4f, accelerationState: %d",
+           state->lane, state->distanceTaken, state->speed, state->accelerationState);
+    fflush(stdout);
 }
 
 int attributesAndStateToString(State *state, char *attributesStr) {
-    return sprintf(attributesStr, "%.6f,%.6f,%.6f,%.6f,%.6f|%d,%.6f,%.6f,%d",
+    return sprintf(attributesStr, "%.4f,%.4f,%.4f,%.4f,%.4f|%d,%.4f,%.4f,%d",
                    state->attributes.preferredSpeed, state->attributes.maxSpeed,
                    state->attributes.acceleration, state->attributes.brakingPower, state->attributes.size,
                    state->lane, state->distanceTaken, state->speed, state->accelerationState);
 }
 
 int stateToString(State *state, char *stateStr) {
-    return sprintf(stateStr, "%d,%.6f,%.6f,%d",
+    return sprintf(stateStr, "%d,%.4f,%.4f,%d",
                    state->lane, state->distanceTaken, state->speed, state->accelerationState);
 }

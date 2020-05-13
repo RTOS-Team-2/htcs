@@ -13,8 +13,8 @@ INTERVAL_MS = 500
 
 def check_collision(_c1: Car, _c2: Car):
     if _c1.lane == _c2.lane:
-        diff = abs(_c1.distance_taken - _c2.distance_taken)
-        return diff < _c1.specs.size / 2 + _c2.specs.size / 2
+        diff = _c1.distance_taken - _c2.distance_taken
+        return diff < _c1.specs.size if diff > 0 else abs(diff) < _c2.specs.size
     else:
         return False
 
