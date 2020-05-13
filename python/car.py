@@ -59,6 +59,9 @@ class Car:
         self.speed = state[2]
         self.acceleration_state = state[3]
     
+    def distance_between(self, other_car):
+        return abs(self.distance_taken - other_car.distance_taken)
+
     def follow_distance(self, safety_factor=1.0):
         """
         Distance traveled while getting to a full stop from current speed
@@ -79,6 +82,20 @@ class Car:
             return (target_speed + self.speed) / 2 * (target_speed - self.speed) / self.specs.acceleration
         else:
             return (target_speed + self.speed) / 2 * (self.speed - target_speed) / self.specs.braking_power
+
+    def time_to_speed(self, target_speed):
+        """
+        Time it takes to reach target_speed
+        """
+        if self.speed < target_speed:
+            return target_speed - self.speed / self.specs.acceleration
+        else:
+            return self.speed - target_speed / self.specs.braking_power
+
+    def match_speed_distance_change(self,other_car):
+        self_distance_taken = self.distance_while_reaching_speed(other_car.speed)
+        other_car_distance_taken = self.time_to_speed(other_car.speed) * other_car.speed
+        return abs(self_distance_taken - other_car_distance_taken)
 
     def effective_lane(self):
         return effective_lanes[self.lane.value]
@@ -192,17 +209,15 @@ class DetailedCarTracker(CarManager):
                 if car_ahead_if_overtake.distance_taken - car_ahead_if_overtake.specs.size < car_in_focus.distance_taken:
                     return False
             # else we check if we can brake while overtaking and not hit that
-            else:
-                # TODO: INCORRECT
-                if car_in_focus.distance_while_reaching_speed(car_ahead_if_overtake.speed) > \
-                   car_ahead_if_overtake.distance_taken - car_in_focus.distance_taken:
-                    return False
+            elif car_in_focus.match_speed_distance_change(car_ahead_if_overtake) > \
+                car_in_focus.distance_between(car_ahead_if_overtake):
+                return False
         car_behind_if_overtake = self.car_directly_behind_in_effective_lane(car_in_focus, Lane.EXPRESS_LANE)
         # if we cut someone's path
         if car_behind_if_overtake is not None \
                 and car_behind_if_overtake.speed > car_in_focus.speed \
-                and car_behind_if_overtake.distance_while_reaching_speed(car_in_focus.speed) > \
-                car_in_focus.distance_taken - car_behind_if_overtake.distance_taken:
+                and car_behind_if_overtake.match_speed_distance_change(car_in_focus) > \
+                car_behind_if_overtake.distance_between(car_in_focus):
             return False
         return True
 
@@ -235,12 +250,13 @@ class DetailedCarTracker(CarManager):
         if car_in_focus.lane != Lane.EXPRESS_LANE:
             return False
         car_behind_if_return = self.car_directly_behind_in_effective_lane(car_in_focus, Lane.TRAFFIC_LANE)
+        #Have at least 10 meters between us and the car behind us when we change back
         if car_behind_if_return is not None \
-                and car_behind_if_return.distance_taken + 50 < car_in_focus.distance_taken:
+                and car_behind_if_return.distance_taken + 10 > car_in_focus.distance_taken:
             return False
         car_ahead_if_return = self.car_directly_ahead_in_effective_lane(car_in_focus, Lane.TRAFFIC_LANE)
         if car_ahead_if_return is not None \
                 and car_ahead_if_return.speed < car_in_focus.specs.preferred_speed \
-                and car_ahead_if_return.distance_taken - car_in_focus.distance_taken < 400:
+                and car_ahead_if_return.distance_taken - car_in_focus.distance_taken < car_in_focus.follow_distance() * 1.1:
             return False
         return True
