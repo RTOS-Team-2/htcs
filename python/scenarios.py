@@ -1,3 +1,4 @@
+import os
 import time
 import random
 import pickle
@@ -14,14 +15,21 @@ from car import Car, CarManager, Lane, Command, effective_lanes
 
 logger = logging.getLogger(__name__)
 hun = Hungarian()
+repo_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class Scenario(object):
 
-    def __init__(self, car: Car, neighbours: List[Car], command=None):
+    def __init__(self, car: Car, neighbours: List[Car], command: Command = None):
         self.car: Car = car
         self.neighbours: List[Car] = neighbours
         self.command = command
+
+    def __str__(self) -> str:
+        return f"<Scenario - car: {self.car}, neighbours: {self.neighbours}, command: {self.command}>"
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def compare(self, other: 'Scenario'):
         similarity = 0.0
@@ -68,7 +76,7 @@ class Scenario(object):
         return similarity
 
 
-def compare_stat(stat_1, stat_2, weight=1.0):
+def compare_stat(stat_1: float, stat_2: float, weight: float = 1.0):
     if stat_1 == stat_2:
         return weight
     return weight / abs(stat_1 - stat_2)
@@ -98,36 +106,46 @@ def closest_neighbours(car: Car, car_list: List[Car]):
     return neighbours
 
 
+SIMILARITY_THRESHOLD = 6
+scenarios: List[Scenario] = []
+
+
 def looks_like_new_scenario(scenario: Scenario):
-    if len(scenarios) == 0:
-        scenarios.append(scenario)
-    max_similarity = scenarios[0]
-    for sc in scenarios:
+    for idx, sc in enumerate(scenarios):
         similarity = sc.compare(scenario)
+        if similarity > SIMILARITY_THRESHOLD:
+            logger.info(f"Similarity no. {idx} over threshold: {similarity} scenario_1: {scenario}, scenario_2: {sc}")
+            return False
+    return True
 
 
-def gather_new_scenarios():
+def gather_new_scenarios(sample_size: int = 5):
     if len(local_cars) < 5:
         logger.info("Not enough cars to gather new scenarios")
         return
     cars = list(local_cars.values())
-    selected_cars = random.sample(cars, 5)
+    selected_cars = random.sample(cars, sample_size)
+    new_scenarios = 0
     for car in selected_cars:
         scenario = Scenario(car, closest_neighbours(car, cars))
-        scenarios.append(scenario)
+        logger.debug(f"Found scenario: {scenario}")
+        if len(scenarios) == 0 or looks_like_new_scenario(scenario):
+            new_scenarios = new_scenarios + 1
+            scenarios.append(scenario)
+
+    logger.info(f"Found {new_scenarios} new scenarios, total scenarios: {len(scenarios)}")
+    return new_scenarios > 0
 
 
 if __name__ == "__main__":
     local_cars: CarManager = CarManager()
     mqtt_connector.setup_connector(local_cars)
+    found_new_scenarios = True
 
-    scenarios: List[Scenario] = []
-
-    i = 0
-    while i < 10:
+    while found_new_scenarios:
         time.sleep(3)
-        gather_new_scenarios()
-        i += 1
+        found_new_scenarios = gather_new_scenarios()
 
-    with open("logs/scenario-" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + ".dump") as dump:
+    file_name = "scenario-" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + ".dump"
+    with open(os.path.join(repo_root_dir, "python", "logs", file_name), 'wb') as dump:
         pickle.dump(scenarios, dump)
