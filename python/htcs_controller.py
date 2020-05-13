@@ -8,7 +8,9 @@ from HTCSPythonUtil import config
 
 
 logger = logging.getLogger(__name__)
+
 #logger.setLevel(logging.INFO)
+
 lock = threading.Lock()
 INTERVAL_MS = 100
 
