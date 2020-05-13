@@ -132,6 +132,9 @@ class Car:
             return self.speed - target_speed / self.specs.braking_power
 
     def match_speed_distance_change(self, other_car, safety_factor=1.0):
+        """
+        Calculates how much closer the car gets to another car, while getting to the other car's speed
+        """
         self_distance_traveled = self.distance_while_reaching_speed(other_car.speed)
         other_car_distance_traveled = self.time_to_speed(other_car.speed) * other_car.speed
         return safety_factor*(self_distance_traveled - other_car_distance_traveled)
