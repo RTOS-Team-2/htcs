@@ -66,18 +66,7 @@ def control_traffic():
                          or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 1.2
                          or car_directly_ahead.speed > car.specs.preferred_speed):
                 give_command(car, Command.ACCELERATE)
-#            if car.acceleration_state == AccelerationState.BRAKING \
-#                    and car_directly_ahead is not None \
-#                    and car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 3:
-#                give_command(car, Command.MAINTAIN_SPEED)
-#            if car.acceleration_state != AccelerationState.ACCELERATING \
-#                    and (car_directly_ahead is None
-#                         or car_directly_ahead.distance_taken - car.distance_taken > car.follow_distance() * 5
-#                         or car_directly_ahead.speed > car.specs.preferred_speed):
-#                give_command(car, Command.ACCELERATE)
-
-        # if car is in the express lane, and did not reach max speed, it shoudl accelerate
-        if car.lane == Lane.EXPRESS_LANE and car.speed < car.specs.max_speed:
+        elif car.lane == Lane.EXPRESS_LANE and car.speed < car.specs.max_speed:
             give_command(car, Command.ACCELERATE)
 
 
