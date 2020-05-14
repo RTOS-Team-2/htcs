@@ -6,13 +6,15 @@ they all represent a different feature of this simulation.
 ---
 ## Controller
 
-_**TODO update this section**_
+The Basic goals of the [controller](htcs_controller.py) are the following. First of all, avoid
+collisions, while allowing cars to go as fast as their preferred speed. Also, allow each vehicle
+in the merge lane, to merge in as fast as possible, after getting to a decent speed. It is also
+important, not to have vehicles in the express lane without a reason. To achieve this,
+the controller implements functions like *can_overtake*, *can_return_to_traffic_lane*,
+*can_merge_in* etc.
 
-Very basic controller logic, it blindly commands all cars in the merge lane to switch to the traffic lane
-
-Has to be started before any car is connected, just like the visualizer
-
-Controlling start after STARTING_DELAY_SEC seconds (default is 10 seconds), so there is time to start the car client(s), can be modified in htcs-controller.py: line 8
+Running the script controls every car on the map. Do this along with running the visualizer to
+witness some high quality, action-packed highway scenarios!
 
 ---
 ## Visualizer
